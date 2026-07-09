@@ -75,12 +75,12 @@
 
 ## [D-0006] Q-0040 bounded-authority posture routed to the owner
 
-- status: needs-owner
+- status: decided
 - date: 2026-07-09
-- verdict: the D&D story-game plan routes the Q-0040 bounded-authority decision to the
-  owner — approve "Story Actions as the sole AI-emitted component; the deterministic
-  engine owns all amounts + all state mutation; every menu is hard-capped in code" as
-  the P3→P4 ship-gate. Recommend APPROVE.
+- verdict: decided to ROUTE the Q-0040 bounded-authority decision to the owner
+  (⚑ needs-owner) — approve "Story Actions as the sole AI-emitted component; the
+  deterministic engine owns all amounts + all state mutation; every menu is hard-capped
+  in code" as the P3→P4 ship-gate. Recommend APPROVE; **awaiting owner sign-off**.
 - why: Q-0040's own scope names a bounded-authority decision as a required gate before
   the D&D game ships; the deterministic substrate it depends on is now built and
   sim-pinned, so this posture sign-off is the one remaining blocker. Recommended

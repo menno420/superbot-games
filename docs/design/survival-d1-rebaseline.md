@@ -1,6 +1,6 @@
 # Survival overlay — D1 re-baseline against shipped per-game energy
 
-> **Status:** `design` — resolves a factual contradiction in the survival plan's D1
+> **Status:** `reference` — resolves a factual contradiction in the survival plan's D1
 > row created by energy shipping after the plan was written. Presents both options and
 > recommends one (⚑ decide-and-flag). Verified against superbot@shipped and
 > superbot-next@main.
@@ -36,7 +36,8 @@ energy has since shipped as part of the base game.
 
 ### superbot-next has NOT ported energy
 
-- Energy is **deferred under decision D-0043** in the rebuild. The rebuilt bot currently
+- Energy is **deferred in the rebuild** (tracked in superbot-next's own decision ledger;
+  recorded locally as [D-0004]). The rebuilt bot currently
   runs mining/fishing at the **pre-energy STARTER baseline** (no energy consumed) and
   has **no survival / difficulty contract at all** yet.
 
@@ -81,9 +82,9 @@ Both cannot hold. D1 must be re-baselined.
   EXISTING per-game bars** (via the owner's rule-of-three: *extract a shared settle/spend
   core* the two bars share, then let difficulty scale each game's tunables through it)
   rather than adding a third global bar.
-- **Clean insertion point in superbot-next.** Because superbot-next **defers energy
-  under D-0043**, the cheapest correct path is to **bake the difficulty-aware energy
-  contract INTO the D-0043 energy port** — port energy *once*, already difficulty-aware,
+- **Clean insertion point in superbot-next.** Because superbot-next **still defers the
+  energy port**, the cheapest correct path is to **bake the difficulty-aware energy
+  contract INTO that deferred energy port** — port energy *once*, already difficulty-aware,
   rather than porting flat 60-cap bars and then re-porting them to add difficulty. The
   shared settle/spend core (rule-of-three) is the natural home for the difficulty
   multiplier.
@@ -96,7 +97,7 @@ Both cannot hold. D1 must be re-baselined.
 > the survival Energy axis only modifies those existing bars for Medium/Hard. No third
 > global energy bar — extract a shared settle/spend core (rule-of-three) and scale each
 > game's tunables through it. In superbot-next, bake this difficulty-aware contract into
-> the D-0043 energy port rather than re-porting flat bars."**
+> the rebuild's deferred energy port rather than re-porting flat bars."**
 
 This keeps the byte-identical pin meaningful, honors the owner's explicit decoupling +
 rule-of-three, reuses the shipped campfire (D3), and gives the rebuild a single clean
