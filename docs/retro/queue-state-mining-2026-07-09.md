@@ -1,5 +1,6 @@
 # Mining lane — roadmap / queue state (gen-1 wind-down, 2026-07-09)
 
+> **Status:** `audit`
 > Committed so nothing lives only in chat. Verified against GitHub 2026-07-09 ~20:00Z.
 
 ## DONE (on main)

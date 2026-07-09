@@ -1,5 +1,6 @@
 # Gen-2 feedback — mining lane (2026-07-09)
 
+> **Status:** `audit`
 > Titled clearly per the wind-down order. The few structural changes I'd most want gen-2 to make,
 > from lived mining-lane experience. Terse on purpose.
 

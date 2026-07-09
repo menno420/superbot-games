@@ -1,5 +1,6 @@
 # Mining lane — gen-2 first-boot guide (2026-07-09)
 
+> **Status:** `audit`
 > For the fresh mining Project session. The gen-1 lane is archived; you boot ONLY from
 > what is committed here. Read this FIRST. Target: be productive and un-stuck inside 10 minutes.
 

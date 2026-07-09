@@ -1,5 +1,6 @@
 # Proposed gen-2 custom instructions — from mining-lane lived experience (2026-07-09)
 
+> **Status:** `audit`
 > Rewritten from what actually helped or hurt in gen-1. KEEP / DROP / ADD, one line why each.
 > The fleet-manager `gen2-blueprint.md` was NOT in this session's repo scope, so this is written
 > from experience; where it likely overlaps the blueprint's §1–§2 (READY-never-draft, explicit

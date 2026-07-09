@@ -1,5 +1,6 @@
 # Mining lane — environment variable NAMES (gen-2 handoff)
 
+> **Status:** `audit`
 > NAMES ONLY — never values, never secrets. The mining lane is a PURE domain with
 > NO live infrastructure (`docs/founding-plan-mining.md`), so it requires ZERO runtime
 > env vars. Everything below is optional / harness-provided. Paired with `environments/setup-mining.sh`.
