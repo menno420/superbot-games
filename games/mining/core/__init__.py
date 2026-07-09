@@ -6,6 +6,11 @@ Every formula and balance constant is preserved unchanged (sim-pinned upstream;
 pinned here as *preserved-from-oracle, unchanged* — no new tuning). stdlib +
 dataclasses/enum/random only.
 
+One module is **new design, not an oracle port**: ``encounters`` (the grid-encounters
+extension's first slice, ``docs/design/mining-grid-encounters.md``). Its balance
+numbers are freshly **sim-pinned** in-repo (``games/mining/sim/encounters_sim.py``),
+not preserved-from-oracle — the only module here whose constants originate locally.
+
 Two fishing couplings from the oracle are severed for the mining-only port
 (see ``docs/design/mining-plugin-layout.md``):
     * ``items`` no longer imports ``utils.fishing.fish.SPECIES`` — fish rows fold
@@ -20,6 +25,7 @@ Modules:
     world        — depth↔biome model + descent gating (z axis)
     exploration  — loadout-aware exploration outcome engine (injectable RNG)
     grid         — seed-deterministic procedural grid (x/y at a depth)
+    encounters   — live-rollable encounter layer over the grid (feature-keyed; NEW design)
     energy       — passive-regen energy "fuel" model
     capacity     — pack soft-cap + vault capacity/upgrade math
     skills       — 4-branch capped skill tree → stats
