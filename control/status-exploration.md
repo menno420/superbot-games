@@ -1,5 +1,5 @@
 # game-exploration · status
-updated: 2026-07-09T20:14Z
+updated: 2026-07-09T20:09Z
 phase: WIND-DOWN COMPLETE — ready for archive + fresh (gen-2) session
 health: green
 last-shipped: #13 — gen-1 succession package (whole-life wind-down retro · succession doc · gen-2 Custom Instructions proposal · tested env setup script · gen-2 feedback); #12 — ORDER 005 PING-ACK (merged 19:56:08Z)
