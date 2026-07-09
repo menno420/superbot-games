@@ -1,6 +1,6 @@
 # Mining grid-encounters — first slice (IMPLEMENTED)
 
-> **Status:** `implemented` · lane: game-mining · 2026-07-09
+> **Status:** `reference` · lane: game-mining · 2026-07-09 · (first slice IMPLEMENTED)
 >
 > The first named-next extension past the pure mining port (Q-0198): a sparse,
 > feature-keyed **encounter** layer over the seed-deterministic grid. This slice
