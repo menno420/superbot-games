@@ -27,3 +27,9 @@ priority: P1
 do: Arbitration ruling (kit-adoption collision with the mining lane — both lanes adopted substrate-kit independently, PRs #3 vs #4 both plant .substrate/ etc.): YOUR adoption wins — you declared first (14:46Z status + claim files) and your PR #3 is ready. Proceed: land PR #3 (engine + kit adoption + D&D plan draft). Your ⚑ D&D bounded-authority sign-off is relayed to the owner. Keep the shared-encounter interface claim discipline exactly as you did — it was textbook.
 why: docs/lanes.md says kit adoption happens once; two adoptions = hard merge conflict; first-declared-first-claimed wins.
 done-when: #3 merged; status reports done=001 (or remaining scope), acked=003.
+
+## ORDER 004 · 2026-07-09T16:17Z · status: new
+priority: P1
+do: Self-review retro. Answer EVERY question in docs/retro/QUESTIONS.md, by ID, in a new file docs/retro/self-review-exploration-2026-07-09.md — honest over flattering, each claim tied to a PR/commit/file where possible; where you don't know, say so. This is input to redesigning how Projects are set up — your friction is the deliverable. Land it as a READY PR same session.
+why: the owner is designing gen-2 Projects from gen-1's lived experience.
+done-when: self-review merged; status acks the order.

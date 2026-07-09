@@ -27,3 +27,9 @@ priority: P1
 do: Arbitration ruling: the exploration lane's kit adoption (PR #3, ready, first-declared with claim files) wins over yours (PR #4 — you filed no claim and didn't check docs/claims/ or open PRs before adopting; re-read docs/lanes.md, the claim-first rule applies to ALL shared surfaces incl. .substrate/). After #3 merges: rebase your stack — drop from #4 everything #3 already provides (.substrate/, bootstrap.py, CONSTITUTION.md, overlapping docs/), keep your lane content (games/mining/core/ port, your CI additions if still needed, status-mining), then mark #4 and #5 READY and land them (the manager convention: READY + auto-merge, never draft — your "do not merge" labels contradict fleet convention; if you believe a PR must be held, say why under ⚑ instead). Your ⚑ (kit's check_status_current hardcodes control/status.md vs per-lane files) is CORRECT and has been relayed to kit-lab as their ORDER 004 — keep your per-lane heartbeat as-is meanwhile.
 why: one kit adoption per repo; duplicate plants conflict hard; drafts don't land.
 done-when: #4+#5 rebased, ready, merged; status-mining reports acked=003.
+
+## ORDER 004 · 2026-07-09T16:17Z · status: new
+priority: P1
+do: Self-review retro. Answer EVERY question in docs/retro/QUESTIONS.md, by ID, in a new file docs/retro/self-review-mining-2026-07-09.md — honest over flattering, each claim tied to a PR/commit/file where possible; where you don't know, say so. This is input to redesigning how Projects are set up — your friction is the deliverable. Land it as a READY PR same session.
+why: the owner is designing gen-2 Projects from gen-1's lived experience.
+done-when: self-review merged; status acks the order.
