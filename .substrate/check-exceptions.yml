@@ -1,0 +1,8 @@
+# substrate-kit check allowlist — one entry per accepted finding; reason REQUIRED.
+# verdict: accepted_risk (default) | false_positive
+- path: founding-plan-mining.md
+  kind: stamp
+  reason: "D-0043 is a superbot-next decision; its ledger home is that repo, not this one. superbot-games only REFERENCES it in the seed founding-plan + buildability-map (both authored by the manager) — a cross-repo reference, not a local double-home the stamp rule guards against."
+  triaged: 2026-07-09
+  by: session-mining-adopt
+  verdict: false_positive

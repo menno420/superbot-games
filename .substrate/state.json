@@ -1,0 +1,134 @@
+{
+  "graduation": {
+    "criteria": {
+      "blocking_questions": 0,
+      "critical_slots_filled_pct": 0.8
+    },
+    "soft_target_sessions": 50
+  },
+  "graduation_proposed": false,
+  "kit_version": "1.2.0",
+  "last_compaction_session": 0,
+  "mode": "active",
+  "mode_history": [
+    {
+      "date": "2026-07-09",
+      "mode": "active",
+      "session": 0
+    }
+  ],
+  "open_questions": [],
+  "planted_doc_hashes": {
+    ".session-journal.md": "8fbe1fc3b52a8c3005ce4d7e81ac758616628d80a6c386d08a0763e7081cbe5d",
+    "CONSTITUTION.md": "bf97b2fcf467d4fd78dd6360fe9e30889d00680fc91b3ae1fd9e0dc0e4ec9833",
+    "control/inbox.md": "ec3374c42d06dc2192b7fd94db357bfab16a932f10d1c718b2b0bd6f2199aacb",
+    "control/status.md": "789f674180cad9a8bc71eb68616edf8f71b343d5e8e161f52fefe31938a53493",
+    "docs/AGENT_ORIENTATION.md": "fef938401b80e49b67ec85f3312645f0b621d4f9b82ef5df26f188b1a0fb55b5",
+    "docs/ai-project-workflow.md": "3167a570306f38cc0f2eae4195627a5ef43bda3f20e70676b41c5d7eb38fc687",
+    "docs/architecture.md": "4b72fceba2e78627ca7d27c7579c0bf1c082b0aa899fb8c935323ca2a31a3fe3",
+    "docs/collaboration-model.md": "cd7a3e2efd9d7034286f17717809009679f4cd0747fc554a200aa7fb334ff9f3",
+    "docs/current-state.md": "9e245849929ece33edc8b93578eff549ae9dd68f812c53663ddb65c5eea39b47",
+    "docs/decisions.md": "699ce68dac278839c1d85bbee57faf16bf134340c45658d85064b67a8a291e3a",
+    "docs/helper-policy.md": "5f8f4a2473de25b5b7cefc29ee2c6f45ff0f9cbef737ba171145d60fb7184dca",
+    "docs/ideas/README.md": "d9bc71ad180855d8891ef5f12b9cb3525a045f3222f103ea52cf1eb09250f961",
+    "docs/owner-profile.md": "ce1b0fc1064ecb806d1d8d85a256ae9261ac2b69a6ceb34373799169efaed504",
+    "docs/ownership.md": "6e5445df019de3b9eb49e56d38a05be0f4aa6af229d6ba48061479f57c629258",
+    "docs/question-router.md": "c643362fc9f7234217ca1c870fe06feceefcd434b7d603f975d78cbad5fa056b",
+    "docs/repo-navigation-map.md": "68fab181453f1f6098dd7e31340762a5cb81017481cbc06dae38a8b025af62eb",
+    "docs/runtime_contracts.md": "1e3f2e5f905aa45be6cf8d34b03e021d8a789cb87133ff8a6ec44cbe6d17b4e6"
+  },
+  "project_id": "f8f1a3e065b0",
+  "promotion_rights": "propose",
+  "quiet_sessions": 0,
+  "reflection_buffer": {
+    "active_count": 0,
+    "last_mined": null
+  },
+  "review_log": [],
+  "session_count": 0,
+  "slot_values": {
+    "architecture_layers": {
+      "question_id": "Q-004",
+      "source": "user",
+      "value": "Games ship as Discord-free plugin packages under games/<domain>/. Layers: (1) pure domain core (grid, energy, wear, skills, structures, workshop, market, rewards, titles, loadouts, character) \u2014 seedable state machines with injected RNG/clock and no I/O; (2) a workflow layer mirroring superbot's *_workflow audited op seams; (3) a thin host adapter left open to dock onto superbot-next's manifest/plugin contract. games/shared/ holds the shared encounter engine (claim-first). Import rule: domain core imports stdlib only; workflow imports core; adapter imports workflow; nothing in the package imports discord."
+    },
+    "doc_roots": {
+      "question_id": "Q-007",
+      "source": "user",
+      "value": "docs"
+    },
+    "drift_resolution": {
+      "question_id": "Q-011",
+      "source": "user",
+      "value": "First substrate-kit adoption of superbot-games (kit v1.2.0). The adopt-time reds were the UNRENDERED banners on the planted doc templates; fixed by answering the content slots and running render --live. Standing edge flagged for the kit: the control/ heartbeat checker hardcodes control/status.md, while this repo's multi-Project extension uses per-lane control/status-mining.md and control/status-exploration.md \u2014 resolved locally by keeping control/status.md as an aggregate heartbeat pointer to the per-lane files."
+    },
+    "integration_mode": {
+      "question_id": "Q-001",
+      "source": "user",
+      "value": "active"
+    },
+    "mutation_seam": {
+      "question_id": "Q-009",
+      "source": "user",
+      "value": "Domain state mutates only through pure, transactional state-machine ops in the workflow layer, mirroring superbot's mining_workflow audited op seams (RS02/Q-0071): focused reversible single-domain changes take the direct audited op; compound/generated changes take the draft/operation-row lane. No Discord or host writes live in the domain core. When docked, every host-side write routes through superbot-next's manifest plugin contract \u2014 no direct DB writes from plugin code."
+    },
+    "new_area_ownership": {
+      "question_id": "Q-013",
+      "source": "user",
+      "value": "New games/mining/** code is owned by the mining Project. New games/shared/** code is claim-first (claim before touching; any public-surface change is announced in BOTH status files the same session). New docs default to the lane that authored them; genuinely cross-lane docs are common ground, edited additively by section."
+    },
+    "owner_profile": {
+      "question_id": "Q-008",
+      "source": "user",
+      "value": "The owner designs and visualizes but does not code; agents build, cross-checked by other agents. Decide-and-flag over route-up: decide reversible calls yourself with a one-line rationale and flag them \u2014 never wait, silence = consent. Goal comes first; constraints serve the goal; prefer the better implementation. Hard rail: no pay-to-win, free for everyone forever (Q-0039/Q-0190). Never hallucinate filler \u2014 if there is nothing useful to add, say so and why."
+    },
+    "ownership_model": {
+      "question_id": "Q-006",
+      "source": "user",
+      "value": "Per-lane ownership (docs/lanes.md): the mining Project owns games/mining/** + docs/founding-plan-mining.md + control/status-mining.md; exploration owns games/exploration/** + its plan + status file. games/shared/** is claim-first via docs/claims/<project>-<topic>.md. control/inbox-mining.md and control/inbox-exploration.md are manager-only (one writer per file). Persistent data stores (mining_inventory, mining_player_state, ...) are owned by superbot-next's audited write lanes once the host contract lands; until then the pure-domain packages own only in-memory reproducible state."
+    },
+    "primary_language": {
+      "question_id": "Q-003",
+      "source": "user",
+      "value": "Python 3.10 (Discord-free pure-domain game plugin packages; oracle superbot is Python 3.10)"
+    },
+    "project_name": {
+      "question_id": "Q-002",
+      "source": "user",
+      "value": "superbot-games"
+    },
+    "review_ritual": {
+      "question_id": "Q-010",
+      "source": "user",
+      "value": "Forward-only git: branch -> PR -> squash-merge; never force-push, never delete branches, never amend pushed history; push with git push -u origin <branch>. One PR per lane (plus shared paths you have claimed). Open a PR each session; owner-directed work auto-merges on green CI. Session enders: contribute one new idea, review the previous session, run a docs audit. The owner reviews mainly by reacting to what he sees and rarely blocks."
+    },
+    "staleness_review": {
+      "question_id": "Q-012",
+      "source": "user",
+      "value": "Fresh adoption on 2026-07-09 \u2014 nothing stale yet. Baseline: repo seeded (#1), buildability maps + ORDER 002 (#2); substrate-kit v1.2.0 adopted and engaged this session. Next: begin the deep-systems mining port (superbot-next's named successor port) against the pinned oracle (superbot disbot/utils/mining/ + services/mining_workflow.py), starting with package-layout design and the pure-domain core with tests."
+    },
+    "verify_command": {
+      "question_id": "Q-005",
+      "source": "user",
+      "value": "python3 bootstrap.py check --strict"
+    }
+  },
+  "slots": {
+    "architecture_layers": "filled",
+    "doc_roots": "filled",
+    "drift_resolution": "filled",
+    "integration_mode": "filled",
+    "mutation_seam": "filled",
+    "new_area_ownership": "filled",
+    "owner_profile": "filled",
+    "ownership_model": "filled",
+    "primary_language": "filled",
+    "project_name": "filled",
+    "review_ritual": "filled",
+    "staleness_review": "filled",
+    "verify_command": "filled"
+  },
+  "stage": "integration",
+  "stance": "analysis",
+  "version": 1
+}
