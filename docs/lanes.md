@@ -1,5 +1,7 @@
 # Lanes — the cohabitation contract
 
+> **Status:** `binding`
+
 > **BINDING on both resident Projects.** Two autonomous Projects share this repo; lanes
 > are what keep them from colliding. When in doubt: your lane only.
 
