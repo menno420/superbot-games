@@ -1,6 +1,6 @@
 # Self-review — exploration lane, gen-1 retro (2026-07-09)
 
-> **Status:** `retro-answers` — exploration lane's answers to `docs/retro/QUESTIONS.md`, by ID (ORDER 004).
+> **Status:** `audit` — exploration lane's answers to `docs/retro/QUESTIONS.md`, by ID (ORDER 004).
 
 **Honesty preamble.** The lane's P1 work was done by one child session
 (`cse_01Fsfc2hZ6gjmRmq6ojBSeq4`, model `claude-opus-4-8[1m]` — verified from its

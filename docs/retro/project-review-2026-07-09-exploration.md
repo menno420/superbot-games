@@ -1,6 +1,6 @@
 # Project review — game-exploration lane (2026-07-09, wake-up pass)
 
-> **Status:** `retro-report` — owner-ordered full self-review + wake-up pass, exploration lane.
+> **Status:** `audit` — owner-ordered full self-review + wake-up pass, exploration lane.
 > Written by the wake-up session; every state claim below verified against the repo/GitHub
 > at write time, not from memory. Companion answers file:
 > [self-review-exploration-2026-07-09.md](self-review-exploration-2026-07-09.md).

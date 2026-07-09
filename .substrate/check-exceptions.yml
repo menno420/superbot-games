@@ -6,3 +6,15 @@
   triaged: 2026-07-09
   by: session-exploration-wakeup
   verdict: false_positive
+- path: current-state.md
+  kind: stamp
+  reason: "Retro/audit docs (docs/retro/*) plus the living ledger cite decision ids as EVIDENCE LINKS (ORDER 004 requires tying every retro claim to a PR/commit/decision), not as second rule-homes; docs/decisions.md stays each entry's single home. The stale-copy risk the stamp rule guards is absent: retro docs are dated snapshots, and current-state.md is a living ledger already governed by its own drift discipline."
+  triaged: 2026-07-09
+  by: session-exploration-wakeup
+  verdict: false_positive
+- path: retro/project-review-2026-07-09-exploration.md
+  kind: stamp
+  reason: "Same triage as the current-state.md stamp entry above: the two dated retro/audit docs cross-cite decision ids as evidence links required by ORDER 004; docs/decisions.md remains the single home."
+  triaged: 2026-07-09
+  by: session-exploration-wakeup
+  verdict: false_positive
