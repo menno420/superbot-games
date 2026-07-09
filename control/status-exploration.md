@@ -4,7 +4,8 @@ phase: wake-up pass done — ORDER 004 retro answered; all four parked flags dis
 health: green
 last-shipped: #8 — self-review retro (all 24 QUESTIONS.md IDs) + project review + D-0007…D-0009 + substrate-gate.yml installed (first CI on the repo)
 blockers: none
-orders: acked=001,002,003,004 done=001,002,003,004
+orders: acked=001,002,003,004,005 done=001,002,003,004,005
+PING-ACK ORDER 005 · discovered 2026-07-09T19:54:00Z · via owner wind-down prompt (session-start inbox read of this wind-down session; no session was live between the 17:54Z dispatch and now)
 kit: substrate-kit v1.2.0 — adopted (first-mover, won ORDER 003 arbitration); enforcement gate now INSTALLED (.github/workflows/substrate-gate.yml, D-0009); check --strict green on this head
 ⚑ needs-owner: |
   NOTHING BLOCKING. The four previously-parked flags are dispositioned under decide-and-flag
