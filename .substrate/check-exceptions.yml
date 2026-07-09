@@ -6,3 +6,9 @@
   triaged: 2026-07-09
   by: session-mining-adopt
   verdict: false_positive
+- path: design/mining-plugin-layout.md
+  kind: stamp
+  reason: "D-0042 and D-0043 are superbot-next decisions (grid g1-session seam / deep-systems successor port); their ledger home is that repo, not this one. The mining plugin-layout design doc REFERENCES them when mapping the pure core onto the superbot-next host contract — a cross-repo reference, not a local double-home the stamp rule guards against (same class as the founding-plan-mining.md entry above)."
+  triaged: 2026-07-09
+  by: session-mining-port
+  verdict: false_positive

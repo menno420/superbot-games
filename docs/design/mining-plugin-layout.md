@@ -1,6 +1,6 @@
 # Mining plugin — package layout & port design
 
-> **Status:** `design` · lane: game-mining · 2026-07-09
+> **Status:** `plan` · lane: game-mining · 2026-07-09
 >
 > Home for the mining plugin's package shape, its mapping onto the superbot-next
 > host contract, the port-order DAG, the severed couplings, and the grid-encounters
