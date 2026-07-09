@@ -1,6 +1,6 @@
 # 2026-07-09 · Adopt substrate-kit into superbot-games (mining lane, ORDER 001)
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus 4.8 (1M context) · lane: game-mining · branch: mining/adopt-substrate-kit
 
