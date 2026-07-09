@@ -33,8 +33,3 @@ htmlcov/
 # Local env
 .env
 .env.*
-
-# substrate-kit: the per-adopt bootstrap backup is a redundant full copy of the
-# vendored root bootstrap.py — don't commit it (the live state/telemetry under
-# .substrate/ IS committed, per the kit's own convention).
-.substrate/backup/
