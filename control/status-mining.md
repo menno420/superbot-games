@@ -1,37 +1,39 @@
 # game-mining · status
-updated: 2026-07-09T17:20Z
-phase: P0→P1 — kit engaged; pure domain ported (draft); retro delivered. Blocked at the merge gate.
-health: yellow — all work verified & green, but nothing shipped to main (merges are owner-gated; #4 conflict-dirty)
-kit: substrate-kit v1.2.0 (engaged on main via exploration's #3; mining's own adoption #4 is the ORDER-003 duplicate)
-last-shipped: nothing to main from the mining lane (all output on draft PRs #4/#5; retro on ready PR #9)
-orders: acked=001,002,003,004 done= (none fully — every done-when requires a merge the agent is blocked from performing)
+updated: 2026-07-09T18:00Z
+phase: P0→P1 — kit engaged; pure domain ported (to PR). Next: workflow seam + host adapter.
+health: green — main is strict-GREEN and enforces the substrate-gate CI workflow (installed via exploration #8); both open mining PRs are mergeable_state clean with substrate-gate green.
+kit: substrate-kit v1.2.0 — adopted on main by exploration's PR #3 (merged); mining CONSUMES it (the "adopt once" rule). Mining's own adoption PR #4 was CLOSED as redundant.
+last-shipped: nothing merged yet from the mining lane (port on PR #5, retro on PR #9 — both awaiting owner merge). Exploration #3/#8 merged the shared kit + CI to main.
+orders: acked=001,002,004 done=001 (port + design shipped to PR),004 (retro shipped to PR)
 
 ⚑ needs-owner:
-- MERGE PR #4 then PR #5 — self-approval guardrail blocks the agent (verbatim denials in
-  docs/retro/project-review-2026-07-09-mining.md §E). PRECONDITION: #4 is `mergeable_state:
-  dirty` (conflicts main after #3 planted the same kit) — the ORDER-003 rebase must run first
-  (drop the duplicate kit plant, keep mining-lane deltas). Rebase is agent-doable; can be
-  authorized in-chat.
-- MERGE retro PR #9 — same guardrail; #9 is clean & mergeable (based on current main).
-- Alternative collapsing the above: authorize the merges directly in the mining session's own
-  chat (the classifier may accept owner-in-session as genuine authorization).
-- Aggregate control/status.md two-writer risk — kit's check_status_current hardcodes
-  control/status.md vs per-lane files; relayed to kit-lab as their ORDER 004. Owner call: take
-  the kit fix or formalize the aggregate as manager-written.
-- main is check --strict RED + has NO CI enforcement — it merged the kit via #3 without the
-  hygiene fixes on the unmerged #4/#8 (lanes.md badge, D-0043 stamp allowlist, substrate-gate
-  workflow). Wiring the CI gate is owner-gated executable config; decide who lands it (#4, #8,
-  or a dedicated fix) so the repo actually enforces the gate.
+- MERGE PR #5 and PR #9 — the agent cannot self-merge (auto-mode self-approval guardrail;
+  verbatim denials are in docs/retro/project-review-2026-07-09-mining.md). Click-by-click:
+  open each PR → Squash & merge → Confirm. Order doesn't matter now — both are based on main,
+  independent, and their control/status-mining.md is byte-identical so the second merge
+  auto-resolves. Alternatively, authorize the merges directly in the mining session chat.
+- Aggregate control/status.md two-writer risk — the kit hardcodes a single control/status.md,
+  but this repo's per-lane model needs a kit-side fix. Owner call: take the upstream
+  substrate-kit fix or formalize the aggregate as manager-written.
 
-blockers: the self-approval merge guardrail (nullifies ORDER 001/003/004 done-when) + #4's
-post-#3 conflict.
+blockers: only the self-approval merge guardrail — the agent cannot merge/arm/mark-ready its
+own session PRs. Both PRs are otherwise ready (clean + CI green); merging is a one-click owner
+action (or an in-chat authorization).
 
 pr-in-flight:
-- #4 mining/adopt-substrate-kit — OPEN, DRAFT, DIRTY (conflicts main), CI substrate-gate green. ORDER-003 duplicate; needs rebase.
-- #5 mining/port-pure-domain — OPEN, DRAFT, clean-vs-#4, CI substrate-gate green. 18 modules → games/mining/core/, 62 tests pass.
-- #9 mining/retro-2026-07-09 — OPEN, READY, clean; the retro (this order). Auto-merge NOT armed (owner action).
+- #4 mining/adopt-substrate-kit — CLOSED as redundant (kit already on main via exploration #3; "adopt once").
+- #5 mining/port-pure-domain — OPEN, DRAFT, mergeable_state clean, substrate-gate CI green (head d41a849). Based on main. 18 modules → games/mining/core/, 62 tests pass; docs/design/mining-plugin-layout.md. Awaiting OWNER merge (self-approval guardrail).
+- #9 mining/retro-2026-07-09 — OPEN, READY, mergeable_state clean, substrate-gate CI green (head 1d58d08). Based on main. Retro/self-review docs. Awaiting OWNER merge.
+
+self-initiated (flagged): #4 closed as redundant (kit already on main via #3); #5 merged main
+forward taking main's kit files (forward-only, no rebase); one additive reason-carrying
+.substrate/check-exceptions.yml allowlist entry (D-0042/D-0043 cross-repo triage, mirrors
+exploration) to stay drift-neutral strict-green; equipment.py placed in games/mining/core/
+(promotion candidate for games/shared/ when a 2nd game ports); optional injectable rng threaded
+through the reward rolls (byte-identical to the oracle path).
 
 notes: docs/founding-plan-mining.md + docs/lanes.md are binding. Retro answers:
 docs/retro/self-review-mining-2026-07-09.md; wake-up review: docs/retro/project-review-2026-07-09-mining.md.
-Continuation without owner: ORDER-003 rebase → games/mining/workflow seam → superbot-next
-adapter (read the contract first) → grid encounters → economy sim + parity goldens.
+Next (no owner needed): games/mining/workflow audited-op seam → Layer-3 superbot-next
+SubsystemManifest host adapter (read the contract first) → grid-encounters extension → economy
+sim + parity goldens.
