@@ -22,3 +22,14 @@ should not be re-audited without a reported regression.)
 ## Review rhythm
 
 Cross-agent review: another agent (or Project lane) verifies work against shipped source before it lands; the owner reacts to results rather than gating each step (decide-and-flag, not stop-and-wait). The second Project verifies kit engagement instead of re-adopting.
+
+## Lane docs, designs & plans (index)
+
+Read-path index into the two lanes' binding briefs, research, designs, and plans.
+Links are relative from this file.
+
+- **Cohabitation contract:** [`../docs/lanes.md`](lanes.md)
+- **Founding plans:** [`../docs/founding-plan-exploration.md`](founding-plan-exploration.md) · [`../docs/founding-plan-mining.md`](founding-plan-mining.md)
+- **Buildability maps (research):** [`../docs/research/buildability-map-exploration.md`](research/buildability-map-exploration.md) · [`../docs/research/buildability-map-mining.md`](research/buildability-map-mining.md)
+- **Designs:** [`../docs/design/quest-encounter-engine.md`](design/quest-encounter-engine.md) · [`../docs/design/survival-d1-rebaseline.md`](design/survival-d1-rebaseline.md)
+- **Plans:** [`../docs/planning/dnd-story-game-plan.md`](planning/dnd-story-game-plan.md)

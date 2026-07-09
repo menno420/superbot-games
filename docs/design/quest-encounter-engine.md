@@ -1,6 +1,6 @@
 # Quest / encounter engine — design (exploration P1, Lane C)
 
-> **Status:** shipped v1 (deterministic core + v1 bounded-menu catalog + shared
+> **Status:** `shipped` — v1 (deterministic core + v1 bounded-menu catalog + shared
 > encounter seam + balance sim). Accurate to the code under
 > `games/exploration/quest/**` and `games/shared/encounter/**`.
 

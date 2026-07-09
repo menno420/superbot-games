@@ -21,6 +21,12 @@
 
 Documentation root(s): docs
 
+**Exploration lane designs & plans:** the deterministic quest/encounter engine
+(`docs/design/quest-encounter-engine.md`), the D&D story-game plan
+(`docs/planning/dnd-story-game-plan.md`), and the survival D1 re-baseline
+(`docs/design/survival-d1-rebaseline.md`). The full lane-doc index (both lanes) is the
+"Lane docs, designs & plans" section of `docs/current-state.md`.
+
 The planted doc set (this router reaches every live doc — keep it that way):
 `docs/architecture.md` · `docs/ownership.md` · `docs/runtime_contracts.md` ·
 `docs/collaboration-model.md` · `docs/helper-policy.md` ·
