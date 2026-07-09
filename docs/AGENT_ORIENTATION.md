@@ -38,6 +38,9 @@ the planted contracts above:
   the `games/shared/**` claim-first rule, and the once-only kit-adoption rule (binding).
 - [founding-plan-mining.md](founding-plan-mining.md) — the mining Project brief
   (the deep-systems port, grid encounters, shared encounter engine).
+- [design/mining-plugin-layout.md](design/mining-plugin-layout.md) — the mining
+  plugin package layout: three-layer split, the superbot-next host contract mapping,
+  the port-order DAG, severed couplings, and the grid-encounters extension seam.
 - [founding-plan-exploration.md](founding-plan-exploration.md) — the exploration
   Project brief (federated world, quest/encounter engine, AI-DM layer).
 - [research/buildability-map-mining.md](research/buildability-map-mining.md) —
