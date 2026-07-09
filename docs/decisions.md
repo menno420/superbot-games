@@ -86,3 +86,58 @@
   sim-pinned, so this posture sign-off is the one remaining blocker. Recommended
   because the model's worst case is a legal, capped, game-approved outcome.
 - provenance: docs/planning/dnd-story-game-plan.md § ⚑ needs-owner; Q-0040
+
+## [D-0007] Q-0040 bounded-authority posture ADOPTED under decide-and-flag
+
+- status: decided
+- date: 2026-07-09
+- supersedes: D-0006
+- verdict: the Q-0040 bounded-authority posture — "Story Actions as the sole
+  AI-emitted component; the deterministic engine owns all amounts + all state
+  mutation; every menu is hard-capped in code" — is ADOPTED now, decided-and-flagged
+  (vetoable), instead of parked awaiting owner sign-off.
+- why: the decision is reversible until the P3→P4 ship gate (nothing AI-emitted
+  executes before then), it carries the manager's and the lane's own APPROVE
+  recommendation, and the worst case is a legal, capped, engine-approved outcome —
+  the exact shape decide-and-flag exists for. The owner's veto window is the entire
+  P1–P3 build; a veto costs a posture doc edit, not rework of the deterministic
+  substrate (which is required under every posture).
+- provenance: owner wake-up order 2026-07-09 (self-unblock step); D-0006;
+  docs/planning/dnd-story-game-plan.md
+
+## [D-0008] Q-0087 cap reconciliation waits on an upstream ARTIFACT, not the owner
+
+- status: decided
+- date: 2026-07-09
+- supersedes: D-0005
+- verdict: flag (3) is reclassified off the needs-owner list. Verified against
+  menno420/superbot: Q-0087 defines a dual-track *philosophy* plus a simulation
+  methodology — the "bands" are future sim-output pinned tests
+  (docs/planning/rpg-survival-difficulty-design-2026-06-10.md, survival P0 harness),
+  not numeric constants that exist today. There is nothing for the owner to click;
+  reconciliation happens when superbot's survival P0 sim ships its pinned bands.
+  Until then `catalog.py` `TIER_CAPS`/`GLOBAL_MAX` stay the sim-pinned conservative
+  placeholders (D-0005's mechanism unchanged).
+- why: a flag that names a nonexistent artifact as "when available" reads as
+  owner-blocked when it is actually upstream-blocked; naming the real dependency
+  (superbot survival P0 bands) makes it actionable and removes a phantom owner item.
+- provenance: owner wake-up order 2026-07-09; superbot
+  docs/owner/maintainer-question-router.md § Q-0087; superbot
+  docs/planning/rpg-survival-difficulty-design-2026-06-10.md
+
+## [D-0009] Cross-lane CI gate installed (substrate-gate.yml) under decide-and-flag
+
+- status: decided
+- date: 2026-07-09
+- verdict: `.substrate/ci/substrate-gate.yml` is installed to
+  `.github/workflows/substrate-gate.yml` (exploration wake-up PR), resolving flag (4).
+  Two companion fixes land with it so the gate is born green on main: the
+  `docs/lanes.md` status badge and the D-0043 cross-repo stamp allowlist in
+  `.substrate/check-exceptions.yml`.
+- why: the flag parked installation on cross-lane coordination — but the mining
+  lane's own draft PR #4 ships the *identical* gate, i.e. both lanes independently
+  chose it; coordination is de facto complete. The gate is not a required branch
+  check (removal = one-file revert), has a control-only fast lane, and mining's #4/#5
+  rebase per ORDER 003 anyway. Vetoable by deleting the workflow file.
+- provenance: owner wake-up order 2026-07-09; mining draft PR #4 (same file);
+  control/status-exploration.md ⚑ (4)
