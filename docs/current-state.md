@@ -15,17 +15,24 @@
 
 ## In flight
 
-(Verify against live source control — this section is a dated snapshot; 2026-07-09.)
+(Verify against live source control — this section is a dated snapshot; 2026-07-09 wind-down.)
 
-- **#8** — exploration wake-up: retro answers (ORDER 004) + project review + flag
-  disposition D-0007…D-0009 + first CI on the repo (substrate-gate.yml installed).
-- **#4 / #5** (mining lane, drafts) — kit adoption (loses per ORDER 003, rebase pending)
-  + pure mining domain port stacked on it.
-- Exploration next default (queued, no order needed): **P2 survival sim harness** on the
-  D-0004 option-(a) baseline.
+- **#13** — exploration gen-1 WIND-DOWN: succession package (whole-life retro, succession
+  doc, gen-2 Custom Instructions proposal, tested env setup script, gen-2 feedback,
+  ready-marker status flip). The lane's last gen-1 PR.
+- **#5 / #11** (mining lane, drafts) — pure mining domain port + grid-encounters slice
+  stacked on it (#4 closed as redundant per ORDER 003).
+- Exploration next default (queued for gen-2, no order needed): **P2 survival sim
+  harness** on the D-0004 option-(a) baseline.
 
 ## Recently shipped (newest first)
 
+- **#12** (2026-07-09) — exploration: ORDER 005 PING-ACK (dispatch 17:54:33Z →
+  discovery 19:54:00Z → ack on main; measured no-live-session pickup ≈ 2h).
+- **#9** (2026-07-09) — mining: self-review retro (ORDER 004) + project review.
+- **#10** (2026-07-09) — manager: ORDER 005 ×2 (latency ping).
+- **#8** (2026-07-09) — exploration wake-up: retro answers (ORDER 004) + project review +
+  flag disposition D-0007…D-0009 + first CI on the repo (substrate-gate.yml).
 - **#3** (2026-07-09) — exploration P1: substrate-kit v1.2.0 adoption (first-mover,
   D-0002), deterministic quest/encounter engine + v1 bounded-menu catalog, shared
   encounter interface (D-0003), D&D story-game plan, survival D1 re-baseline (D-0004).
@@ -49,3 +56,4 @@ Links are relative from this file.
 - **Designs:** [`../docs/design/quest-encounter-engine.md`](design/quest-encounter-engine.md) · [`../docs/design/survival-d1-rebaseline.md`](design/survival-d1-rebaseline.md)
 - **Plans:** [`../docs/planning/dnd-story-game-plan.md`](planning/dnd-story-game-plan.md)
 - **Retro (gen-1 self-review):** [`retro/README.md`](retro/README.md) · [`retro/self-review-exploration-2026-07-09.md`](retro/self-review-exploration-2026-07-09.md) · [`retro/project-review-2026-07-09-exploration.md`](retro/project-review-2026-07-09-exploration.md)
+- **Gen-1 → gen-2 succession (exploration):** [`succession-exploration.md`](succession-exploration.md) (read order · walking skeleton · known walls) · [`retro/project-review-wind-down-2026-07-09-exploration.md`](retro/project-review-wind-down-2026-07-09-exploration.md) (whole-life wind-down retro) · [`gen2-custom-instructions-exploration.md`](gen2-custom-instructions-exploration.md) (owner-paste proposal) · [`gen2-feedback-exploration.md`](gen2-feedback-exploration.md) (for the fleet manager) · [`../environment/setup-exploration.sh`](../environment/setup-exploration.sh) (tested env setup)
