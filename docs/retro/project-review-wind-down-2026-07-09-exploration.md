@@ -26,10 +26,10 @@ inside `menno420/superbot-games`, cohabiting with the mining Project under
 | ~14:46–16:42 | **P1 built and merged**: substrate-kit v1.2.0 adoption (first-mover, D-0002), deterministic quest/encounter engine (`games/exploration/quest/`, 48 tests incl. balance-pin sim), shared encounter seam (`games/shared/encounter/`, D-0003), D&D story-game plan, survival D1 re-baseline (D-0004) | PR #3, merged 16:42Z **by the owner** after ~1.5h wait |
 | 15:30 | ORDER 003 kit-collision arbitration (exploration's adoption wins; mining's #4 later closed as redundant) | PR #6; mining #5 body |
 | 16:17 | ORDER 004 retro protocol planted | PR #7 |
-| ~16:53–18:30 | **Wake-up pass**: all 24 retro IDs answered, 4 parked ⚑ flags dispositioned (D-0007…D-0009), first CI on the repo installed (`substrate-gate.yml`, D-0009) | PR #8, self-squash-merged ~18:30Z |
-| 17:54:33 | ORDER 005 latency ping dispatched | PR #10 |
+| ~16:53–17:06 | **Wake-up pass**: all 24 retro IDs answered, 4 parked ⚑ flags dispositioned (D-0007…D-0009), first CI on the repo installed (`substrate-gate.yml`, D-0009) | PR #8, self-squash-merged **17:06:06Z per git committer time** (the coordinator relayed "~18:30Z" and the wake-up status file stamped "updated: 18:05Z" — both conflict with git; git is the clock of record, cause of the drift unknown — see §3(f)) |
+| 17:54:33 | ORDER 005 latency ping dispatched (on main 17:55:36Z) | PR #10 |
 | 19:54:00 | ORDER 005 **discovered** by this wind-down session (~2h later — no session was live in between) | PR #12 |
-| ~19:57 | PING-ACK on main | PR #12 merged `27d0673` |
+| 19:56:08 | PING-ACK on main | PR #12 merged `27d0673` |
 | 19:58→ | This wind-down pass (succession package) | PR #13 |
 
 Net product on main at wind-down: a pure, deterministic, sim-pinned quest/encounter
@@ -142,7 +142,18 @@ unbounded" — the lane had no wake routine, so the *owner's next prompt* was th
 de-facto wake. Gen-2's cadence table is the right fix; this lane post-mission is
 Class C (daily).
 
-### (f) Design-time friction (from the earlier retros, summarized — see self-review B/C)
+### (f) Timestamp drift on our own lane **[NEW]**
+
+Git committer time says PR #8 merged **17:06:06Z**; the wake-up session's own status
+file stamped `updated: 2026-07-09T18:05Z` (a time ~1h *after* its PR merged, for a
+close-out written *before* the merge), and the coordinator relayed the merge as
+"~18:30Z". I don't know which upstream clock produced which error — but the fleet
+blueprint's §2a note ("two lanes caught stamping local-time-as-Z") likely has a
+third instance here. Rule that survives: **`date -u` only; git commit history is
+the clock of record; never trust a model's sense of time or a relayed timestamp
+without checking git.**
+
+### (g) Design-time friction (from the earlier retros, summarized — see self-review B/C)
 
 - The kit-adoption collision (both lanes adopted independently within 7 minutes;
   ORDER 003 arbitration + mining's rebase + mining PR #4 closed as redundant was the
