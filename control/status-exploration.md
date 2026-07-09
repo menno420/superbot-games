@@ -1,25 +1,26 @@
 # game-exploration · status
-updated: 2026-07-09T16:42Z
-phase: P1 shipped — deterministic quest/encounter engine live; D&D plan + survival re-baseline drafted
+updated: 2026-07-09T18:05Z
+phase: wake-up pass done — ORDER 004 retro answered; all four parked flags dispositioned; first CI installed; next default = P2 survival sim harness
 health: green
-last-shipped: #3 — quest/encounter engine (Lane C) + v1 bounded-menu catalog + shared encounter seam + kit adoption
+last-shipped: #8 — self-review retro (all 24 QUESTIONS.md IDs) + project review + D-0007…D-0009 + substrate-gate.yml installed (first CI on the repo)
 blockers: none
-orders: acked=001,002 done=001,002
-kit: substrate-kit v1.2.0 — adopted (first-mover); engagement scaffold rendered; CI gate left STAGED (not installed, cross-lane — see flag)
+orders: acked=001,002,003,004 done=001,002,003,004
+kit: substrate-kit v1.2.0 — adopted (first-mover, won ORDER 003 arbitration); enforcement gate now INSTALLED (.github/workflows/substrate-gate.yml, D-0009); check --strict green on this head
 ⚑ needs-owner: |
-  (1) Q-0040 bounded-authority sign-off for the D&D story game — approve "Story Actions as the sole AI-emitted
-      component; engine owns all amounts + mutation; menus hard-capped." Recommend APPROVE. This is the P3→P4 ship-gate.
-      See docs/planning/dnd-story-game-plan.md.
-  (2) Survival D1 re-baseline: recommend option (a) "byte-identical = today's shipped per-game energy bars; survival
-      only modifies them for Medium/Hard." See docs/design/survival-d1-rebaseline.md.
-  (3) Q-0087 reward caps in the catalog are conservative in-band placeholders — reconcile with superbot's real Q-0087
-      constants when available (numbers are sim-pinned meanwhile).
-  (4) Cross-lane CI enforcement gate (substrate-gate.yml) left STAGED under .substrate/ci/ — installing it would gate
-      BOTH lanes' PRs on session-log discipline; flagged for coordination with the mining lane rather than imposed unilaterally.
+  NOTHING BLOCKING. The four previously-parked flags are dispositioned under decide-and-flag
+  (veto = react; silence = consent): (1) Q-0040 posture ADOPTED — D-0007, veto window open
+  until the P3→P4 ship gate; (2) survival D1 option (a) confirmed adopted — D-0004; (3) Q-0087
+  caps reclassified: wait on superbot's future survival-P0 sim bands, NOT on the owner — D-0008;
+  (4) cross-lane CI gate INSTALLED — D-0009 (mining's #4 ships the identical file; revert = veto).
+  Remaining owner-only items (optional, click-by-click in docs/retro/project-review-2026-07-09-exploration.md §e):
+  merged-branch deletion housekeeping (agents get 403 on branch deletion); the PR #8 merge click
+  ONLY IF the lane's own squash-merge attempt failed (the PR + review doc record the exact error if so).
 notes: |
-  SHARED INTERFACE ANNOUNCEMENT (docs/lanes.md): exploration defined the public shared encounter-resolution seam
+  SHARED INTERFACE ANNOUNCEMENT (docs/lanes.md, standing): the public shared encounter-resolution seam is
   games/shared/encounter/interface.py (EncounterResolver Protocol + EncounterRequest/Outcome + EncounterTrigger:
-  GRID_ROAM/EXPLORE_ACTION/CHAT_ACTIVITY) with a deterministic reference resolver. Mining owns the PRODUCTION encounter
-  core and replaces the reference impl via this Protocol — coordinate before changing the interface. (Cannot write
-  control/status-mining.md under the one-writer rule; announced here + flagged for the manager to relay to mining.)
-  Engine is pure/seedable, 48 tests green incl. the balance-pin sim. No pay-to-win; all reward numbers sim-pinned.
+  GRID_ROAM/EXPLORE_ACTION/CHAT_ACTIVITY), deterministic reference resolver included. Mining owns the PRODUCTION
+  core and replaces the reference impl via the Protocol — coordinate before changing the interface.
+  RETRO: docs/retro/self-review-exploration-2026-07-09.md (ORDER 004, all IDs) +
+  docs/retro/project-review-2026-07-09-exploration.md (state · agent audit · efficiency · owner actions · continuation).
+  NEXT DEFAULT (queued, no order needed): P2 survival sim harness on the D-0004 option-(a) baseline —
+  it also produces the pinned bands that retire D-0008's placeholder caps in catalog.py.
