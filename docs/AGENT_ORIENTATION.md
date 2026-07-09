@@ -13,13 +13,19 @@
 
 ## Binding contracts
 
-- **Architecture / layering:** Games ship as Discord-free plugin packages under games/<domain>/. Layers: (1) pure domain core (grid, energy, wear, skills, structures, workshop, market, rewards, titles, loadouts, character) — seedable state machines with injected RNG/clock and no I/O; (2) a workflow layer mirroring superbot's *_workflow audited op seams; (3) a thin host adapter left open to dock onto superbot-next's manifest/plugin contract. games/shared/ holds the shared encounter engine (claim-first). Import rule: domain core imports stdlib only; workflow imports core; adapter imports workflow; nothing in the package imports discord.
-- **Ownership** (who owns each write path): Per-lane ownership (docs/lanes.md): the mining Project owns games/mining/** + docs/founding-plan-mining.md + control/status-mining.md; exploration owns games/exploration/** + its plan + status file. games/shared/** is claim-first via docs/claims/<project>-<topic>.md. control/inbox-mining.md and control/inbox-exploration.md are manager-only (one writer per file). Persistent data stores (mining_inventory, mining_player_state, ...) are owned by superbot-next's audited write lanes once the host contract lands; until then the pure-domain packages own only in-memory reproducible state.
-- **Mutation seam** (how writes are gated): Domain state mutates only through pure, transactional state-machine ops in the workflow layer, mirroring superbot's mining_workflow audited op seams (RS02/Q-0071): focused reversible single-domain changes take the direct audited op; compound/generated changes take the draft/operation-row lane. No Discord or host writes live in the domain core. When docked, every host-side write routes through superbot-next's manifest plugin contract — no direct DB writes from plugin code.
+- **Architecture / layering:** Games ship as plugin packages under games/<lane>/** (game-mining, game-exploration); shared engine code lives under games/shared/** (encounter engine, shared domain) and is claim-first. Each game's core is deterministic, seedable, and sim-tested — the core owns all outcomes; presentation is a separate, thin layer. Packages are pure-domain, built against the old superbot code as oracle, and consumed by the rebuilt bot menno420/superbot-next via its manifest/plugin contract.
+- **Ownership** (who owns each write path): Two autonomous Projects cohabit here (game-mining, game-exploration) under the binding lane contract docs/lanes.md. Each lane exclusively owns its games/<lane>/** package plus its founding-plan and status files; a PR touches only its own lane. Code under games/shared/** is claim-first — create docs/claims/<project>-<topic>.md before editing, delete it at session close, and announce any shared-interface change in both control/status files. Git is forward-only.
+- **Mutation seam** (how writes are gated): All game outcomes flow through each package's deterministic, seedable core — no ad-hoc RNG and no state writes outside it. Every outcome is reproducible from its seed and covered by sim tests; a change that bypasses the deterministic core is a blocker.
 
 ## Where things live
 
 Documentation root(s): docs
+
+**Exploration lane designs & plans:** the deterministic quest/encounter engine
+(`docs/design/quest-encounter-engine.md`), the D&D story-game plan
+(`docs/planning/dnd-story-game-plan.md`), and the survival D1 re-baseline
+(`docs/design/survival-d1-rebaseline.md`). The full lane-doc index (both lanes) is the
+"Lane docs, designs & plans" section of `docs/current-state.md`.
 
 The planted doc set (this router reaches every live doc — keep it that way):
 `docs/architecture.md` · `docs/ownership.md` · `docs/runtime_contracts.md` ·
@@ -29,29 +35,8 @@ The planted doc set (this router reaches every live doc — keep it that way):
 `docs/question-router.md` · `docs/ideas/README.md` — plus the root
 `CONSTITUTION.md` (the working agreement) and `.session-journal.md`.
 
-## Repo-specific binding docs (superbot-games)
-
-This repo hosts two cohabiting game Projects on shared lanes. Read these alongside
-the planted contracts above:
-
-- [lanes.md](lanes.md) — the cohabitation contract: which paths each lane owns,
-  the `games/shared/**` claim-first rule, and the once-only kit-adoption rule (binding).
-- [founding-plan-mining.md](founding-plan-mining.md) — the mining Project brief
-  (the deep-systems port, grid encounters, shared encounter engine).
-- [design/mining-plugin-layout.md](design/mining-plugin-layout.md) — the mining
-  plugin package layout: three-layer split, the superbot-next host contract mapping,
-  the port-order DAG, severed couplings, and the grid-encounters extension seam.
-- [founding-plan-exploration.md](founding-plan-exploration.md) — the exploration
-  Project brief (federated world, quest/encounter engine, AI-DM layer).
-- [research/buildability-map-mining.md](research/buildability-map-mining.md) —
-  mining buildability research (reference; verify against sources).
-- [research/buildability-map-exploration.md](research/buildability-map-exploration.md) —
-  exploration buildability research (reference; verify against sources).
-
-Fleet protocol: [../control/README.md](../control/README.md).
-
 ## Verifying any change
 
 ```
-python3 bootstrap.py check --strict
+python3.10 -m pytest (deterministic game-core sims must pass, seed-reproducible) and python3 bootstrap.py check --strict (docs + session-log hygiene). No live CI workflow yet — verification runs locally per lane.
 ```

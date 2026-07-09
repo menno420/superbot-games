@@ -12,7 +12,7 @@
 
 ## Ownership model
 
-Per-lane ownership (docs/lanes.md): the mining Project owns games/mining/** + docs/founding-plan-mining.md + control/status-mining.md; exploration owns games/exploration/** + its plan + status file. games/shared/** is claim-first via docs/claims/<project>-<topic>.md. control/inbox-mining.md and control/inbox-exploration.md are manager-only (one writer per file). Persistent data stores (mining_inventory, mining_player_state, ...) are owned by superbot-next's audited write lanes once the host contract lands; until then the pure-domain packages own only in-memory reproducible state.
+Two autonomous Projects cohabit here (game-mining, game-exploration) under the binding lane contract docs/lanes.md. Each lane exclusively owns its games/<lane>/** package plus its founding-plan and status files; a PR touches only its own lane. Code under games/shared/** is claim-first — create docs/claims/<project>-<topic>.md before editing, delete it at session close, and announce any shared-interface change in both control/status files. Git is forward-only.
 
 ## Ownership table
 
@@ -22,4 +22,4 @@ Per-lane ownership (docs/lanes.md): the mining Project owns games/mining/** + do
 
 ## New areas
 
-New games/mining/** code is owned by the mining Project. New games/shared/** code is claim-first (claim before touching; any public-surface change is announced in BOTH status files the same session). New docs default to the lane that authored them; genuinely cross-lane docs are common ground, edited additively by section.
+A new game or area is claimed as a lane in docs/lanes.md and gets its own games/<lane>/** package with its founding-plan and control/status files; shared engine code lands under games/shared/** on the claim-first path.

@@ -17,3 +17,127 @@
   discipline let agents work correctly with little steering; adopting the
   kit starts superbot-games governed instead of accreting rules ad hoc.
 - provenance: substrate-kit adoption interview
+
+## [D-0002] Exploration is the first-mover kit adopter
+
+- status: decided
+- date: 2026-07-09
+- verdict: exploration adopted substrate-kit v1.2.0 this session (first-mover);
+  mining verifies the engagement instead of re-adopting.
+- why: `docs/lanes.md` "Kit adoption — ONCE" — no `.substrate/` existed and the
+  mining lane had not started, so the exploration Project adopts once and the
+  second Project verifies `check --strict` green rather than a second adopt over a
+  live `.substrate/`.
+- provenance: ORDER 001; docs/lanes.md § Kit adoption — ONCE
+
+## [D-0003] Shared encounter interface defined by exploration; mining owns production
+
+- status: decided
+- date: 2026-07-09
+- verdict: exploration defines the public shared encounter-resolution seam
+  (`games/shared/encounter/interface.py`: `EncounterResolver` Protocol,
+  `EncounterRequest`/`EncounterOutcome`, `EncounterTrigger` GRID_ROAM/EXPLORE_ACTION/
+  CHAT_ACTIVITY) plus a deterministic reference resolver; mining owns the PRODUCTION
+  encounter core and replaces the reference impl via the Protocol.
+- why: claim-first shared code (docs/lanes.md); one resolution core serves all three
+  Q-0186 triggers. Exploration needs the seam now to build against; a reference impl
+  unblocks it without waiting for mining. Interface changes announced in both status
+  files in the same session they ship.
+- provenance: docs/lanes.md § games/shared claim-first; founding-plan-exploration §2
+
+## [D-0004] Survival D1 re-baseline — option (a), byte-identical wins
+
+- status: decided
+- date: 2026-07-09
+- verdict: re-baseline survival D1 to "Easy ≡ today's shipped per-game energy bars
+  (mining 60/1/10s, fishing 60/2/30s); the survival Energy axis only modifies those
+  bars for Medium/Hard — no third global energy bar." Recommend baking the
+  difficulty-aware energy contract into superbot-next's deferred D-0043 energy port.
+- why: energy shipped after the plan was written, making the old D1 ("Easy = no
+  energy, byte-identical") self-contradictory; option (a) preserves the byte-identical
+  pin, honors the owner's rule-of-three (no third energy system), and reuses the
+  shipped campfire loop (D3). Flagged decide-and-flag; recommendation stands unless
+  vetoed.
+- provenance: docs/design/survival-d1-rebaseline.md
+
+## [D-0005] Q-0087 reward caps are conservative in-band placeholders
+
+- status: decided
+- date: 2026-07-09
+- verdict: the catalog's per-tier reward ceilings (`games/exploration/quest/catalog.py`
+  `TIER_CAPS` / `GLOBAL_MAX`) are deliberately conservative, in-band placeholder
+  numbers, sim-pinned now, to be reconciled against superbot's real Q-0087 dual-track
+  band constants when those are imported.
+- why: the exact Q-0087 bands were not sourced into this repo; the engine must be
+  fully sim-pinned today. `catalog.py` is the single source of truth — change the caps
+  there and the balance-sim tests re-pin to whatever lands.
+- provenance: docs/design/quest-encounter-engine.md §5; catalog.py header
+
+## [D-0006] Q-0040 bounded-authority posture routed to the owner
+
+- status: decided
+- date: 2026-07-09
+- verdict: decided to ROUTE the Q-0040 bounded-authority decision to the owner
+  (⚑ needs-owner) — approve "Story Actions as the sole AI-emitted component; the
+  deterministic engine owns all amounts + all state mutation; every menu is hard-capped
+  in code" as the P3→P4 ship-gate. Recommend APPROVE; **awaiting owner sign-off**.
+- why: Q-0040's own scope names a bounded-authority decision as a required gate before
+  the D&D game ships; the deterministic substrate it depends on is now built and
+  sim-pinned, so this posture sign-off is the one remaining blocker. Recommended
+  because the model's worst case is a legal, capped, game-approved outcome.
+- provenance: docs/planning/dnd-story-game-plan.md § ⚑ needs-owner; Q-0040
+
+## [D-0007] Q-0040 bounded-authority posture ADOPTED under decide-and-flag
+
+- status: decided
+- date: 2026-07-09
+- supersedes: D-0006
+- verdict: the Q-0040 bounded-authority posture — "Story Actions as the sole
+  AI-emitted component; the deterministic engine owns all amounts + all state
+  mutation; every menu is hard-capped in code" — is ADOPTED now, decided-and-flagged
+  (vetoable), instead of parked awaiting owner sign-off.
+- why: the decision is reversible until the P3→P4 ship gate (nothing AI-emitted
+  executes before then), it carries the manager's and the lane's own APPROVE
+  recommendation, and the worst case is a legal, capped, engine-approved outcome —
+  the exact shape decide-and-flag exists for. The owner's veto window is the entire
+  P1–P3 build; a veto costs a posture doc edit, not rework of the deterministic
+  substrate (which is required under every posture).
+- provenance: owner wake-up order 2026-07-09 (self-unblock step); D-0006;
+  docs/planning/dnd-story-game-plan.md
+
+## [D-0008] Q-0087 cap reconciliation waits on an upstream ARTIFACT, not the owner
+
+- status: decided
+- date: 2026-07-09
+- supersedes: D-0005
+- verdict: flag (3) is reclassified off the needs-owner list. Verified against
+  menno420/superbot: Q-0087 defines a dual-track *philosophy* plus a simulation
+  methodology — the "bands" are future sim-output pinned tests
+  (docs/planning/rpg-survival-difficulty-design-2026-06-10.md, survival P0 harness),
+  not numeric constants that exist today. There is nothing for the owner to click;
+  reconciliation happens when superbot's survival P0 sim ships its pinned bands.
+  Until then `catalog.py` `TIER_CAPS`/`GLOBAL_MAX` stay the sim-pinned conservative
+  placeholders (D-0005's mechanism unchanged).
+- why: a flag that names a nonexistent artifact as "when available" reads as
+  owner-blocked when it is actually upstream-blocked; naming the real dependency
+  (superbot survival P0 bands) makes it actionable and removes a phantom owner item.
+- provenance: owner wake-up order 2026-07-09; superbot
+  docs/owner/maintainer-question-router.md § Q-0087; superbot
+  docs/planning/rpg-survival-difficulty-design-2026-06-10.md
+
+## [D-0009] Cross-lane CI gate installed (substrate-gate.yml) under decide-and-flag
+
+- status: decided
+- date: 2026-07-09
+- verdict: `.substrate/ci/substrate-gate.yml` is installed to
+  `.github/workflows/substrate-gate.yml` (exploration wake-up PR), resolving flag (4).
+  Two companion fixes land with it so the gate is born green on main: the
+  `docs/lanes.md` status badge and the D-0043 cross-repo stamp allowlist in
+  `.substrate/check-exceptions.yml`.
+- why: the flag parked installation on cross-lane coordination — but the mining
+  lane's own draft PR #4 ships the *identical* gate, i.e. both lanes independently
+  chose it; coordination is de facto complete. The gate is not a required branch
+  check (removal = one-file revert), has a control-only fast lane, and mining's #4/#5
+  rebase per ORDER 003 anyway. Vetoable by deleting the workflow file.
+- provenance: owner wake-up order 2026-07-09; mining draft PR #4 (same file);
+  control/status-exploration.md ⚑ (4)

@@ -8,17 +8,44 @@
 
 ## Stability baseline
 
-(Describe the accepted-stable baseline once established — what is known-good and
-should not be re-audited without a reported regression.)
+- Exploration P1 engine (`games/exploration/quest/`, 48 tests incl. balance-pin sim) and
+  the shared encounter seam (`games/shared/encounter/`) — merged #3, sim-pinned;
+  re-audit only on a reported regression or when D-0008's upstream bands arrive.
+- substrate-kit v1.2.0 engagement (adopted in #3; CI gate installed by the wake-up PR).
 
 ## In flight
 
-(Verify against live source control — this section is a dated snapshot.)
+(Verify against live source control — this section is a dated snapshot; 2026-07-09.)
+
+- **#8** — exploration wake-up: retro answers (ORDER 004) + project review + flag
+  disposition D-0007…D-0009 + first CI on the repo (substrate-gate.yml installed).
+- **#4 / #5** (mining lane, drafts) — kit adoption (loses per ORDER 003, rebase pending)
+  + pure mining domain port stacked on it.
+- Exploration next default (queued, no order needed): **P2 survival sim harness** on the
+  D-0004 option-(a) baseline.
 
 ## Recently shipped (newest first)
 
-(Merged work only, newest first.)
+- **#3** (2026-07-09) — exploration P1: substrate-kit v1.2.0 adoption (first-mover,
+  D-0002), deterministic quest/encounter engine + v1 bounded-menu catalog, shared
+  encounter interface (D-0003), D&D story-game plan, survival D1 re-baseline (D-0004).
+- **#7** (2026-07-09) — manager: gen-1 retro question set + ORDER 004 to both lanes.
+- **#6** (2026-07-09) — manager: ORDER 003 kit-adoption arbitration.
+- **#2** (2026-07-09) — manager: buildability maps + ORDER 002 to both lanes.
+- **#1** (2026-07-09) — manager: repo seed (founding plans, lanes contract, control files).
 
 ## Review rhythm
 
-Forward-only git: branch -> PR -> squash-merge; never force-push, never delete branches, never amend pushed history; push with git push -u origin <branch>. One PR per lane (plus shared paths you have claimed). Open a PR each session; owner-directed work auto-merges on green CI. Session enders: contribute one new idea, review the previous session, run a docs audit. The owner reviews mainly by reacting to what he sees and rarely blocks.
+Cross-agent review: another agent (or Project lane) verifies work against shipped source before it lands; the owner reacts to results rather than gating each step (decide-and-flag, not stop-and-wait). The second Project verifies kit engagement instead of re-adopting.
+
+## Lane docs, designs & plans (index)
+
+Read-path index into the two lanes' binding briefs, research, designs, and plans.
+Links are relative from this file.
+
+- **Cohabitation contract:** [`../docs/lanes.md`](lanes.md)
+- **Founding plans:** [`../docs/founding-plan-exploration.md`](founding-plan-exploration.md) · [`../docs/founding-plan-mining.md`](founding-plan-mining.md)
+- **Buildability maps (research):** [`../docs/research/buildability-map-exploration.md`](research/buildability-map-exploration.md) · [`../docs/research/buildability-map-mining.md`](research/buildability-map-mining.md)
+- **Designs:** [`../docs/design/quest-encounter-engine.md`](design/quest-encounter-engine.md) · [`../docs/design/survival-d1-rebaseline.md`](design/survival-d1-rebaseline.md)
+- **Plans:** [`../docs/planning/dnd-story-game-plan.md`](planning/dnd-story-game-plan.md)
+- **Retro (gen-1 self-review):** [`retro/README.md`](retro/README.md) · [`retro/self-review-exploration-2026-07-09.md`](retro/self-review-exploration-2026-07-09.md) · [`retro/project-review-2026-07-09-exploration.md`](retro/project-review-2026-07-09-exploration.md)

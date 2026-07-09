@@ -25,7 +25,7 @@ orient -> claim -> born-red card -> build -> verify -> close
 3. **Born-red card** — open the session record first, marked in-progress, so
    the work is visible while it is still incomplete.
 4. **Build** — the goal, end-to-end.
-5. **Verify** — run `python3 bootstrap.py check --strict` before shipping.
+5. **Verify** — run `python3.10 -m pytest (deterministic game-core sims must pass, seed-reproducible) and python3 bootstrap.py check --strict (docs + session-log hygiene). No live CI workflow yet — verification runs locally per lane.` before shipping.
 6. **Close** — flip the card complete; log the session, groom one idea, hand
    off.
 

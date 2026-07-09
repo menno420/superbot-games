@@ -7,7 +7,7 @@
 
 ## Layers & import rules
 
-Games ship as Discord-free plugin packages under games/<domain>/. Layers: (1) pure domain core (grid, energy, wear, skills, structures, workshop, market, rewards, titles, loadouts, character) — seedable state machines with injected RNG/clock and no I/O; (2) a workflow layer mirroring superbot's *_workflow audited op seams; (3) a thin host adapter left open to dock onto superbot-next's manifest/plugin contract. games/shared/ holds the shared encounter engine (claim-first). Import rule: domain core imports stdlib only; workflow imports core; adapter imports workflow; nothing in the package imports discord.
+Games ship as plugin packages under games/<lane>/** (game-mining, game-exploration); shared engine code lives under games/shared/** (encounter engine, shared domain) and is claim-first. Each game's core is deterministic, seedable, and sim-tested — the core owns all outcomes; presentation is a separate, thin layer. Packages are pure-domain, built against the old superbot code as oracle, and consumed by the rebuilt bot menno420/superbot-next via its manifest/plugin contract.
 
 | Layer | May import | Must NOT import |
 |---|---|---|
@@ -37,5 +37,5 @@ believing the other covers it.
 ## Verifying a change
 
 ```
-python3 bootstrap.py check --strict
+python3.10 -m pytest (deterministic game-core sims must pass, seed-reproducible) and python3 bootstrap.py check --strict (docs + session-log hygiene). No live CI workflow yet — verification runs locally per lane.
 ```

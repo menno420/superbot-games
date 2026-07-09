@@ -22,7 +22,7 @@ queue bounds, cache coherence.)
 
 ## Mutation seam
 
-Domain state mutates only through pure, transactional state-machine ops in the workflow layer, mirroring superbot's mining_workflow audited op seams (RS02/Q-0071): focused reversible single-domain changes take the direct audited op; compound/generated changes take the draft/operation-row lane. No Discord or host writes live in the domain core. When docked, every host-side write routes through superbot-next's manifest plugin contract — no direct DB writes from plugin code.
+All game outcomes flow through each package's deterministic, seedable core — no ad-hoc RNG and no state writes outside it. Every outcome is reproducible from its seed and covered by sim tests; a change that bypasses the deterministic core is a blocker.
 
 ## Failure modes
 

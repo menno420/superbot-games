@@ -2,13 +2,19 @@
 # verdict: accepted_risk (default) | false_positive
 - path: founding-plan-mining.md
   kind: stamp
-  reason: "D-0043 is a superbot-next decision; its ledger home is that repo, not this one. superbot-games only REFERENCES it in the seed founding-plan + buildability-map (both authored by the manager) — a cross-repo reference, not a local double-home the stamp rule guards against."
+  reason: "D-0043 is a superbot-next decision; its ledger home is that repo, not this one. superbot-games only REFERENCES it in the seed founding-plan + buildability-map (both authored by the manager) — a cross-repo reference, not a local double-home the stamp rule guards against. (Same triage as mining's draft #4; landed from the exploration wake-up pass so main's check --strict goes green.)"
   triaged: 2026-07-09
-  by: session-mining-adopt
+  by: session-exploration-wakeup
   verdict: false_positive
-- path: design/mining-plugin-layout.md
+- path: current-state.md
   kind: stamp
-  reason: "D-0042 and D-0043 are superbot-next decisions (grid g1-session seam / deep-systems successor port); their ledger home is that repo, not this one. The mining plugin-layout design doc REFERENCES them when mapping the pure core onto the superbot-next host contract — a cross-repo reference, not a local double-home the stamp rule guards against (same class as the founding-plan-mining.md entry above)."
+  reason: "Retro/audit docs (docs/retro/*) plus the living ledger cite decision ids as EVIDENCE LINKS (ORDER 004 requires tying every retro claim to a PR/commit/decision), not as second rule-homes; docs/decisions.md stays each entry's single home. The stale-copy risk the stamp rule guards is absent: retro docs are dated snapshots, and current-state.md is a living ledger already governed by its own drift discipline."
   triaged: 2026-07-09
-  by: session-mining-port
+  by: session-exploration-wakeup
+  verdict: false_positive
+- path: retro/project-review-2026-07-09-exploration.md
+  kind: stamp
+  reason: "Same triage as the current-state.md stamp entry above: the two dated retro/audit docs cross-cite decision ids as evidence links required by ORDER 004; docs/decisions.md remains the single home."
+  triaged: 2026-07-09
+  by: session-exploration-wakeup
   verdict: false_positive

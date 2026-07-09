@@ -52,5 +52,5 @@ decide-and-flag, PL-002 never-wait, PL-007 enforce-don't-exhort) and
 
 ## Drift & staleness
 
-- When a doc and a source file disagree: First substrate-kit adoption of superbot-games (kit v1.2.0). The adopt-time reds were the UNRENDERED banners on the planted doc templates; fixed by answering the content slots and running render --live. Standing edge flagged for the kit: the control/ heartbeat checker hardcodes control/status.md, while this repo's multi-Project extension uses per-lane control/status-mining.md and control/status-exploration.md — resolved locally by keeping control/status.md as an aggregate heartbeat pointer to the per-lane files.
-- Staleness review cadence: Fresh adoption on 2026-07-09 — nothing stale yet. Baseline: repo seeded (#1), buildability maps + ORDER 002 (#2); substrate-kit v1.2.0 adopted and engaged this session. Next: begin the deep-systems mining port (superbot-next's named successor port) against the pinned oracle (superbot disbot/utils/mining/ + services/mining_workflow.py), starting with package-layout design and the pure-domain core with tests.
+- When a doc and a source file disagree: the source file wins — fix the doc on sight, don't work around it.
+- Staleness review cadence: reviewed every session at close: update docs/current-state.md and the .sessions/ card, and reconcile any doc/ledger drift the moment it is spotted.

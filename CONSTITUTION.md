@@ -23,7 +23,7 @@
   a separate blocking question. Two payoffs, not one: it catches a misread
   before work happens, and the filled-in picture is itself new material the
   owner reasons against and redirects.
-- When a doc and a source file disagree: First substrate-kit adoption of superbot-games (kit v1.2.0). The adopt-time reds were the UNRENDERED banners on the planted doc templates; fixed by answering the content slots and running render --live. Standing edge flagged for the kit: the control/ heartbeat checker hardcodes control/status.md, while this repo's multi-Project extension uses per-lane control/status-mining.md and control/status-exploration.md — resolved locally by keeping control/status.md as an aggregate heartbeat pointer to the per-lane files.
+- When a doc and a source file disagree: the source file wins — fix the doc on sight, don't work around it.
 
 ## Autonomy rails — act vs. ask
 

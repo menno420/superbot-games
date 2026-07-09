@@ -8,11 +8,11 @@
 
 ## How the owner works
 
-The owner designs and visualizes but does not code; agents build, cross-checked by other agents. Decide-and-flag over route-up: decide reversible calls yourself with a one-line rationale and flag them — never wait, silence = consent. Goal comes first; constraints serve the goal; prefer the better implementation. Hard rail: no pay-to-win, free for everyone forever (Q-0039/Q-0190). Never hallucinate filler — if there is nothing useful to add, say so and why.
+The maintainer designs and visualizes the games; agents build them, cross-checked by other agents against shipped source. Decide-and-flag, never wait — reversible decisions are made with a one-line rationale and flagged for veto, silence means consent. Hard product rails: no pay-to-win; the deterministic, seedable core owns every outcome; forward-only git; stay within your lane.
 
 ## Review ritual
 
-Forward-only git: branch -> PR -> squash-merge; never force-push, never delete branches, never amend pushed history; push with git push -u origin <branch>. One PR per lane (plus shared paths you have claimed). Open a PR each session; owner-directed work auto-merges on green CI. Session enders: contribute one new idea, review the previous session, run a docs audit. The owner reviews mainly by reacting to what he sees and rarely blocks.
+Cross-agent review: another agent (or Project lane) verifies work against shipped source before it lands; the owner reacts to results rather than gating each step (decide-and-flag, not stop-and-wait). The second Project verifies kit engagement instead of re-adopting.
 
 ## Privacy note
 

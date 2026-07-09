@@ -9,35 +9,35 @@
   "graduation_proposed": false,
   "kit_version": "1.2.0",
   "last_compaction_session": 0,
-  "mode": "active",
+  "mode": "guided",
   "mode_history": [
     {
       "date": "2026-07-09",
-      "mode": "active",
+      "mode": "guided",
       "session": 0
     }
   ],
   "open_questions": [],
   "planted_doc_hashes": {
     ".session-journal.md": "8fbe1fc3b52a8c3005ce4d7e81ac758616628d80a6c386d08a0763e7081cbe5d",
-    "CONSTITUTION.md": "bf97b2fcf467d4fd78dd6360fe9e30889d00680fc91b3ae1fd9e0dc0e4ec9833",
+    "CONSTITUTION.md": "5e0656030ce0d23ebd385270c618a9899292cb086e0e529242ca87fef17fe9d6",
     "control/inbox.md": "ec3374c42d06dc2192b7fd94db357bfab16a932f10d1c718b2b0bd6f2199aacb",
     "control/status.md": "789f674180cad9a8bc71eb68616edf8f71b343d5e8e161f52fefe31938a53493",
-    "docs/AGENT_ORIENTATION.md": "fef938401b80e49b67ec85f3312645f0b621d4f9b82ef5df26f188b1a0fb55b5",
-    "docs/ai-project-workflow.md": "3167a570306f38cc0f2eae4195627a5ef43bda3f20e70676b41c5d7eb38fc687",
-    "docs/architecture.md": "4b72fceba2e78627ca7d27c7579c0bf1c082b0aa899fb8c935323ca2a31a3fe3",
-    "docs/collaboration-model.md": "cd7a3e2efd9d7034286f17717809009679f4cd0747fc554a200aa7fb334ff9f3",
-    "docs/current-state.md": "9e245849929ece33edc8b93578eff549ae9dd68f812c53663ddb65c5eea39b47",
+    "docs/AGENT_ORIENTATION.md": "04d8b4e3da16ed6d366cc77e6941b6d682993aa2cf190ac7e2bfbc80a9a59e97",
+    "docs/ai-project-workflow.md": "83b5231411732dde0a00ce4e8e66ec256197e4a64b5773fddba18a49981d027c",
+    "docs/architecture.md": "c7ba99f0171b7772ba74473200a82d3b8b033bee2646d6e57255017ad3b2787e",
+    "docs/collaboration-model.md": "786a0ea638576972b7b4f6105a707dd44884db3de9948fc15c0616fc5506f29d",
+    "docs/current-state.md": "c62376ca0dd041b65029202e453435e2f28707eff29659cbc9a0ca5421ea81be",
     "docs/decisions.md": "699ce68dac278839c1d85bbee57faf16bf134340c45658d85064b67a8a291e3a",
     "docs/helper-policy.md": "5f8f4a2473de25b5b7cefc29ee2c6f45ff0f9cbef737ba171145d60fb7184dca",
     "docs/ideas/README.md": "d9bc71ad180855d8891ef5f12b9cb3525a045f3222f103ea52cf1eb09250f961",
-    "docs/owner-profile.md": "ce1b0fc1064ecb806d1d8d85a256ae9261ac2b69a6ceb34373799169efaed504",
-    "docs/ownership.md": "6e5445df019de3b9eb49e56d38a05be0f4aa6af229d6ba48061479f57c629258",
+    "docs/owner-profile.md": "7d04fbf582e7e5d31c63702ce411b61a7a073b0740b18b7b8b1f59e935f73651",
+    "docs/ownership.md": "f43bc50b7de3b8fef3f4d4fbe75cf4fc820bcba3f70e7400a16a734fbc2d32f7",
     "docs/question-router.md": "c643362fc9f7234217ca1c870fe06feceefcd434b7d603f975d78cbad5fa056b",
     "docs/repo-navigation-map.md": "68fab181453f1f6098dd7e31340762a5cb81017481cbc06dae38a8b025af62eb",
-    "docs/runtime_contracts.md": "1e3f2e5f905aa45be6cf8d34b03e021d8a789cb87133ff8a6ec44cbe6d17b4e6"
+    "docs/runtime_contracts.md": "29f06431d95240f102f5396f8096fd96396c51d2190a8c6f56858e00e4914c1f"
   },
-  "project_id": "f8f1a3e065b0",
+  "project_id": "6b843e2240e9",
   "promotion_rights": "propose",
   "quiet_sessions": 0,
   "reflection_buffer": {
@@ -50,7 +50,7 @@
     "architecture_layers": {
       "question_id": "Q-004",
       "source": "user",
-      "value": "Games ship as Discord-free plugin packages under games/<domain>/. Layers: (1) pure domain core (grid, energy, wear, skills, structures, workshop, market, rewards, titles, loadouts, character) \u2014 seedable state machines with injected RNG/clock and no I/O; (2) a workflow layer mirroring superbot's *_workflow audited op seams; (3) a thin host adapter left open to dock onto superbot-next's manifest/plugin contract. games/shared/ holds the shared encounter engine (claim-first). Import rule: domain core imports stdlib only; workflow imports core; adapter imports workflow; nothing in the package imports discord."
+      "value": "Games ship as plugin packages under games/<lane>/** (game-mining, game-exploration); shared engine code lives under games/shared/** (encounter engine, shared domain) and is claim-first. Each game's core is deterministic, seedable, and sim-tested \u2014 the core owns all outcomes; presentation is a separate, thin layer. Packages are pure-domain, built against the old superbot code as oracle, and consumed by the rebuilt bot menno420/superbot-next via its manifest/plugin contract."
     },
     "doc_roots": {
       "question_id": "Q-007",
@@ -60,37 +60,32 @@
     "drift_resolution": {
       "question_id": "Q-011",
       "source": "user",
-      "value": "First substrate-kit adoption of superbot-games (kit v1.2.0). The adopt-time reds were the UNRENDERED banners on the planted doc templates; fixed by answering the content slots and running render --live. Standing edge flagged for the kit: the control/ heartbeat checker hardcodes control/status.md, while this repo's multi-Project extension uses per-lane control/status-mining.md and control/status-exploration.md \u2014 resolved locally by keeping control/status.md as an aggregate heartbeat pointer to the per-lane files."
-    },
-    "integration_mode": {
-      "question_id": "Q-001",
-      "source": "user",
-      "value": "active"
+      "value": "the source file wins \u2014 fix the doc on sight, don't work around it."
     },
     "mutation_seam": {
       "question_id": "Q-009",
       "source": "user",
-      "value": "Domain state mutates only through pure, transactional state-machine ops in the workflow layer, mirroring superbot's mining_workflow audited op seams (RS02/Q-0071): focused reversible single-domain changes take the direct audited op; compound/generated changes take the draft/operation-row lane. No Discord or host writes live in the domain core. When docked, every host-side write routes through superbot-next's manifest plugin contract \u2014 no direct DB writes from plugin code."
+      "value": "All game outcomes flow through each package's deterministic, seedable core \u2014 no ad-hoc RNG and no state writes outside it. Every outcome is reproducible from its seed and covered by sim tests; a change that bypasses the deterministic core is a blocker."
     },
     "new_area_ownership": {
       "question_id": "Q-013",
       "source": "user",
-      "value": "New games/mining/** code is owned by the mining Project. New games/shared/** code is claim-first (claim before touching; any public-surface change is announced in BOTH status files the same session). New docs default to the lane that authored them; genuinely cross-lane docs are common ground, edited additively by section."
+      "value": "A new game or area is claimed as a lane in docs/lanes.md and gets its own games/<lane>/** package with its founding-plan and control/status files; shared engine code lands under games/shared/** on the claim-first path."
     },
     "owner_profile": {
       "question_id": "Q-008",
       "source": "user",
-      "value": "The owner designs and visualizes but does not code; agents build, cross-checked by other agents. Decide-and-flag over route-up: decide reversible calls yourself with a one-line rationale and flag them \u2014 never wait, silence = consent. Goal comes first; constraints serve the goal; prefer the better implementation. Hard rail: no pay-to-win, free for everyone forever (Q-0039/Q-0190). Never hallucinate filler \u2014 if there is nothing useful to add, say so and why."
+      "value": "The maintainer designs and visualizes the games; agents build them, cross-checked by other agents against shipped source. Decide-and-flag, never wait \u2014 reversible decisions are made with a one-line rationale and flagged for veto, silence means consent. Hard product rails: no pay-to-win; the deterministic, seedable core owns every outcome; forward-only git; stay within your lane."
     },
     "ownership_model": {
       "question_id": "Q-006",
       "source": "user",
-      "value": "Per-lane ownership (docs/lanes.md): the mining Project owns games/mining/** + docs/founding-plan-mining.md + control/status-mining.md; exploration owns games/exploration/** + its plan + status file. games/shared/** is claim-first via docs/claims/<project>-<topic>.md. control/inbox-mining.md and control/inbox-exploration.md are manager-only (one writer per file). Persistent data stores (mining_inventory, mining_player_state, ...) are owned by superbot-next's audited write lanes once the host contract lands; until then the pure-domain packages own only in-memory reproducible state."
+      "value": "Two autonomous Projects cohabit here (game-mining, game-exploration) under the binding lane contract docs/lanes.md. Each lane exclusively owns its games/<lane>/** package plus its founding-plan and status files; a PR touches only its own lane. Code under games/shared/** is claim-first \u2014 create docs/claims/<project>-<topic>.md before editing, delete it at session close, and announce any shared-interface change in both control/status files. Git is forward-only."
     },
     "primary_language": {
       "question_id": "Q-003",
       "source": "user",
-      "value": "Python 3.10 (Discord-free pure-domain game plugin packages; oracle superbot is Python 3.10)"
+      "value": "Python 3.10"
     },
     "project_name": {
       "question_id": "Q-002",
@@ -100,24 +95,23 @@
     "review_ritual": {
       "question_id": "Q-010",
       "source": "user",
-      "value": "Forward-only git: branch -> PR -> squash-merge; never force-push, never delete branches, never amend pushed history; push with git push -u origin <branch>. One PR per lane (plus shared paths you have claimed). Open a PR each session; owner-directed work auto-merges on green CI. Session enders: contribute one new idea, review the previous session, run a docs audit. The owner reviews mainly by reacting to what he sees and rarely blocks."
+      "value": "Cross-agent review: another agent (or Project lane) verifies work against shipped source before it lands; the owner reacts to results rather than gating each step (decide-and-flag, not stop-and-wait). The second Project verifies kit engagement instead of re-adopting."
     },
     "staleness_review": {
       "question_id": "Q-012",
       "source": "user",
-      "value": "Fresh adoption on 2026-07-09 \u2014 nothing stale yet. Baseline: repo seeded (#1), buildability maps + ORDER 002 (#2); substrate-kit v1.2.0 adopted and engaged this session. Next: begin the deep-systems mining port (superbot-next's named successor port) against the pinned oracle (superbot disbot/utils/mining/ + services/mining_workflow.py), starting with package-layout design and the pure-domain core with tests."
+      "value": "reviewed every session at close: update docs/current-state.md and the .sessions/ card, and reconcile any doc/ledger drift the moment it is spotted."
     },
     "verify_command": {
       "question_id": "Q-005",
       "source": "user",
-      "value": "python3 bootstrap.py check --strict"
+      "value": "python3.10 -m pytest (deterministic game-core sims must pass, seed-reproducible) and python3 bootstrap.py check --strict (docs + session-log hygiene). No live CI workflow yet \u2014 verification runs locally per lane."
     }
   },
   "slots": {
     "architecture_layers": "filled",
     "doc_roots": "filled",
     "drift_resolution": "filled",
-    "integration_mode": "filled",
     "mutation_seam": "filled",
     "new_area_ownership": "filled",
     "owner_profile": "filled",
