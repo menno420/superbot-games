@@ -162,28 +162,36 @@ skill caps 10/20, luck rarity boosts, etc.) carry over exactly. Any future tunin
 fresh simulated playthrough committed alongside the change (the mining economy sim ports as
 part of the workflow slice, per ORDER 002 default #3).
 
-## 7. Grid-encounters extension seam (designed, not implemented)
+## 7. Grid-encounters extension seam (first slice IMPLEMENTED)
 
 The **first named-next extension** (Q-0198: depth-gated sparse encounters, loot/flavour-first,
-combat a fast-follow reusing the creature/deathmatch engine, **live-roll** not per-cell
-deterministic). The substrate is already in place and ported:
+combat a fast-follow reusing the creature/deathmatch engine). **The first slice has shipped** —
+full design, sim-pin table, and evidence live in **`docs/design/mining-grid-encounters.md`**;
+this section is the seam summary.
 
 - `grid.py` models each `(x, y, z)` cell as a pure function of world seed + coordinates:
   `cell_at(seed, x, y, z) -> Cell(feature: CellFeature, featured_resource, richness)`, where
   `CellFeature ∈ {NORMAL, RICH, BARREN, TREASURE}`. The grid itself stays **seed-deterministic**
   (splitmix64 hash, process-independent — unit-tested including a subprocess check).
-- **The seam:** encounters are a **separate live-roll** layered *on top of* the deterministic
-  grid, not a new `CellFeature` value (Q-0198 says the grid stays seed-deterministic but
-  encounters differ between two players' runs). The extension adds an encounter resolver
-  alongside `apply_cell_to_loot` — keyed off `(cell, biome, loadout)` with a depth threshold
-  (default z ≥ 10), per-action chance (~8%), and cooldown (~5 actions), all config-driven and
-  sim-tuned. It reuses `exploration.py`'s proven pattern (`ExploreOutcome`/`Rarity`/weighted
-  `resolve` already model hazards, tool-gating, rarity, loadout requirements) and
-  `equipment.EffectiveStats` `damage`/`defense`/`max_health` (combat stats already exist),
-  returning a pure result the workflow commits. **Loot/flavour archetypes first** (rich vein /
-  hazard costing energy / coin cache); combat resolution via navigator buttons is the fast-follow.
-- This session **describes** the seam only; the three depth-band archetypes are authored +
-  sim-passed in a later slice (ORDER 002 default #3). No encounter code ships now.
+- **The seam (shipped):** `games/mining/core/encounters.py` layers an encounter resolver
+  *on top of* the deterministic grid — `resolve(seed, cell, stats, energy, rng)` →
+  `EncounterOutcome`. Encounter *kind* is keyed on `CellFeature` (NORMAL→hazard, RICH→rich
+  vein, TREASURE→loot cache, BARREN→none); it is **sparse** (a per-action trigger, hazard
+  chance depth-scaled ~7%→cap 25%). It reuses `equipment.EffectiveStats`
+  `damage`/`defense`/`max_health` for single-exchange hazard combat and draws rewards from the
+  existing ore/depth tables (no parallel economy), returning a pure result the workflow commits.
+- **Live-roll vs deterministic — reconciled.** Q-0198 wants encounters to differ between two
+  players' runs (live-roll). The resolver honours that *and* stays testable: `rng=None` derives a
+  deterministic stream from the grid's `(seed,x,y,z)` splitmix64 convention (reproducible), while
+  a host injects its **own** `rng` (seeded with player/action entropy) for the live-roll variance.
+  Determinism is the default's property, not a constraint on the host.
+- **Sim-pinned (new design, not oracle-ported).** Every balance number is justified by
+  `games/mining/sim/encounters_sim.py` (276k-action sweep): ~11.6% encounter rate, a depth×gear
+  danger gradient (bare miner clears the surface, is overwhelmed in the deep; earned gear never
+  loses), no pay-to-win. Table + evidence: `mining-grid-encounters.md` §5.
+- **Deferred to later slices:** multi-turn combat depth, the stateful hard depth-gate + cooldown
+  (a host/workflow concern), and host wiring (navigator button / `ResultRender` + the audited
+  apply-op). See `mining-grid-encounters.md` §7.
 
 ## 8. Verification
 

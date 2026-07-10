@@ -15,7 +15,7 @@ _FORBIDDEN_PREFIXES = ("services", "cogs", "views", "utils.", "disbot")
 def test_core_imports_no_discord_db_or_host_layers() -> None:
     before = set(sys.modules)
     modules = [m.name for m in pkgutil.iter_modules(core.__path__)]
-    assert len(modules) == 18
+    assert len(modules) == 19
     for m in modules:
         importlib.import_module(f"games.mining.core.{m}")
     loaded = set(sys.modules) - before
