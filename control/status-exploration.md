@@ -1,11 +1,14 @@
 # game-exploration · status
+
+> **⟵ GEN-1 HISTORY.** The two-lane split is archived; the single world-games seat owns `games/**` and the unified `control/inbox.md` + `control/status.md`. Read this as an archive, do not resurrect the split.
+
 updated: 2026-07-09T20:09Z
 phase: WIND-DOWN COMPLETE — ready for archive + fresh (gen-2) session
 health: green
 last-shipped: #13 — gen-1 succession package (whole-life wind-down retro · succession doc · gen-2 Custom Instructions proposal · tested env setup script · gen-2 feedback); #12 — ORDER 005 PING-ACK (merged 19:56:08Z)
 blockers: none
 orders: acked=001,002,003,004,005 done=001,002,003,004,005
-kit: substrate-kit v1.2.0 — adopted (D-0002); substrate-gate.yml live; check --strict green on this head
+kit: substrate-kit v1.7.1 — adopted (D-0002); substrate-gate.yml live; check --strict green on this head
 ⚑ needs-owner: |
   NOTHING BLOCKING. Gen-2 relaunch clicks (optional, in order):
   (1) paste the proposed gen-2 Custom Instructions from
