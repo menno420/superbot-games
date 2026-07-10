@@ -55,3 +55,8 @@ jobs:
           card="$(git diff --name-only --diff-filter=d "$range" -- '.sessions/*.md' ':!.sessions/README.md' 2>/dev/null | tail -1)"
           echo "session gate card: ${card:-<none - mtime fallback>}"
           python3 bootstrap.py check --strict --require-session-log ${card:+--session-log "$card"}
+      - name: test suite (pure-domain pytest — the gate ran zero tests before this step)
+        if: steps.lane.outputs.control_only != 'true'
+        run: |
+          python3 -m pip install --quiet pytest
+          python3 -m pytest tests/ -q
