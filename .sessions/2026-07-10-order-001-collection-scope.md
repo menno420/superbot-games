@@ -1,6 +1,6 @@
 # 2026-07-10 — ORDER 001: unify seat + fix pytest collection scope
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 
 📊 Model: Claude Opus · 2026-07-10T23:55:47Z · one-shot seat-unification + CI collection-scope fix
 
@@ -35,4 +35,19 @@ idea) applies here verbatim; this session pays that debt down with a collected-c
 instead of trusting the path list to stay complete.
 
 ## What shipped
-_(placeholder — filled at close-out)_
+1. **CI collection-scope fix + count floor (ORDER 001 P0)** — `.github/workflows/tests.yml`
+   now collects `tests/` **and** `games/exploration/tests/` and guards a 121-count floor
+   (73 + 48); a dropped/renamed suite trips `::error::` instead of silently shrinking
+   coverage. Before this the gate ran `pytest tests/ -q` and saw only 73 of 121.
+2. **GEN-1 HISTORY banners** on the five lane files (`docs/lanes.md`,
+   `control/inbox-mining.md`, `control/inbox-exploration.md`, `control/status-mining.md`,
+   `control/status-exploration.md`) — the two-lane split is archived, not live.
+3. **Kit-drift fix** — the two archived status files recorded `substrate-kit v1.2.0`; the
+   tree is on v1.7.1, corrected in place.
+4. **Single-seat reality** — root `README.md` rewritten to one seat owning `games/**` and
+   the unified `control/` bus (Q-0267 theme-readiness), and `control/status.md` converted
+   from the gen-1 pointer stub into the real unified status.
+
+Local test evidence: `python3 -m pytest tests/ games/exploration/tests/ -q` → **121 passed
+in 3.54s**; the count-floor pipeline printed `collected tests: 121` (floor passed).
+
