@@ -1,26 +1,36 @@
 # game-exploration · status
-updated: 2026-07-09T18:05Z
-phase: wake-up pass done — ORDER 004 retro answered; all four parked flags dispositioned; first CI installed; next default = P2 survival sim harness
+updated: 2026-07-09T20:09Z
+phase: WIND-DOWN COMPLETE — ready for archive + fresh (gen-2) session
 health: green
-last-shipped: #8 — self-review retro (all 24 QUESTIONS.md IDs) + project review + D-0007…D-0009 + substrate-gate.yml installed (first CI on the repo)
+last-shipped: #13 — gen-1 succession package (whole-life wind-down retro · succession doc · gen-2 Custom Instructions proposal · tested env setup script · gen-2 feedback); #12 — ORDER 005 PING-ACK (merged 19:56:08Z)
 blockers: none
-orders: acked=001,002,003,004 done=001,002,003,004
-kit: substrate-kit v1.2.0 — adopted (first-mover, won ORDER 003 arbitration); enforcement gate now INSTALLED (.github/workflows/substrate-gate.yml, D-0009); check --strict green on this head
+orders: acked=001,002,003,004,005 done=001,002,003,004,005
+kit: substrate-kit v1.2.0 — adopted (D-0002); substrate-gate.yml live; check --strict green on this head
 ⚑ needs-owner: |
-  NOTHING BLOCKING. The four previously-parked flags are dispositioned under decide-and-flag
-  (veto = react; silence = consent): (1) Q-0040 posture ADOPTED — D-0007, veto window open
-  until the P3→P4 ship gate; (2) survival D1 option (a) confirmed adopted — D-0004; (3) Q-0087
-  caps reclassified: wait on superbot's future survival-P0 sim bands, NOT on the owner — D-0008;
-  (4) cross-lane CI gate INSTALLED — D-0009 (mining's #4 ships the identical file; revert = veto).
-  Remaining owner-only items (optional, click-by-click in docs/retro/project-review-2026-07-09-exploration.md §e):
-  merged-branch deletion housekeeping (agents get 403 on branch deletion); the PR #8 merge click
-  ONLY IF the lane's own squash-merge attempt failed (the PR + review doc record the exact error if so).
+  NOTHING BLOCKING. Gen-2 relaunch clicks (optional, in order):
+  (1) paste the proposed gen-2 Custom Instructions from
+  docs/gen2-custom-instructions-exploration.md §B into the relaunched Project (agents
+  cannot edit Project settings); (2) create the wake routine — relaunch starts Class A
+  hourly per the lane's gen-2 feedback §3 (the measured ORDER-005 pickup without a
+  routine was ~2h); (3) branch-deletion housekeeping (agents 403 on branch delete):
+  claude/exploration-ping-ack-005, claude/exploration-wind-down-2026-07-09 (after #13
+  merges), claude/exploration-wakeup-2026-07-09, plus the older merged branches listed
+  in docs/retro/project-review-2026-07-09-exploration.md §e — do NOT delete
+  mining/port-pure-domain or mining/grid-encounters (live mining drafts #5/#11);
+  (4) the #13 merge click ONLY IF this session's own merge-on-green failed (the PR
+  records the exact error if so). Standing veto windows unchanged: D-0007 (Q-0040
+  posture, open until the P3→P4 gate), D-0009 (CI gate; revert = veto).
 notes: |
-  SHARED INTERFACE ANNOUNCEMENT (docs/lanes.md, standing): the public shared encounter-resolution seam is
-  games/shared/encounter/interface.py (EncounterResolver Protocol + EncounterRequest/Outcome + EncounterTrigger:
-  GRID_ROAM/EXPLORE_ACTION/CHAT_ACTIVITY), deterministic reference resolver included. Mining owns the PRODUCTION
-  core and replaces the reference impl via the Protocol — coordinate before changing the interface.
-  RETRO: docs/retro/self-review-exploration-2026-07-09.md (ORDER 004, all IDs) +
-  docs/retro/project-review-2026-07-09-exploration.md (state · agent audit · efficiency · owner actions · continuation).
-  NEXT DEFAULT (queued, no order needed): P2 survival sim harness on the D-0004 option-(a) baseline —
-  it also produces the pinned bands that retire D-0008's placeholder caps in catalog.py.
+  GEN-1 CLOSED. Succession read order for the next session: docs/succession-exploration.md
+  (first-10-minutes files, walking-skeleton check, known walls with exact error text).
+  Whole-life retro: docs/retro/project-review-wind-down-2026-07-09-exploration.md.
+  QUEUE AT CLOSE — done: P0+P1 (#3), wake-up audit + first CI (#8), ORDERs 001–005;
+  in-flight: nothing after #13; NEXT DEFAULT (order-free, gen-2 first real session):
+  P2 survival sim harness on the D-0004 option-(a) baseline
+  (docs/design/survival-d1-rebaseline.md) — it also produces the pinned bands that
+  retire D-0008's placeholder caps in games/exploration/quest/catalog.py.
+  SHARED INTERFACE ANNOUNCEMENT (standing, docs/lanes.md): the public shared
+  encounter seam is games/shared/encounter/interface.py (EncounterResolver Protocol +
+  EncounterRequest/Outcome + EncounterTrigger GRID_ROAM/EXPLORE_ACTION/CHAT_ACTIVITY);
+  mining owns the PRODUCTION core and replaces the reference impl via the Protocol —
+  coordinate before changing the interface.
