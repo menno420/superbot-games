@@ -38,8 +38,17 @@ jobs:
         if: steps.lane.outputs.control_only != 'true'
         with:
           python-version: "3.x"
-      - name: test suite (pure-domain pytest — the gate ran zero tests before this step)
+      - name: test suite (pure-domain pytest — all suites; count-floor guarded)
         if: steps.lane.outputs.control_only != 'true'
         run: |
           python3 -m pip install --quiet pytest
-          python3 -m pytest tests/ -q
+          # ORDER 001 count floor: every pure-domain suite must stay collected.
+          # 73 (tests/) + 48 (games/exploration/tests/) = 121 at this commit; a
+          # dropped/renamed suite trips this floor instead of silently shrinking coverage.
+          COLLECTED=$(python3 -m pytest tests/ games/exploration/tests/ --collect-only -q 2>/dev/null | grep -cE '::')
+          echo "collected tests: $COLLECTED"
+          if [ "$COLLECTED" -lt 121 ]; then
+            echo "::error::pytest collected $COLLECTED tests, below floor 121 — a suite is not being collected"
+            exit 1
+          fi
+          python3 -m pytest tests/ games/exploration/tests/ -q
