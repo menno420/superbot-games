@@ -7,7 +7,7 @@ description: "Run the project's full verification before pushing and report what
 
 Prove a change is good before pushing superbot-games.
 
-1. Run `${verify_command}` — the project's full verification (tests + lint/types).
+1. Run `python3.10 -m pytest (deterministic game-core sims must pass, seed-reproducible) and python3 bootstrap.py check --strict (docs + session-log hygiene). No live CI workflow yet — verification runs locally per lane.` — the project's full verification (tests + lint/types).
 2. Run `bootstrap check --strict` — doc + session-log hygiene.
 3. Report every failure with the exact command to reproduce it.
 4. Do NOT push on red — green here should mean green in CI.
