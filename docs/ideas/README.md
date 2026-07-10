@@ -43,3 +43,8 @@ frontmatter keeps the score.
 ## Backlog
 
 (Captured ideas, each with a state and a next destination — none left at `raw`.)
+
+- [`shared-deterministic-rng-seam-2026-07-10.md`](shared-deterministic-rng-seam-2026-07-10.md) —
+  `captured` → quick-win lane (shared ground: claim first, ONE executor): extract mining's
+  splitmix64 convention into `games/shared/rng.py` so every game plugin gets audited,
+  subprocess-stable determinism from one implementation.
