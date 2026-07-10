@@ -37,3 +37,14 @@
 - Aggregate `control/status.md` two-writer risk: the kit hardcodes a single `control/status.md`,
   but this repo runs per-lane status files. Owner: take the upstream kit fix or formalize the
   aggregate as manager-written.
+
+## Gen-1 close-out (2026-07-10) — additive; the snapshot above is historical
+- **All mining PRs are MERGED on main** (verified 2026-07-10): #5 (pure domain), #11 (grid-encounters),
+  #14 (succession package), #15 (final status). The PARKED-awaiting-owner-merge section above is now
+  historical — the merge wall was cleared by direct owner authorization; nothing of the lane's remains open.
+- **ROUTINE STATE — NOT ARMED.** No scheduler tool was available this session
+  ("No such tool available: mcp__claude-code-remote__send_later"), so no timed self-wake was scheduled.
+  The next mining wake is **owner-initiated or webhook-driven (PR events)** — not a promised timer.
+- **NEXT resume items (1–3) confirmed present above** and unchanged: (1) mint parity goldens;
+  (2) `games/mining/workflow/` audited-op seam; (3) superbot-next Layer-3 `SubsystemManifest` host
+  adapter — verify the plugin/manifest contract in superbot-next FIRST before docking.
