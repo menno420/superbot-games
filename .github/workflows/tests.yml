@@ -1,0 +1,45 @@
+# Host carve-out relocated out of the kit-owned substrate-gate.yml.
+# Since kit PR #130 the live gate is kit-owned and regenerated on every
+# adopt/upgrade pass — hand edits there are overwritten by design; host
+# carve-outs go in a separate workflow file (this one). The pytest step
+# below is the repo's own addition from PR #16 ("ci: substrate-gate runs
+# the pure-domain test suite"), moved here verbatim during the
+# v1.2.0 → v1.7.0 kit upgrade so the gate refresh doesn't drop test CI.
+# Same control-fast-lane short-circuit as the gate: heartbeat/inbox
+# commits skip the suite but the job still reports green.
+name: tests
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: control fast lane (control/**-only diff short-circuits green)
+        id: lane
+        run: |
+          if [ -n "${{ github.base_ref }}" ]; then
+            range="origin/${{ github.base_ref }}...HEAD"
+          else
+            range="${{ github.event.before }}..${{ github.sha }}"
+          fi
+          files="$(git diff --name-only "$range" 2>/dev/null || true)"
+          control_only=false
+          if [ -n "$files" ] && [ -z "$(printf '%s\n' "$files" | grep -v '^control/')" ]; then
+            control_only=true
+          fi
+          echo "control_only=$control_only" >> "$GITHUB_OUTPUT"
+          echo "control-only diff: $control_only"
+      - uses: actions/setup-python@v5
+        if: steps.lane.outputs.control_only != 'true'
+        with:
+          python-version: "3.x"
+      - name: test suite (pure-domain pytest — the gate ran zero tests before this step)
+        if: steps.lane.outputs.control_only != 'true'
+        run: |
+          python3 -m pip install --quiet pytest
+          python3 -m pytest tests/ -q

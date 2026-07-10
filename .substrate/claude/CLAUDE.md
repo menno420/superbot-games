@@ -1,9 +1,3 @@
-> ⚠️ **UNRENDERED SLOTS BELOW — run `python3 bootstrap.py ask`.**
-> Every `${...}` token in this file is an unfilled interview slot, not
-> project truth. Fill: `bootstrap answer <slot> <value...>`, then
-> `bootstrap render --live` (fills in place and removes this banner).
-> Prose without `${...}` tokens is live guidance already.
-
 # superbot-games — agent working agreement
 
 > **Status:** `binding`
@@ -14,29 +8,33 @@
 
 ## What this project is
 
-superbot-games is built in ${primary_language}.
+superbot-games is built in Python 3.10.
 
 ## Orientation — read first, in order
 
 1. This file — the working agreement.
 2. `docs/current-state.md` — what is true right now.
-3. `docs/AGENT_ORIENTATION.md` — the task-specific reading router.
+3. `docs/CAPABILITIES.md` — what sessions here CAN and CANNOT do (verified).
+   Never declare a wall or a missing credential without its discovery rule:
+   check the file → check the env → attempt once + capture the exact error →
+   append the finding same session.
+4. `docs/AGENT_ORIENTATION.md` — the task-specific reading router.
 
 ## Architecture — layers & import rules
 
-${architecture_layers}
+Games ship as plugin packages under games/<lane>/** (game-mining, game-exploration); shared engine code lives under games/shared/** (encounter engine, shared domain) and is claim-first. Each game's core is deterministic, seedable, and sim-tested — the core owns all outcomes; presentation is a separate, thin layer. Packages are pure-domain, built against the old superbot code as oracle, and consumed by the rebuilt bot menno420/superbot-next via its manifest/plugin contract.
 
 ## Verifying a change
 
 Run before every push:
 
 ```
-${verify_command}
+python3.10 -m pytest (deterministic game-core sims must pass, seed-reproducible) and python3 bootstrap.py check --strict (docs + session-log hygiene). No live CI workflow yet — verification runs locally per lane.
 ```
 
 ## How the maintainer works
 
-${owner_profile}
+The maintainer designs and visualizes the games; agents build them, cross-checked by other agents against shipped source. Decide-and-flag, never wait — reversible decisions are made with a one-line rationale and flagged for veto, silence means consent. Hard product rails: no pay-to-win; the deterministic, seedable core owns every outcome; forward-only git; stay within your lane.
 
 ## Workflow adoption
 
