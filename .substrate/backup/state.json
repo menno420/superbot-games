@@ -7,7 +7,7 @@
     "soft_target_sessions": 50
   },
   "graduation_proposed": false,
-  "kit_version": "1.2.0",
+  "kit_version": "1.7.0",
   "last_compaction_session": 0,
   "mode": "guided",
   "mode_history": [
@@ -20,13 +20,14 @@
   "open_questions": [],
   "planted_doc_hashes": {
     ".session-journal.md": "8fbe1fc3b52a8c3005ce4d7e81ac758616628d80a6c386d08a0763e7081cbe5d",
-    "CONSTITUTION.md": "5e0656030ce0d23ebd385270c618a9899292cb086e0e529242ca87fef17fe9d6",
+    "CONSTITUTION.md": "53b7e67031ab9e4b91655ea918d837103ebc057dcf01bfcccb692329b978b4ab",
     "control/inbox.md": "ec3374c42d06dc2192b7fd94db357bfab16a932f10d1c718b2b0bd6f2199aacb",
     "control/status.md": "789f674180cad9a8bc71eb68616edf8f71b343d5e8e161f52fefe31938a53493",
     "docs/AGENT_ORIENTATION.md": "04d8b4e3da16ed6d366cc77e6941b6d682993aa2cf190ac7e2bfbc80a9a59e97",
+    "docs/CAPABILITIES.md": "405fb9cde893b2d176d3ba0bc36eec48404df5682b13efadd30af60d24326d5e",
     "docs/ai-project-workflow.md": "83b5231411732dde0a00ce4e8e66ec256197e4a64b5773fddba18a49981d027c",
     "docs/architecture.md": "c7ba99f0171b7772ba74473200a82d3b8b033bee2646d6e57255017ad3b2787e",
-    "docs/collaboration-model.md": "786a0ea638576972b7b4f6105a707dd44884db3de9948fc15c0616fc5506f29d",
+    "docs/collaboration-model.md": "fd30c1742f0d559b1b3d47f552705dd6647a676fc8d6ec88363a759ebb1172b4",
     "docs/current-state.md": "c62376ca0dd041b65029202e453435e2f28707eff29659cbc9a0ca5421ea81be",
     "docs/decisions.md": "699ce68dac278839c1d85bbee57faf16bf134340c45658d85064b67a8a291e3a",
     "docs/helper-policy.md": "5f8f4a2473de25b5b7cefc29ee2c6f45ff0f9cbef737ba171145d60fb7184dca",
