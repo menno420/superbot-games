@@ -80,7 +80,7 @@ it as a design doc when its turn comes; do not schedule it ahead of the port.
 - **P0** — kit adoption per inbox ORDER 001 (adopt only if `.substrate/` doesn't exist
   yet — kit adoption happens ONCE per lanes.md; otherwise verify engagement); lane claim;
   oracle code study (`utils/mining` + `mining_workflow`, module by module); package-layout
-  design doc.
+  design doc → [`design/mining-plugin-layout.md`](design/mining-plugin-layout.md).
 - **P1** — the pure-domain port, with tests: module by module, oracle-behavior-pinned,
   Discord-free.
 - **P2** — workflow seams mapped to the plugin contract (adapter boundary documented

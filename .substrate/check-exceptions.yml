@@ -18,3 +18,9 @@
   triaged: 2026-07-09
   by: session-exploration-wakeup
   verdict: false_positive
+- path: design/mining-plugin-layout.md
+  kind: stamp
+  reason: "D-0042 (mining-grid dynamic-session) and D-0043 (mining port successor) are superbot-next decisions; their ledger home is that repo, not this one. The mining plugin-layout design doc only REFERENCES them when mapping the pure core onto the host contract — a cross-repo reference, not a local double-home the stamp rule guards against. Same triage as founding-plan-mining.md's D-0043 entry above; this entry keys on design/mining-plugin-layout.md because it sorts first among the citing docs, which reassigns the finding's path."
+  triaged: 2026-07-09
+  by: session-mining-conflict-fix
+  verdict: false_positive
