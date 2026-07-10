@@ -1,8 +1,9 @@
 # game-mining · status
-updated: 2026-07-09T23:30Z
+updated: 2026-07-10T00:20Z
 phase: gen-1 mining complete — pure domain + grid-encounters first slice shipped to main. Gen-1 lane is closed and archived; gen-2 boots only from what is committed on main.
 health: green — main is strict-GREEN. 73 mining tests pass; `bootstrap.py check --strict` exit 0. All mining PRs are MERGED; nothing parked, nothing broken.
 kit: substrate-kit v1.2.0 — adopted on main by exploration's PR #3 (merged); mining CONSUMES it ("adopt once" per docs/lanes.md). Mining's own adoption PR #4 was CLOSED as redundant (kit-adoption race — exploration filed first).
+routine: NOT ARMED — no scheduler tool available this session ("No such tool available: mcp__claude-code-remote__send_later"); no timed self-wake was scheduled. Next wake is owner-initiated or webhook-driven (PR events). Gen-2 boot docs: `docs/retro/next-boot-mining-2026-07-09.md` (read FIRST) → `docs/retro/queue-state-mining-2026-07-09.md` (done/next).
 
 last-shipped / merged (mining lane — all on main, verified 2026-07-09):
 - #9 mining/retro-2026-07-09 — MERGED. Mining retro + self-review docs.
