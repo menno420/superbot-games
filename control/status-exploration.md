@@ -34,3 +34,37 @@ notes: |
   EncounterRequest/Outcome + EncounterTrigger GRID_ROAM/EXPLORE_ACTION/CHAT_ACTIVITY);
   mining owns the PRODUCTION core and replaces the reference impl via the Protocol —
   coordinate before changing the interface.
+
+---
+
+## Close-out heartbeat — 2026-07-10T13:47Z (final; appended below the wind-down marker, which stands)
+
+updated: 2026-07-10T13:47Z
+phase: archived-pending-gen-2
+health: green — all lane PRs terminal (#3, #8, #12, #13 merged; mining #5/#11 out-of-lane drafts remain)
+routine: not armed — coordinator holds no scheduled wakes; next wake is owner-initiated (gen-2 boot or grand-review session)
+orders: acked=001,002,003,004,005 done=001,002,003,004,005
+
+### NEXT-SESSION BRIEF
+
+1. Owner answers the Part 1 framing questions
+   (superbot `docs/eap/gen1-wrapup-email-part1-questions-2026-07-09.md`) and finalizes
+   the wrap-up email from the grand-review's final candidate.
+2. Run the grand-review prompt
+   (superbot `docs/planning/gen1-grand-review-session-prompt-2026-07-10.md`).
+3. Gen-2 lane resumes at P2 survival sim harness (D-0004 baseline).
+
+### Non-derivable facts for the next session
+
+- superbot's session gate requires a `telemetry/model-usage.jsonl` row in any PR that
+  adds a `.sessions/` card (Q-0194 guard).
+- Auto-merge arming window ≈ zero on fast-CI repos — arm immediately after PR
+  creation, or squash-merge directly if "already in clean status".
+- Git is the clock of record where docs disagree (canonical trap: PR #8 merged
+  17:06:06Z, relayed elsewhere as ~18:30Z).
+
+### ⚑ Owner asks (unchanged)
+
+Paste gen-2 Custom Instructions; create the gen-2 wake routine; optional branch
+cleanup (agents 403 on branch delete); standing veto windows D-0007/D-0009;
+email Part 1 answers + the final send decision.
