@@ -26,8 +26,8 @@ this session); do not resurrect the two-lane split.
   files; kit-version drift fix (v1.2.0 → v1.7.1) in the two archived status files; root
   README rewritten to single-seat reality (Q-0267 theme-readiness); this status file
   converted from the gen-1 pointer stub to unified status.
-- PR: #<n> <url>
-- CI: <run link>
+- PR: #24 https://github.com/menno420/superbot-games/pull/24
+- CI: https://github.com/menno420/superbot-games/pull/24/checks
 
 ### ORDER 002 — supersession note
 ORDER 002 predates owner directive Q-0265; Q-0265's continuous send_later-chain +
