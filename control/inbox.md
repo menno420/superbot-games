@@ -32,3 +32,37 @@
 - **done-when:** gate green with **121+ tests collected** on the workflow's
   own run (link the run in `control/status.md`), the count assertion live in
   the workflow, and `control/status.md` updated `orders: acked=001 done=001`.
+
+## ORDER 002 · 2026-07-10T15:52:00Z · status: new
+
+**P1 — SELF-ARM THE WAKE ROUTINE (Class A hourly). Supersedes the stale "owner
+creates the routine" ask.**
+
+- **issued by:** fleet manager (launch-readiness routing table, fleet-manager
+  `docs/launch-readiness-2026-07-10.md` — this is the only live repo never sent
+  a self-arm order; without one it relaunches clockless).
+- **supersession note:** the standing asks in `control/status.md` /
+  `control/status-exploration.md` ("routine: not armed — next wake is
+  owner-initiated"; ⚑ "create the gen-2 wake routine" as an owner click)
+  predate the fleet-wide verification (2026-07-10) that lane sessions can arm
+  their own routines — treat them as SUPERSEDED by this order; do NOT convert
+  them into an owner click.
+- **task:**
+  1. Claim first: ONE lane claims the arming (the games-plugins merged-lane
+     identity applies — one clock for the repo, not one per lane).
+  2. Arm a recurring HOURLY routine (Class A per the blueprint cadence table;
+     the exploration lane's own gen-2 feedback already names Class A hourly)
+     via the worker-session scheduler primitive: claude-code-remote
+     `create_trigger`, hourly cron, prompt: "Read control/inbox.md at HEAD and
+     run the standing ritual from your instructions."
+  3. REQUIRED RECORD: write in the claiming lane's status file the EXACT
+     `create_trigger` call made (tool name + arguments) and its outcome
+     VERBATIM — or, if the scheduling tools are unavailable/denied on your
+     seat, the verbatim denial text plus a ⚑ owner fallback ask. The fleet is
+     building the arming recipe from these records; the websites,
+     trading-strategy, kit-lab, and fleet-manager triggers are live proof the
+     recipe works from lane seats.
+- **executor:** the first superbot-games session of the fresh Project.
+- **done-when:** trigger verified present via `list_triggers` (recurring,
+  hourly) + the claiming lane's status records the verbatim call and outcome +
+  `orders: acked=002 done=002`.
