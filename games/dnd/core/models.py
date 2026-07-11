@@ -23,11 +23,21 @@ FLAVOR_CAP = 240  # DM flavour text is length-capped and DISPLAY-ONLY (never par
 
 @dataclass(frozen=True)
 class MenuOption:
-    """One pre-approved button. Mechanics key on ``id``; copy lives in the catalog."""
+    """One pre-approved button. Mechanics key on ``id``; copy lives in the catalog.
+
+    ``next_scene_id`` is the option's PRE-DEFINED destination scene — plain DATA on the
+    button, NOT something the DM computes or chooses. When ``None`` (the default) the
+    option stays in / ends the current scene; when set it is a fixed scene id the
+    resolver surfaces verbatim. The DM only picks an option id; that option's
+    destination is immutable data, so the model can never steer to an arbitrary scene
+    (design §4.1/§4.4). The referenced id is validated against the scene catalog at
+    load (see ``data/scenes.py``); ``models.py`` stays catalog-free to avoid a cycle.
+    """
 
     id: str  # stable option id, e.g. "advance_escort" — the mechanics key
     text_key: str  # neutral id into data/scenes.py copy — NOT the copy itself (Q-0267)
     effect_id: str  # id into effects.EFFECTS — a PRE-DEFINED, PRE-PRICED transition
+    next_scene_id: str | None = None  # PRE-DEFINED destination scene id (data), or stay/end
 
 
 @dataclass(frozen=True)
