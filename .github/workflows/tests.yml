@@ -38,19 +38,14 @@ jobs:
         if: steps.lane.outputs.control_only != 'true'
         with:
           python-version: "3.x"
-      - name: test suite (pure-domain pytest — all suites; count-floor guarded)
+      - name: test suite (pure-domain pytest — all suites; per-suite floor guarded)
         if: steps.lane.outputs.control_only != 'true'
         run: |
           python3 -m pip install --quiet pytest
-          # ORDER 001 count floor: every pure-domain suite must stay collected.
-          # 79 (tests/mining) + 26 (tests/fishing/) + 20 (fishing inventory adapter)
-          # + 48 (games/exploration/tests/) + 57 (tests/shared/inventory/) = 230
-          # + 18 (fishing spot biomes) = 248; + 9 (theme leak R2) = 257 at this commit;
-          # a dropped/renamed suite trips this floor instead of silently shrinking coverage.
-          COLLECTED=$(python3 -m pytest tests/ games/exploration/tests/ --collect-only -q 2>/dev/null | grep -cE '::')
-          echo "collected tests: $COLLECTED"
-          if [ "$COLLECTED" -lt 257 ]; then
-            echo "::error::pytest collected $COLLECTED tests, below floor 257 — a suite is not being collected"
-            exit 1
-          fi
+          # ORDER 001 count floor is now PER-SUITE and self-maintaining: each real
+          # suite dir owns an EXPECTED_MIN_TESTS.txt, so a test-adding PR edits only
+          # its own suite's file (no shared hardcoded int for open PRs to collide on).
+          # The guard fails LOUDLY, naming the suite, if any suite drops out of
+          # collection or shrinks below its floor. Guard first, then run the suite.
+          python3 tests/check_suite_floors.py
           python3 -m pytest tests/ games/exploration/tests/ -q
