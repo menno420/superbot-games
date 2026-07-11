@@ -13,3 +13,9 @@
   - advisory claim: [`../claims/world-games-inventory-contract.md`](../claims/world-games-inventory-contract.md)
   - migration PR-1 stands up the pure-domain seam `games/shared/inventory/` —
     implementation claim: [`../claims/world-games-inventory-seam.md`](../claims/world-games-inventory-seam.md)
+- [`economy-sim.md`](economy-sim.md) — REFERENCE: the cross-domain economy sim
+  (`games/shared/sim/economy_sim.py`) enumerates every reward source across
+  mining, fishing, dnd, and exploration by driving the shipped resolvers, pins
+  each domain's per-hour emission, and asserts the global invariants
+  `GRANT_WITHIN_GLOBAL_CAP`, `ITEM_FAUCET_MINTS_NO_CURRENCY`, and
+  `NOOP_MINTS_NOTHING`.
