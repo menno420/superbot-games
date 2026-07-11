@@ -17,9 +17,15 @@ from games.exploration.quest.models import RewardBundle
 
 # --- pinned bounds (produced by the harness; see games/dnd/sim/menu_sim.py) --- #
 # The per-scene max reward each menu's best option mints — code-owned, seed-stable.
-# A future balance change must update these pins consciously.
-_PER_SCENE_MAX_REWARD: dict[str, RewardBundle] = {
+# A future balance change must update these pins consciously. The scene-chain scenes
+# reuse the existing sim-pinned effects (``escort_step`` tier-I; ``scout_narrate`` /
+# ``rest_noop`` no-ops), so no new balance number: ``treeline_watch`` signals the escort
+# (same escort reward as the road), and ``waystation_gate`` is narrate-only (mints
+# nothing -> ``None``).
+_PER_SCENE_MAX_REWARD: dict[str, RewardBundle | None] = {
     "waystation_road": RewardBundle(global_xp=5, game_xp=25, currency=10),
+    "waystation_gate": None,
+    "treeline_watch": RewardBundle(global_xp=5, game_xp=25, currency=10),
 }
 # The global max reward across every option in every scene.
 _GLOBAL_MAX_REWARD = RewardBundle(global_xp=5, game_xp=25, currency=10)
