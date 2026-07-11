@@ -21,3 +21,4 @@
 - [gen2-feedback-mining-2026-07-09.md](gen2-feedback-mining-2026-07-09.md) — gen-2 feedback (mining).
 - [queue-state-mining-2026-07-09.md](queue-state-mining-2026-07-09.md) — mining roadmap/queue state at wind-down.
 - [env-vars-mining-2026-07-09.md](env-vars-mining-2026-07-09.md) — mining environment variable names (gen-2 handoff).
+- [archive-ready-2026-07-10-mining.md](archive-ready-2026-07-10-mining.md) — mining gen-1 ARCHIVE-READY note: verified true state at main `5d38593`, every open ⚑ owner-action, resume read-order, gen-2 next 1–3 with block status, and the cross-project D-0043 wait.
