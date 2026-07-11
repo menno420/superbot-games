@@ -2,7 +2,7 @@
 
 > **Status:** `complete`
 
-- **📊 Model:** Claude Opus · Sat Jul 11 01:29:26 UTC 2026 · kill cross-PR conflict churn (self-computing floor + doc indexes)
+- **📊 Model:** Opus 4.8 · Sat Jul 11 01:29:26 UTC 2026 · kill cross-PR conflict churn (self-computing floor + doc indexes)
 
 ## Scope
 
@@ -28,6 +28,17 @@ This session removes both code-level causes without weakening the ORDER-001 guar
   LOUD per-suite failure (naming the suite) on any shortfall / collection error / known
   suite collecting zero. The shared hardcoded `-lt 230` is gone from `tests.yml`; the CI
   step now runs the guard then the suite.
+- **FIX #1b — suite registry closes the wholesale-removal gap.** Discovery alone had a
+  hole: deleting an ENTIRE suite dir *together with* its `EXPECTED_MIN_TESTS.txt` made the
+  suite vanish from discovery, so the guard passed green while all of that suite's coverage
+  was silently lost (the old single hardcoded total floor would have caught it; per-suite
+  discovery could not). A committed registry `tests/EXPECTED_SUITES.txt` now pins the set of
+  suite dirs that MUST exist; `check_suite_floors.py` cross-checks discovery against it so a
+  registered suite whose dir or floor file has VANISHED fails LOUDLY (naming it), and a
+  discovered-but-UNREGISTERED suite also fails LOUDLY (new coverage must be tracked). The
+  registry is one shared file touched only when a whole suite is added/removed (rare), so it
+  does not reintroduce per-test churn. Net: neither per-suite shrinkage NOR wholesale suite
+  removal NOR an untracked suite can pass silently.
 - **FIX #2 — per-domain doc indexes.** Per-domain design index files under `docs/design/`
   (one per domain that has design docs), each badged `reference`, list that domain's
   design docs. `current-state.md` links the four indexes ONCE instead of enumerating every

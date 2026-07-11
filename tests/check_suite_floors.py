@@ -17,6 +17,26 @@ The ORDER-001 guarantee is preserved and, if anything, sharpened: the gate still
 fails LOUDLY the moment any suite drops out of collection or shrinks below its
 floor — now naming the exact suite instead of reporting one opaque total.
 
+The registry — closing the wholesale-suite-removal gap
+------------------------------------------------------
+Discovery alone had a hole: deleting an ENTIRE suite directory *together with*
+its ``EXPECTED_MIN_TESTS.txt`` made that suite vanish from discovery, so the
+guard passed green while all of that suite's coverage was silently lost. The old
+single hardcoded total floor would have caught that (the total drops); the
+per-suite discovery could not.
+
+To close it, a committed registry — ``tests/EXPECTED_SUITES.txt`` — pins the set
+of suite directories that MUST exist. The guard now cross-checks discovery
+against the registry so NONE of these can pass silently:
+
+  * per-suite SHRINKAGE below floor,
+  * WHOLESALE suite removal (registered dir or its floor file gone),
+  * an UNTRACKED new suite (discovered but absent from the registry).
+
+The registry is one shared file, edited only when a whole suite is added or
+removed (rare), so it does not reintroduce the per-test churn the per-suite
+floors fixed.
+
 Discovery
 ---------
 A suite is any directory that either
@@ -33,10 +53,20 @@ Taking the UNION means:
     -> LOUD failure (the "suite dropped out of collection" case);
   * a suite that shrinks below its recorded floor -> LOUD failure naming it.
 
+Registry cross-check
+--------------------
+On top of discovery, every path in ``tests/EXPECTED_SUITES.txt`` must still be a
+directory that owns its floor file and meets it; a registered suite whose dir or
+floor file has VANISHED fails LOUDLY (naming it). Conversely, any discovered
+suite that is NOT in the registry fails LOUDLY, so coverage cannot be added
+untracked and then silently removed later.
+
 Exit status
 -----------
-0  every suite collected >= its floor (prints a per-suite table).
-1  any suite below floor / missing floor file / collection error / zero collected.
+0  every suite collected >= its floor AND registry matches discovery (prints a
+   per-suite table).
+1  any suite below floor / missing floor file / collection error / zero
+   collected / a registered suite vanished / a discovered suite unregistered.
 """
 
 from __future__ import annotations
@@ -47,10 +77,32 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 FLOOR_FILENAME = "EXPECTED_MIN_TESTS.txt"
+REGISTRY_PATH = REPO_ROOT / "tests" / "EXPECTED_SUITES.txt"
 
 # Roots under which a directory holding test_*.py counts as a suite.
 TESTS_ROOT = REPO_ROOT / "tests"
 GAMES_ROOT = REPO_ROOT / "games"
+
+
+def _read_registry() -> tuple[list[str], str | None]:
+    """Read EXPECTED_SUITES.txt; return (list_of_relposix_paths, error_or_None)."""
+    if not REGISTRY_PATH.is_file():
+        return [], (
+            f"suite registry missing: {REGISTRY_PATH.relative_to(REPO_ROOT).as_posix()} "
+            f"— add it listing every expected suite dir (one per line)"
+        )
+    entries: list[str] = []
+    for line in REGISTRY_PATH.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        entries.append(stripped.rstrip("/"))
+    if not entries:
+        return [], (
+            f"suite registry {REGISTRY_PATH.relative_to(REPO_ROOT).as_posix()} lists "
+            f"no suites — it must pin at least one expected suite dir"
+        )
+    return entries, None
 
 
 def _discover_suite_dirs() -> list[Path]:
@@ -110,13 +162,56 @@ def _read_floor(suite_dir: Path) -> tuple[int | None, str | None]:
 
 
 def main() -> int:
+    failures: list[str] = []
+
+    # --- Registry cross-check (closes the wholesale-suite-removal gap) --------
+    registry, registry_err = _read_registry()
+    if registry_err is not None:
+        print("=" * 72, file=sys.stderr)
+        print("SUITE FLOOR GUARD FAILED (ORDER-001) — registry problem:", file=sys.stderr)
+        print("=" * 72, file=sys.stderr)
+        print(f"  !! {registry_err}", file=sys.stderr)
+        print("=" * 72, file=sys.stderr)
+        return 1
+
+    registered: set[str] = set(registry)
+
+    # Every registered suite MUST still exist and own its floor file. A suite
+    # whose dir OR floor file has vanished fails LOUDLY here — this is the case
+    # plain discovery could not see (the whole dir + its floor file both gone).
+    for rel in registry:
+        suite_path = REPO_ROOT / rel
+        if not suite_path.is_dir():
+            failures.append(
+                f"[{rel}] REGISTERED SUITE VANISHED: directory no longer exists "
+                f"— an entire suite (and its coverage) was removed; restore it or "
+                f"drop it from {REGISTRY_PATH.relative_to(REPO_ROOT).as_posix()} "
+                f"in a reviewed change"
+            )
+        elif not (suite_path / FLOOR_FILENAME).is_file():
+            failures.append(
+                f"[{rel}] REGISTERED SUITE lost its {FLOOR_FILENAME} — floor file "
+                f"vanished; the suite can no longer be ratcheted"
+            )
+
     suites = _discover_suite_dirs()
     if not suites:
         print("FLOOR GUARD FAILURE: no test suites discovered at all", file=sys.stderr)
         return 1
 
+    # Any DISCOVERED suite that is NOT registered fails LOUDLY: new coverage must
+    # be tracked in the registry, so it can never be added untracked and then
+    # silently removed later.
+    for suite_dir in suites:
+        rel = suite_dir.relative_to(REPO_ROOT).as_posix()
+        if rel not in registered:
+            failures.append(
+                f"[{rel}] UNREGISTERED SUITE: has tests/floor but is absent from "
+                f"{REGISTRY_PATH.relative_to(REPO_ROOT).as_posix()} — add it there so "
+                f"the suite is pinned against silent removal"
+            )
+
     rows: list[tuple[str, int, int]] = []
-    failures: list[str] = []
 
     for suite_dir in suites:
         rel = suite_dir.relative_to(REPO_ROOT).as_posix()

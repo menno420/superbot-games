@@ -1,0 +1,20 @@
+# Committed registry of EXPECTED test-suite directories (ORDER-001 anti-vanish).
+#
+# One suite-dir path per line, relative to the repo root, POSIX slashes.
+# Blank lines and lines starting with '#' are ignored.
+#
+# WHY: the per-suite floor guard DISCOVERS suites, so deleting an entire suite
+# directory *together with* its EXPECTED_MIN_TESTS.txt made that suite silently
+# vanish from discovery — the guard would then pass green while all of that
+# suite's coverage was lost. This registry pins the set of suites that MUST
+# exist: a registered suite whose directory or floor file has disappeared fails
+# LOUDLY, and a discovered suite that is NOT registered also fails LOUDLY (new
+# coverage must be tracked here, so it can never be added untracked and later
+# removed silently).
+#
+# This file changes only when a whole suite is ADDED or REMOVED (rare), so it
+# does not reintroduce the per-test churn the per-suite floors fixed.
+tests/mining
+tests/fishing
+tests/shared/inventory
+games/exploration/tests
