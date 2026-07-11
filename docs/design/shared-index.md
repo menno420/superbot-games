@@ -13,3 +13,6 @@
   - advisory claim: [`../claims/world-games-inventory-contract.md`](../claims/world-games-inventory-contract.md)
   - migration PR-1 stands up the pure-domain seam `games/shared/inventory/` —
     implementation claim: [`../claims/world-games-inventory-seam.md`](../claims/world-games-inventory-seam.md)
+- [`../balance.md`](../balance.md) — REFERENCE: the auto-generated economy balance page
+  (`tools/gen_balance.py` regenerates it from the shipped catalogs / sim tunables / caps /
+  suite floors; CI enforces freshness via `--check`).

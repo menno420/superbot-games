@@ -49,3 +49,11 @@ jobs:
           # collection or shrinks below its floor. Guard first, then run the suite.
           python3 tests/check_suite_floors.py
           python3 -m pytest tests/ games/exploration/tests/ -q
+      - name: Balance page freshness (docs/balance.md regenerates byte-identical)
+        if: steps.lane.outputs.control_only != 'true'
+        run: |
+          # The economy balance page is auto-generated from the shipped catalogs
+          # / sim tunables / caps / suite floors. --check regenerates it in memory
+          # and fails LOUDLY if the committed docs/balance.md has drifted from
+          # source (same freshness-guard shape as the suite-floor gate above).
+          python3 tools/gen_balance.py --check
