@@ -1,0 +1,1 @@
+- `dnd-clamp-fuzz` · **close-out record (PR #52)** — seeded DM-clamp fuzz + Haiku model addendum; green+clean, parked ⚑ owner-merge; next: merge, floor-rebase vs #50; deferred unhashable-option_id clamp · tests/dnd/, docs/design/dnd-story-design.md · `2026-07-11`

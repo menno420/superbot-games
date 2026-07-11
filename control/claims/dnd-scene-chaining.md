@@ -1,0 +1,1 @@
+- `dnd-scene-chaining` · **close-out record (PR #50)** — D&D data-driven bounded scene transitions; green+clean, parked ⚑ owner-merge; next: merge then floor-rebase vs #52 · games/dnd/**, tests/dnd/ · `2026-07-11`
