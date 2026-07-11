@@ -1,5 +1,11 @@
 # Claim — world-games inventory/resource contract (ADVISORY, design-only)
 
+> **Status:** `plan`
+>
+> A design-only path reservation for the prospective `games/shared/inventory/` seam
+> proposed by [`../design/world-inventory-resource-contract.md`](../design/world-inventory-resource-contract.md).
+> No code change in this PR.
+
 project: superbot-games (single world-games seat) · date: 2026-07-11
 
 paths (prospective): `games/shared/inventory/**`
