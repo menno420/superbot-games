@@ -267,9 +267,13 @@ other system working. Order (dependency-first):
    (`interface.py` + `reference.py` + `conformance.py` + `README.md`) + a claim file +
    the status announcement. Nothing imports it yet; the suite grows by the new module's
    own tests. Proves the contract compiles and the reference impl is conformant.
-2. **PR-2 — fishing adapter** (smallest, already neutral-id). `Catch → Stack`;
-   `species.py` exposed as an `ItemCatalog`. Fishing's existing tests unchanged; adds
-   adapter + conformance tests.
+2. **PR-2 — fishing adapter** (smallest, already neutral-id) — **SHIPPED** (PR
+   `feat/fishing-inventory-adapter`). `Catch → Stack` / `Catch → Grant` /
+   `CastOutcome → Grant` (no bite → `EMPTY_GRANT`); `species.py` exposed as a per-system
+   `ItemCatalog` in `games/fishing/inventory/`, each `species_id` mapped to a neutral
+   `fish.<species_id>` `ItemId` at the adapter boundary only (reversible — no internal
+   rename; §6 flags stay deferred). Fishing's existing tests unchanged; adds a pure adapter
+   + conformance tests that run the shipped §7 `run_conformance` against the fishing catalog.
 3. **PR-3 — mining catalog adapter.** Expose `_CATALOG` as an `ItemCatalog` on neutral
    ids and map `Reward → Grant`. This is where the Q-0267 gap (§1a) is closed. Mining's
    73 tests stay green (the display-string keys keep working behind the adapter until a
