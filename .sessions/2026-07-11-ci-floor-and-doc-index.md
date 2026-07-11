@@ -1,6 +1,6 @@
 # 2026-07-11 — kill cross-PR conflict churn (self-computing floor + doc indexes)
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 
 - **📊 Model:** Claude Opus · Sat Jul 11 01:29:26 UTC 2026 · kill cross-PR conflict churn (self-computing floor + doc indexes)
 
