@@ -150,13 +150,73 @@ class EncounterOutcome:
     energy_cost: int = 0
 
 
+# ---------------------------------------------------------------------------
+# --- narration data (theme-swappable, Q-0267) ------------------------------
+# Every player-visible noun / narration string lives HERE, in a module-level
+# table keyed on a *neutral* id — never inlined in a `_resolve_*` branch. This
+# mirrors grid.py's `_STRIKE_NOTE` and fishing/species.py: mechanics key on the
+# neutral slot and read the copy off the row, so a re-skin edits only this block
+# (the "creature" → "abomination" swap, new flavour) without touching the
+# resolver logic or its determinism. Templates fill named fields (`amount`,
+# `item`) plus the always-available `creature` noun via `_narrate` below. Byte-
+# identical to the pre-extraction literals (pinned by the golden test) — this is
+# a pure relocation, not a copy change. Closes theme-audit leak #1 (§3, R1).
+# ---------------------------------------------------------------------------
+
+# The enemy noun — the one theme noun that had no data home before extraction.
+_CREATURE_NOUN = "creature"
+
+
+class _Narration(Enum):
+    """Neutral narration slots — one per player-visible string the resolver emits.
+
+    Keyed finer than ``(EncounterKind, Resolution)`` because a hazard FLED has two
+    distinct copies (too-exhausted vs monster-too-tough); a slot per branch keeps
+    the table 1:1 with the strings and lets the golden test enumerate them.
+    """
+
+    NONE = "none"
+    LOOT_CACHE = "loot_cache"
+    RICH_VEIN = "rich_vein"
+    HAZARD_EXHAUSTED = "hazard_exhausted"  # too drained to fight — forced retreat
+    HAZARD_WON = "hazard_won"
+    HAZARD_FLED = "hazard_fled"  # monster too tough — break off
+    HAZARD_LOST = "hazard_lost"
+
+
+# Narration templates keyed on the neutral slot. Named fields (`{amount}`,
+# `{item}`, `{creature}`) are filled by `_narrate`; a template that omits a field
+# simply ignores it. Re-theme = edit these strings only.
+_NARRATION: dict[_Narration, str] = {
+    _Narration.NONE: "The passage is quiet — nothing stirs.",
+    _Narration.LOOT_CACHE: "💰 A packed loot cache — you haul out {amount} {item}!",
+    _Narration.RICH_VEIN: "⛏️ A rich pocket opens up — {amount} more {item}.",
+    _Narration.HAZARD_EXHAUSTED: (
+        "😮‍💨 Too exhausted to fight — you scramble back the way you came."
+    ),
+    _Narration.HAZARD_WON: "⚔️ You fend off the {creature} and grab {amount} {item}!",
+    _Narration.HAZARD_FLED: "🏃 The {creature} is too tough — you break off and flee.",
+    _Narration.HAZARD_LOST: "💥 The {creature} overwhelms you — you barely crawl away.",
+}
+
+
+def _narrate(slot: _Narration, **fields: object) -> str:
+    """Assemble a player-facing narration string from the theme-data table (pure).
+
+    Looks up the neutral *slot*'s template and fills it with *fields* plus the
+    always-available ``creature`` noun. The resolver branches pass only structured
+    data (amounts, item nouns) and never spell a player string themselves.
+    """
+    return _NARRATION[slot].format(creature=_CREATURE_NOUN, **fields)
+
+
 # The invariant baseline — a non-encounter. Byte-identical regardless of stats,
 # energy, or depth (stats can never *manufacture* an encounter). This object is
 # the additive-safety anchor the tests pin.
 _NONE_OUTCOME = EncounterOutcome(
     kind=EncounterKind.NONE,
     resolution=Resolution.NONE,
-    narration="The passage is quiet — nothing stirs.",
+    narration=_narrate(_Narration.NONE),
 )
 
 
@@ -250,7 +310,7 @@ def _resolve_loot_cache(
     return EncounterOutcome(
         kind=EncounterKind.LOOT_CACHE,
         resolution=Resolution.COLLECTED,
-        narration=f"💰 A packed loot cache — you haul out {reward.amount} {reward.item}!",
+        narration=_narrate(_Narration.LOOT_CACHE, amount=reward.amount, item=reward.item),
         rewards=(reward,),
     )
 
@@ -266,7 +326,7 @@ def _resolve_rich_vein(
     return EncounterOutcome(
         kind=EncounterKind.RICH_VEIN,
         resolution=Resolution.COLLECTED,
-        narration=f"⛏️ A rich pocket opens up — {reward.amount} more {reward.item}.",
+        narration=_narrate(_Narration.RICH_VEIN, amount=reward.amount, item=reward.item),
         rewards=(reward,),
         energy_cost=RICH_VEIN_ENERGY_COST,
     )
@@ -306,7 +366,7 @@ def _resolve_hazard(
         return EncounterOutcome(
             kind=EncounterKind.HAZARD,
             resolution=Resolution.FLED,
-            narration="😮‍💨 Too exhausted to fight — you scramble back the way you came.",
+            narration=_narrate(_Narration.HAZARD_EXHAUSTED),
             damage_taken=hit,
             energy_cost=min(energy, HAZARD_ENERGY_COST),
         )
@@ -318,7 +378,7 @@ def _resolve_hazard(
         return EncounterOutcome(
             kind=EncounterKind.HAZARD,
             resolution=Resolution.WON,
-            narration=f"⚔️ You fend off the creature and grab {loot.amount} {loot.item}!",
+            narration=_narrate(_Narration.HAZARD_WON, amount=loot.amount, item=loot.item),
             rewards=(loot,),
             damage_taken=graze,
             energy_cost=HAZARD_ENERGY_COST,
@@ -332,14 +392,14 @@ def _resolve_hazard(
         return EncounterOutcome(
             kind=EncounterKind.HAZARD,
             resolution=Resolution.FLED,
-            narration="🏃 The creature is too tough — you break off and flee.",
+            narration=_narrate(_Narration.HAZARD_FLED),
             damage_taken=flee_hit,
             energy_cost=HAZARD_ENERGY_COST + FLEE_ENERGY_EXTRA,
         )
     return EncounterOutcome(
         kind=EncounterKind.HAZARD,
         resolution=Resolution.LOST,
-        narration="💥 The creature overwhelms you — you barely crawl away.",
+        narration=_narrate(_Narration.HAZARD_LOST),
         damage_taken=min(player_hp, incoming),
         energy_cost=HAZARD_ENERGY_COST,
     )
