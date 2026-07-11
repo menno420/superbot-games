@@ -63,3 +63,52 @@ def test_total_sale_value_only_counts_resources() -> None:
     inv = {"gold": 2, "diamond": 1, "pickaxe": 1}
     # 2*6 + 1*12 = 24; the pickaxe (tool) contributes nothing.
     assert market.total_sale_value(inv) == 24
+
+
+# ---------------------------------------------------------------------------
+# Q-0267 theme leak R2 — the shop-section titles moved out of the dict literal
+# inside shop_sections into the SHOP_SECTION_LABEL data table, keyed on neutral
+# section ids. Pure relocation: byte-identical labels, same grouping/order.
+# ---------------------------------------------------------------------------
+def test_shop_section_labels_are_byte_identical() -> None:
+    """The rendered section titles equal the exact strings that were inlined at
+    market.py:181-192 (hand-listed expected set), in the same display order."""
+    expected = ["⚔️ Weapons & shields", "🛡️ Armor", "🧰 Tools & supplies"]
+    labels = [label for label, _ in market.shop_sections()]
+    assert labels == expected
+    # ...and each is sourced from the data table, not a branch literal.
+    assert list(market.SHOP_SECTION_LABEL.values()) == expected
+
+
+def test_shop_section_labels_come_from_the_data_table() -> None:
+    """Swapping a SHOP_SECTION_LABEL row re-skins only that title; the grouping
+    (which items land in which section) is byte-identical — table is load-bearing."""
+    before = market.shop_sections()
+    original = market.SHOP_SECTION_LABEL["weapons"]
+    try:
+        market.SHOP_SECTION_LABEL["weapons"] = "🔱 Reef arsenal"
+        after = market.shop_sections()
+    finally:
+        market.SHOP_SECTION_LABEL["weapons"] = original
+    assert after[0][0] == "🔱 Reef arsenal"  # only the label changed
+    assert [rows for _, rows in after] == [rows for _, rows in before]  # grouping unchanged
+    assert [lbl for lbl, _ in after][1:] == [lbl for lbl, _ in before][1:]
+
+
+def test_shop_sections_has_no_inline_player_label() -> None:
+    """shop_sections emits section titles only via SHOP_SECTION_LABEL — no
+    player-facing title literal survives inside the function (audit §7 recipe #1)."""
+    import ast
+    import inspect
+
+    tree = ast.parse(inspect.getsource(market))
+    labels = set(market.SHOP_SECTION_LABEL.values())
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name == "shop_sections":
+            docstring = ast.get_docstring(node, clean=False)
+            for sub in ast.walk(node):
+                if isinstance(sub, ast.Constant) and isinstance(sub.value, str):
+                    if sub.value != docstring and sub.value in labels:
+                        offenders.append(repr(sub.value))
+    assert not offenders, offenders

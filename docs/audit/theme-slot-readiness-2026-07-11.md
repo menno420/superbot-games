@@ -71,16 +71,16 @@ Grounded in code read this session. This is the load-bearing section.
 | Lucky-strike notes | `grid.py:108-111` (`_STRIKE_NOTE`) | ✅ | Narration **templates in a table** keyed on the neutral `CellFeature` enum; the ore is injected via `.format(ore=…)` (`grid.py:174`). Exemplar. |
 | Feature labels / glyphs / legend | `grid.py:187-200` (`_FEATURE_GLYPH`, `_FEATURE_LABEL`, `MAP_LEGEND`) | ✅ | All keyed on the neutral `CellFeature` enum; `describe_cell` (`grid.py:252-257`) assembles from the label data. |
 | Move phrases (locations) | `grid.py:57-64` (`_MOVE_PHRASE`) | ✅ | Direction phrases keyed on neutral direction tokens. |
-| Barren-cell flavour | `grid.py:177` (inside `apply_cell_to_loot`) | ⚠️ | A player-facing literal "The rock here is barren — slim pickings." is inlined **in a branch**, not placed in the sibling `_FEATURE_LABEL`/`_STRIKE_NOTE` tables — inconsistent with the module's own pattern. |
+| Barren-cell flavour | `grid.py` — `_BARREN_NOTE` table keyed on the neutral `CellFeature` enum; `apply_cell_to_loot` reads the note off it | ✅ | **RESOLVED (R2, this PR).** The barren literal ("The rock here is barren — slim pickings.") moved out of the branch into a sibling data table beside `_STRIKE_NOTE` — byte-identical, swap-a-row test proves the table is the only source. |
 | Encounter narration + monster noun | `encounters.py` — `_NARRATION` table + `_CREATURE_NOUN` row, keyed on the neutral `_Narration` slot enum; `_narrate()` assembles copy, the `_resolve_*` fns hold zero player strings | ✅ | **RESOLVED (R1, this PR).** Narration relocated from the resolver branches into a module-level data table (mirroring `grid._STRIKE_NOTE`); the "creature" noun is now a swappable row. Byte-identical to the old literals (golden test `tests/mining/test_encounter_narration.py`). Re-theme = edit data only. |
 | Energy restore values | `energy.py:31-35` (`RESTORE_VALUES`) | ⚠️ | Data table, but keyed on the food display noun ("ration", "cooked fish"). |
 | Energy bar glyphs | `energy.py:132-136` (`bar()`) | ⚠️ | Emoji "⚡" + "▰▱" glyphs inlined in the formatting function (minor; ambient gauge, no theme noun). |
 | Name aliases | `names.py:19-37` (`ALIASES`) | ✅ | Shorthand→canonical map in a module-level table (theme-coupled by nature, but data-resident). |
 | Titles | `titles.py:72-114` (`_RULES` + `Title`) | ✅ | `Title(id, label, emoji, requirement)` keyed on **neutral ids** ("the_deep", "ironclad"); `display` (`:139-141`) assembles "emoji label" from data; predicates key on neutral branch ids. Exemplar — the cleanest surface in mining. |
 | Gear-shop prices | `market.py:49-107` (`GEAR_SHOP`) | ⚠️ | Data table, keyed on item display nouns. |
-| Shop section labels | `market.py:181-192` (inside `shop_sections`) | ⚠️ | Player-facing section titles ("⚔️ Weapons & shields", "🛡️ Armor", "🧰 Tools & supplies") are a **dict literal inside the function**, not a table. |
+| Shop section labels | `market.py` — `SHOP_SECTION_LABEL` table keyed on neutral section ids (`weapons`/`armor`/`tools`); `shop_sections` resolves the id then reads the title | ✅ | **RESOLVED (R2, this PR).** The section titles ("⚔️ Weapons & shields", "🛡️ Armor", "🧰 Tools & supplies") moved out of the in-function dict literal into a module-level data table — byte-identical, grouping/order unchanged. |
 | Structures (names / level names) | `structures.py:50,55,60,120-130` (`_*_LEVEL_NAMES`, `_DEFS` registry) | ✅ | `StructureDef(key, display, ladder, level_names)` keyed on **neutral structure keys** (FORGE="forge"); level names ("Cozy Cabin", "Grand Hall") are data tuples; `display_name`/`level_name` read them off the registry. Exemplar. |
-| Menu category nouns | `taxonomy.py:69-82` (`category_of`) | ⚠️ | The category display nouns ("Weapons", "Armour", "Tools", "Structures", "Items") are **returned as literals from an `if`/`elif`**, not looked up. (The ordering table `CATEGORY_ORDER:20` exists, but the branch emits the strings.) |
+| Menu category nouns | `taxonomy.py` — `_CATEGORY_LABEL` table keyed on neutral slug ids; `category_of` resolves a slug from the slot/kind branch then reads the label | ✅ | **RESOLVED (R2, this PR).** The category display nouns ("Weapons", "Armour", "Tools", "Structures", "Items") moved out of the `if`/`elif` returns into a data table; the branch now emits only neutral slugs — byte-identical labels, swap-a-row test proves it. |
 | Type / kind / category emoji | `taxonomy.py:21-27,39-61` (`CATEGORY_EMOJI`, `TYPE_EMOJI`, `_KIND_EMOJI`) | ✅ | Emoji in module-level tables keyed on base-type / kind / category ids. |
 
 ### 2b. Fishing (`games/fishing/core/`) — the built-to-spec exemplar
@@ -139,12 +139,15 @@ Ordered by severity: a **noun inside mechanics logic** is worse than a
 
 **Severity 3 — stray labels, prose duplication, noun-keyed data tables (⚠️):**
 
-3. **Menu category nouns emitted from `if`/`elif`** — `taxonomy.py:75-82`
-   (`category_of` returns "Weapons"/"Armour"/… as branch literals).
-4. **Shop section labels inlined** — `market.py:181-192` (a dict literal of
-   player-facing titles inside `shop_sections`).
-5. **Barren-cell flavour inlined** — `grid.py:177` (a narration literal in a
-   branch, when its siblings live in `_STRIKE_NOTE`/`_FEATURE_LABEL`).
+3. ~~**Menu category nouns emitted from `if`/`elif`**~~ — **RESOLVED (R2, this
+   PR).** `taxonomy.category_of` now resolves a neutral slug and reads the label
+   off `_CATEGORY_LABEL`; the branch emits no display noun.
+4. ~~**Shop section labels inlined**~~ — **RESOLVED (R2, this PR).**
+   `market.shop_sections` groups on neutral section ids and reads titles off the
+   `SHOP_SECTION_LABEL` table.
+5. ~~**Barren-cell flavour inlined**~~ — **RESOLVED (R2, this PR).** The
+   `grid.py` barren note moved into the sibling `_BARREN_NOTE` data table
+   beside `_STRIKE_NOTE`.
 6. **Noun + amount baked into explore prose** — `rewards.py:138-144`.
 7. **Fish-bridge drops the neutral id** — `items.py:293-303`.
 8. **Fishing status scaffold inlined** — `catch.py:119,180` (no noun; parity-only).
@@ -155,8 +158,10 @@ Ordered by severity: a **noun inside mechanics logic** is worse than a
    same noun identity) and need no separate work once the neutral-id migration
    lands.
 
-**Headline tally:** **16 ✅ · 12 ⚠️ · 2 ❌** across 30 audited surfaces (mining
-encounter narration flipped ❌→✅ in `feat/mining-narration-data`, R1). The
+**Headline tally:** **19 ✅ · 9 ⚠️ · 2 ❌** across 30 audited surfaces (mining
+encounter narration flipped ❌→✅ in `feat/mining-narration-data`, R1; the three
+mining stray-literal ⚠️ — barren flavour, shop-section labels, menu-category
+nouns — flipped ⚠️→✅ in `feat/theme-leak-r2`, R2). The
 world games are *mostly* theme-ready: fishing, titles, structures, quest
 catalog, and mining's grid/stat tables are clean data. The concentration of
 leakage is (a) mining encounter narration and (b) the item-identity model — both
@@ -214,10 +219,17 @@ scope (moving a noun to data), the games are playable and sim-pinned as-is.
   **zero** player strings — mirroring `grid.py`'s `_STRIKE_NOTE`. Proven
   byte-identical by a golden characterization test captured from the pre-change
   resolver (`tests/mining/test_encounter_narration.py`).
-- **R2 — Sweep mining's stray literals into their sibling tables.** Move the
-  `grid.py:177` barren line into `_FEATURE_LABEL`/`_STRIKE_NOTE`; move
-  `market.py:181-192` section labels and `taxonomy.py:75-82` category nouns into
-  small tables. Tiny, mechanical, behaviour-preserving.
+- **R2 — Sweep mining's stray literals into their sibling tables.** ✅ **SHIPPED**
+  (this PR, `feat/theme-leak-r2`). Moved the `grid.py:177` barren line into a new
+  `_BARREN_NOTE` table beside `_STRIKE_NOTE`; moved the `market.py:181-192`
+  section labels into `SHOP_SECTION_LABEL` (keyed on neutral section ids) and the
+  `taxonomy.py:75-82` category nouns into `_CATEGORY_LABEL` (keyed on neutral
+  slug ids). Each branch now emits only neutral ids and reads the label off the
+  table; all three strings are byte-identical, pinned by hand-listed golden
+  asserts + a swap-a-row load-bearing test + an AST "no inline player-label"
+  guard (`tests/mining/test_grid.py`, `test_items_market.py`, `test_taxonomy.py`).
+  Tiny, mechanical, behaviour-preserving — the full mining suite stayed green
+  unchanged.
 - **R3 — Fishing status-scaffold table (parity).** Lift `catch.py:119,180` into a
   `_STATUS_NARRATION` table so `catch.py` has *zero* inline player strings, full
   parity with `species.py`. (Lowest urgency — no noun leaks today.)

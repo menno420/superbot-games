@@ -160,6 +160,22 @@ def shop_listing() -> list[tuple[str, int]]:
     return sorted(GEAR_SHOP.items(), key=lambda kv: (kv[1], kv[0]))
 
 
+# --- shop section labels (theme-swappable, Q-0267) ---
+# The market panel renders one field per section; shop_sections resolves a
+# NEUTRAL section id from the item's equip slot, then reads the display title
+# off this table — so no player-visible label is spelled inside the function.
+# _SECTION_ORDER fixes the display order (weapons → armor → tools).
+_SECTION_WEAPONS = "weapons"
+_SECTION_ARMOR = "armor"
+_SECTION_TOOLS = "tools"
+_SECTION_ORDER: tuple[str, ...] = (_SECTION_WEAPONS, _SECTION_ARMOR, _SECTION_TOOLS)
+SHOP_SECTION_LABEL: dict[str, str] = {
+    _SECTION_WEAPONS: "⚔️ Weapons & shields",
+    _SECTION_ARMOR: "🛡️ Armor",
+    _SECTION_TOOLS: "🧰 Tools & supplies",
+}
+
+
 def shop_sections() -> list[tuple[str, list[tuple[str, int]]]]:
     """The shop listing grouped for display: ``[(section_label, rows)]``.
 
@@ -177,25 +193,26 @@ def shop_sections() -> list[tuple[str, list[tuple[str, int]]]]:
         equipment.LEGGINGS,
         equipment.BOOTS,
     }
-    sections: dict[str, list[tuple[str, int]]] = {
-        "⚔️ Weapons & shields": [],
-        "🛡️ Armor": [],
-        "🧰 Tools & supplies": [],
-    }
+    rows_by_section: dict[str, list[tuple[str, int]]] = {sid: [] for sid in _SECTION_ORDER}
     for name, price in shop_listing():
         slot = equipment.slot_for(name)
         if slot in weapon_slots:
-            sections["⚔️ Weapons & shields"].append((name, price))
+            rows_by_section[_SECTION_WEAPONS].append((name, price))
         elif slot in armor_slots:
-            sections["🛡️ Armor"].append((name, price))
+            rows_by_section[_SECTION_ARMOR].append((name, price))
         else:
-            sections["🧰 Tools & supplies"].append((name, price))
-    return [(label, rows) for label, rows in sections.items() if rows]
+            rows_by_section[_SECTION_TOOLS].append((name, price))
+    return [
+        (SHOP_SECTION_LABEL[sid], rows_by_section[sid])
+        for sid in _SECTION_ORDER
+        if rows_by_section[sid]
+    ]
 
 
 __all__ = [
     "TradeResult",
     "GEAR_SHOP",
+    "SHOP_SECTION_LABEL",
     "SELL_REASON",
     "BUY_REASON",
     "VAULT_UPGRADE_REASON",

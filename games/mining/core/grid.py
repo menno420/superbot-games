@@ -104,10 +104,17 @@ _RICHNESS: dict[CellFeature, float] = {
     CellFeature.TREASURE: 2.0,
 }
 
+# --- cell flavour notes (theme-swappable, Q-0267) ---
 # Flavour for a lucky strike (rich / treasure cells), formatted with the ore.
 _STRIKE_NOTE: dict[CellFeature, str] = {
     CellFeature.RICH: "💎 You struck a rich {ore} vein!",
     CellFeature.TREASURE: "🤑 A treasure pocket, packed with {ore}!",
+}
+# Flavour for a barren cell (no lucky strike; carries no ore) — a sibling of
+# _STRIKE_NOTE keyed on the same neutral CellFeature enum so the copy is
+# swappable data rather than an inline branch literal.
+_BARREN_NOTE: dict[CellFeature, str] = {
+    CellFeature.BARREN: "The rock here is barren — slim pickings.",
 }
 
 # 64-bit mask for the stable coordinate hash (Python ints are unbounded).
@@ -174,7 +181,7 @@ def apply_cell_to_loot(
         note = _STRIKE_NOTE[cell.feature].format(ore=cell.featured_resource)
         return cell.featured_resource, scaled, note
     if cell.feature is CellFeature.BARREN:
-        return found, scaled, "The rock here is barren — slim pickings."
+        return found, scaled, _BARREN_NOTE[cell.feature]
     return found, scaled, None
 
 

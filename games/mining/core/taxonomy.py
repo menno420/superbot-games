@@ -35,6 +35,24 @@ _ARMOUR_SLOTS = frozenset(
 )
 _TOOL_SLOTS = frozenset({equipment.TOOL, equipment.LIGHT, equipment.CHARM})
 
+# --- menu category labels (theme-swappable, Q-0267) ---
+# category_of resolves a NEUTRAL slug id from the item's slot/kind, then reads
+# the display noun off this table — so no player-visible label is spelled inside
+# the branch. The slugs are internal ids (never shown); the values are the same
+# labels that already key CATEGORY_ORDER / CATEGORY_EMOJI.
+_CAT_WEAPONS = "weapons"
+_CAT_ARMOUR = "armour"
+_CAT_TOOLS = "tools"
+_CAT_STRUCTURES = "structures"
+_CAT_ITEMS = "items"
+_CATEGORY_LABEL: dict[str, str] = {
+    _CAT_WEAPONS: "Weapons",
+    _CAT_ARMOUR: "Armour",
+    _CAT_TOOLS: "Tools",
+    _CAT_STRUCTURES: "Structures",
+    _CAT_ITEMS: "Items",
+}
+
 # Per base-type emoji so each type reads at a glance.
 TYPE_EMOJI: dict[str, str] = {
     "sword": "🗡️",
@@ -72,14 +90,16 @@ def category_of(name: str) -> str:
     """
     slot = equipment.slot_for(name)
     if slot in (equipment.WEAPON, equipment.SHIELD):
-        return "Weapons"
-    if slot in _ARMOUR_SLOTS:
-        return "Armour"
-    if slot in _TOOL_SLOTS:
-        return "Tools"
-    if items.classify(name).value == "structure":
-        return "Structures"
-    return "Items"
+        category = _CAT_WEAPONS
+    elif slot in _ARMOUR_SLOTS:
+        category = _CAT_ARMOUR
+    elif slot in _TOOL_SLOTS:
+        category = _CAT_TOOLS
+    elif items.classify(name).value == "structure":
+        category = _CAT_STRUCTURES
+    else:
+        category = _CAT_ITEMS
+    return _CATEGORY_LABEL[category]
 
 
 def pluralize(base: str) -> str:
