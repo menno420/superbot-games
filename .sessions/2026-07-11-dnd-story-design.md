@@ -2,7 +2,7 @@
 
 > **Status:** `complete`
 >
-> 📊 Model: Claude Opus · 2026-07-11T01:55:35Z · D&D story game design (bounded-menu AI DM)
+> 📊 Model: Claude Opus 4.8 · 2026-07-11T01:55:35Z · D&D story game design (bounded-menu AI DM)
 
 ## Goal
 
