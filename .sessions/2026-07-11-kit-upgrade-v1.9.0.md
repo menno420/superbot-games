@@ -1,6 +1,6 @@
 # 2026-07-11 — substrate-kit upgrade v1.8.0 → v1.9.0
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 
 📊 Model: fable-5 · high · kit-upgrade
 
@@ -53,7 +53,16 @@ edits beyond the kit-owned claim file, no domain work).
   in-progress badge with the designed notice ("check: HOLD (by design):
   session card … declares an in-progress Status — the born-red session gate
   holds the merge red until the card flips complete."), all other checks
-  clean.
+  clean. **The v1.9.0 hold also fired in real CI** (first exercise): gate
+  run 29140981827 on the in-progress card went red with the HOLD message
+  plus a `##[notice]` annotation ("Designed hold — not a CI failure to
+  investigate") while tests (run 29140981825) stayed green.
+- **Second anomaly (recorded):** pull_request `synchronize` runs never fire
+  while the PR is unmergeable — after #40's squash, this branch's rewritten
+  card add/add-conflicted with main's copy (`mergeable_state: dirty`) and
+  pushes produced zero workflow runs until a merge of origin/main resolved
+  the conflict; the missing CI looked like an Actions outage but was the
+  merge-ref failing to build.
 - **Session-PR anomaly (recorded for the wave):** the intended born-red
   session PR #40 (card + claim only) auto-merged 24s after
   `enable_pr_auto_merge` armed it — a card-only diff rides the gate's
