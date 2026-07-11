@@ -1,6 +1,6 @@
 # 2026-07-11 · Fishing walking skeleton (games/fishing/)
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus · 2026-07-11T00:11:50Z · fishing walking skeleton reusing mining's energy/determinism substrate
 
@@ -30,11 +30,46 @@ duplicating it. Deliver ONE merged-on-green PR. The slice must:
 
 ## What shipped
 
-_TODO — fill on the final content commit._
+- **`games/fishing/` pure package** (mirrors `games/mining/core`), all stdlib-only, no
+  Discord/DB/IO:
+  - **`core/species.py`** — THE THEME DATA: a four-row species table (`minnow` / `bass` /
+    `pike` / `legend_carp`) keyed on neutral ids; every player-visible noun (name, emoji,
+    flavour, `size_rank`, `rarity_weight`) is a data row (Q-0267). Re-theme = data edit.
+  - **`core/rng.py`** — `fishing_seed(seed, spot_id)`: an INDEPENDENT splitmix64 stream
+    (mining's family + a fishing-domain salt), integer-only → process-independent. Tagged
+    a promotion candidate for `games/shared/rng.py`.
+  - **`core/catch.py`** — THE RESOLVER: `resolve_cast(...) -> CastOutcome(bit, catch,
+    narration, energy_cost)`. Deterministic code owns every outcome (NO LLM anywhere);
+    `rng=None` → the deterministic `fishing_seed` stream, injectable rng for live variance.
+    Bite roll (raised by `bite_luck`), `fishing_power`-biased weighted species pick, size
+    roll, narration assembled from species DATA. Honest energy gate: too tired → no-bite,
+    never raises.
+  - **`sim/catch_sim.py`** — a pure seeded harness sweeping casts × gear tiers
+    (fresh / fishing charm / master angler charm via the real `equipment` model),
+    aggregating bite rate, species distribution, mean size, energy economy.
+- **REUSED substrate (imported directly, not duplicated):**
+  `games.mining.core.energy` (a cast spends `CAST_COST` through the shared engine — one
+  energy economy; "cooked fish" already refills it) and
+  `games.mining.core.equipment.EffectiveStats` (`fishing_power` / `bite_luck`, Q-0175 —
+  the only advantage levers). **EXTENDED** (new independent pattern): a fishing-salted
+  splitmix64 stream + the species theme-data table + the catch resolver/sim, mirroring
+  mining's determinism + sim-pin patterns.
+- **`tests/fishing/`** — 26 tests: determinism (incl. subprocess process-independence),
+  reused-energy contract + honest states, theme-data-drivenness, no-pay-to-win (bias not
+  gate; gear caps), sim-pinned bounds. **Full suite 99 passed** (73 mining + 26 fishing);
+  collected by the existing `pytest tests/` gate with ZERO `tests.yml` edit.
+- **`docs/design/fishing-catch-skeleton.md`** — the catch model, decisions, the gear
+  seam, the determinism scheme, the sim-pin table (real sim output pasted), the
+  no-pay-to-win statement, deferred slices, and exact verification commands.
 
 ## Sim-pin headline
 
-_TODO — paste the real `python3 -m games.fishing.sim.catch_sim` headline on the final commit._
+Bias-not-gate, proven over 64,000 casts/tier: a **zero-gear angler already lands every
+species** (minnow 50% / bass 30% / pike 15% / legend_carp 5% of bites); earned gear only
+*shifts* toward the rare tail (master: 39/32/20/8%) and quickens bites (rate 54.7% fresh →
+78.9% master, capped <90%). Mean size 25.0 → 27.6; every species reachable at every tier;
+gear capped at one charm (fp 6 / bl 3); energy 2.00/cast through the reused engine. The
+gradient is a *progression* incentive, never a paywall — advantage is earned, never bought.
 
 ## 💡 Session idea
 
