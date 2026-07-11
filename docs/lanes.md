@@ -1,5 +1,7 @@
 # Lanes — the cohabitation contract
 
+> **⟵ GEN-1 HISTORY.** The two-lane split is archived; the single world-games seat owns `games/**` and the unified `control/inbox.md` + `control/status.md`. Read this as an archive, do not resurrect the split.
+
 > **Status:** `binding`
 
 > **BINDING on both resident Projects.** Two autonomous Projects share this repo; lanes

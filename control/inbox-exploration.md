@@ -1,5 +1,7 @@
 # control/inbox-exploration.md — orders to game-exploration
 
+> **⟵ GEN-1 HISTORY.** The two-lane split is archived; the single world-games seat owns `games/**` and the unified `control/inbox.md` + `control/status.md`. Read this as an archive, do not resurrect the split.
+
 > **ONE writer: the manager.** Never edit this file. Report order progress ONLY in
 > `control/status-exploration.md` (one writer per file — protocol: `control/README.md`).
 
