@@ -1,6 +1,6 @@
 # 2026-07-11 · Theme leaks R2 — mining grid/market/taxonomy nouns → data
 
-> **Status:** 🔴 `in-progress` (born-red)
+> **Status:** ✅ `complete`
 >
 > 📊 Model: Claude Opus · 2026-07-11T01:43:42Z · clear Q-0267 theme leaks R2 (grid/market/taxonomy nouns → data)
 
@@ -27,7 +27,44 @@ string literals. Pure relocation — every player-facing string stays
 
 ## What shipped
 
-_(filled in on the final content commit)_
+- **`games/mining/core/grid.py`** — the barren-cell flavour literal
+  (`"The rock here is barren — slim pickings."`), previously inlined in the
+  `apply_cell_to_loot` branch (`:177`), moved into a new `# --- cell flavour notes`
+  `_BARREN_NOTE` data table keyed on the neutral `CellFeature` enum, a sibling of
+  `_STRIKE_NOTE`. The branch now returns `_BARREN_NOTE[cell.feature]` — no player
+  literal in the function body. Byte-identical; loot outcome untouched.
+- **`games/mining/core/taxonomy.py`** — the menu-category nouns
+  (`"Weapons"/"Armour"/"Tools"/"Structures"/"Items"`), previously returned as
+  literals from `category_of`'s `if`/`elif` (`:75-82`), moved into a
+  `# --- menu category labels` `_CATEGORY_LABEL` table keyed on **neutral slug
+  ids** (`weapons`/`armour`/`tools`/`structures`/`items`). The branch resolves a
+  slug from the item's slot/kind and the function reads the label off the table.
+  The five values equal `CATEGORY_ORDER` (the labels that already key
+  `CATEGORY_EMOJI`) — byte-identical, noun-keyed tables untouched.
+- **`games/mining/core/market.py`** — the shop-section titles
+  (`"⚔️ Weapons & shields"/"🛡️ Armor"/"🧰 Tools & supplies"`), previously a dict
+  literal inside `shop_sections` (`:181-192`), moved into a
+  `# --- shop section labels` `SHOP_SECTION_LABEL` table keyed on **neutral
+  section ids** (`weapons`/`armor`/`tools`), with `_SECTION_ORDER` fixing display
+  order. The function groups rows on the neutral ids and reads titles off the
+  table. Byte-identical labels; grouping/order/`if rows` filter unchanged.
+- **Tests (+9, `tests/mining/`).** Each module gets three guards mirroring the R1
+  narration slice: (1) a **byte-identity** assert against a hand-listed golden set
+  of the exact pre-refactor literals; (2) a **swap-a-row** load-bearing test (re-skin
+  the data row → only that label changes, every outcome/grouping field identical);
+  (3) an **AST "no inline player-label"** guard proving the function body emits no
+  string constant that is a value of its label table. `test_grid.py` +3,
+  `test_items_market.py` +3, new `test_taxonomy.py` +3.
+- **CI floor** (`.github/workflows/tests.yml`) — collected-count floor 248 → 257
+  (+9, theme leak R2).
+- **Audit doc** (`docs/audit/theme-slot-readiness-2026-07-11.md`) — the three ⚠️
+  rows (barren flavour / shop-section labels / menu-category nouns) flipped to ✅
+  RESOLVED (R2, this PR); §3 leaks #3–#5 struck through; headline tally
+  16 ✅·12 ⚠️·2 ❌ → 19 ✅·9 ⚠️·2 ❌; §5 R2 roadmap line marked SHIPPED.
+- **Verification:** `pytest tests/mining/` → 88 passed (79 + 9, existing 79 green
+  UNCHANGED); `pytest tests/ games/exploration/tests/` → 257 passed (= new floor);
+  `bootstrap.py check --strict` → exit 0. Pure relocation — no mechanic, weight,
+  price, or outcome touched.
 
 ## 💡 Session idea
 

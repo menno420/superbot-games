@@ -75,3 +75,54 @@ def _repo_root() -> str:
 
     # tests/mining/ -> repo root is two levels up.
     return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
+# ---------------------------------------------------------------------------
+# Q-0267 theme leak R2 — the barren-cell flavour moved out of the
+# apply_cell_to_loot branch into the sibling _BARREN_NOTE data table.
+# These prove the move is a PURE relocation: byte-identical copy, no outcome
+# change, and the table is the only source of that string.
+# ---------------------------------------------------------------------------
+def test_barren_note_is_byte_identical_to_pre_refactor_literal() -> None:
+    """The barren note equals the exact string that was inlined at grid.py:177."""
+    expected = "The rock here is barren — slim pickings."
+    barren = grid.Cell(0, 0, 0, grid.CellFeature.BARREN, "stone", 0.5)
+    _, _, note = grid.apply_cell_to_loot(barren, "iron", 3)
+    assert note == expected
+    # ...and it lives in the data table, not the branch body.
+    assert grid._BARREN_NOTE[grid.CellFeature.BARREN] == expected
+
+
+def test_barren_note_comes_from_the_data_table() -> None:
+    """Swapping the _BARREN_NOTE row re-skins the copy while the loot outcome
+    (item, scaled amount) stays byte-identical — proof the table is load-bearing."""
+    barren = grid.Cell(0, 0, 0, grid.CellFeature.BARREN, "stone", 0.5)
+    before = grid.apply_cell_to_loot(barren, "iron", 3)
+    original = grid._BARREN_NOTE[grid.CellFeature.BARREN]
+    try:
+        grid._BARREN_NOTE[grid.CellFeature.BARREN] = "The reef here is picked clean."
+        item, amount, note = grid.apply_cell_to_loot(barren, "iron", 3)
+    finally:
+        grid._BARREN_NOTE[grid.CellFeature.BARREN] = original
+    assert note == "The reef here is picked clean."
+    assert (item, amount) == (before[0], before[1])  # outcome unchanged
+    assert note != before[2]
+
+
+def test_apply_cell_to_loot_has_no_inline_player_label() -> None:
+    """apply_cell_to_loot emits flavour copy only via the _STRIKE_NOTE / _BARREN_NOTE
+    tables — no player-facing note literal survives inline (audit §7 recipe #1)."""
+    import ast
+    import inspect
+
+    tree = ast.parse(inspect.getsource(grid))
+    labels = set(grid._BARREN_NOTE.values()) | set(grid._STRIKE_NOTE.values())
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name == "apply_cell_to_loot":
+            docstring = ast.get_docstring(node, clean=False)
+            for sub in ast.walk(node):
+                if isinstance(sub, ast.Constant) and isinstance(sub.value, str):
+                    if sub.value != docstring and sub.value in labels:
+                        offenders.append(repr(sub.value))
+    assert not offenders, offenders
