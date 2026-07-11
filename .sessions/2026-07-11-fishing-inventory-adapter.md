@@ -1,6 +1,6 @@
 # 2026-07-11 · Fishing → shared inventory adapter — contract migration PR-2
 
-> **Status:** `red`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus · 2026-07-11T01:13:29Z · fishing→shared-inventory adapter (contract migration PR-2)
 
@@ -38,11 +38,57 @@ The slice must:
 
 ## What shipped
 
-_(filled in the last content commit)_
+- **`games/fishing/inventory/` pure adapter package** (stdlib-only, no Discord/DB/IO/RNG),
+  the first consumer of the shared inventory seam (PR #29):
+  - **`adapter.py`** — the fishing ↔ shared §2 mapping:
+    - `item_id_for_species` / `species_id_for_item` — the `fish.<species_id>` namespace map
+      at the adapter boundary, validated through the contract's `item_id()` guard; no
+      internal id renamed.
+    - `fishing_catalog() -> DictItemCatalog` — a per-system `ItemCatalog` built from
+      `species.all_species()`, one `ItemMeta` per row with **name/emoji relayed straight
+      from `species.py` DATA** and `value` = the row's `size_rank` (a carried data number,
+      never rolled); `tags={"fish"}` reuses the namespace constant (no new noun).
+    - `catch_to_stack(catch) -> Stack` — `Stack(fish.<id>, qty=1, attrs={"size", "size_rank"})`;
+      per-instance `size` rides in `attrs` per contract §2c.
+    - `catch_to_grant(catch) -> Grant` — one-stack grant, `progression=ProgressionDelta()`
+      empty (fishing defines no XP/currency today — noted; the shape is ready).
+    - `cast_to_grant(outcome) -> Grant` — no bite → `EMPTY_GRANT`, a bite → the catch's grant;
+      total, never raises.
+    - `reachable_item_ids()` — the theme-data guard surface (exactly `fish.<key>` per species).
+  - **`__init__.py`** — pure-adapter docstring (fishing ↔ shared contract; no Discord/DB/IO),
+    integrity floor, and the two reversible decide-and-flag calls.
+- **`tests/fishing/test_inventory_adapter.py`** — **20 net-new tests**: every species → a
+  valid neutral `ItemId`; the fishing catalog passes the shipped §7 `run_conformance`
+  (round-trip identity, no-spend-lever, catalog-ids-neutral, capacity-in-distinct-types) +
+  `assert_nouns_are_data_only` under a re-skin; `catch_to_stack`/`catch_to_grant` expected
+  shape + determinism; `cast_to_grant` no-bite → `EMPTY_GRANT` (incl. a real resolver
+  too-tired outcome) and a real resolved bite → one-stack grant; round-trip into
+  `ReferenceInventory` (held qty / distinct types), `DefaultCapacityPolicy` status; a
+  theme-data guard proving reachable ids track `species.py` (remove a row → `fish.pike`
+  drops from the reachable set + catalog).
+- **CI floor** bumped `210 → 230` in `.github/workflows/tests.yml` (`-lt` check + comment,
+  `+ 20 (fishing inventory adapter)`). Full suite `python3 -m pytest tests/
+  games/exploration/tests/ -q` → **230 passed**; `bootstrap.py check --strict` exit 0.
+- **Design doc §4** migration path — PR-2 (fishing adapter) marked **SHIPPED** with the
+  branch ref; Status badge (`plan`) + reachability left intact.
+- **Untouched:** `games/fishing/core/` internals, `games/shared/inventory/`, mining — new
+  code only. No new shared interface introduced (consumes the existing one), so no
+  interface-change announcement needed.
+- **Deferred (not resolved):** the §6 ⚑ owner-decisions (neutral-id namespace / mining
+  rename; whether `currency` belongs in the contract; one shared vs per-system catalog) all
+  stay owner-deferred; this PR's `fish.` mapping + per-system catalog are reversible calls.
 
 ## 💡 Session idea
 
-_(filled in the last content commit)_
+PR-1 built the §7 conformance suite as a reusable adapter template; PR-2 is the first PR to
+re-import it, and the whole adapter+tests landed in ~120 lines with zero change to either
+migrated surface — evidence the claim-first shared-seam skeleton (neutral-id mechanics +
+data-only nouns + a Protocol seam with a reference impl the conformance suite pins) makes an
+adapter a near-mechanical slice. Worth capturing PR-2 as the worked example in the proposed
+`docs/patterns/claim-first-shared-seam.md`: it shows a downstream adapter should be a pure
+`domain-type → Stack/Grant` relay that *carries* every value and adds no noun, so the next
+adapters (PR-3 mining catalog, PR-4 quest) start from a filled-in template rather than
+re-deriving the shape.
 
 ## ⟲ Previous-session review
 
