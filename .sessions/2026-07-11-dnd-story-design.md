@@ -1,6 +1,6 @@
 # 2026-07-11 · D&D story game design (bounded-menu AI DM)
 
-> **Status:** `born-red`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus · 2026-07-11T01:55:35Z · D&D story game design (bounded-menu AI DM)
 
