@@ -24,3 +24,6 @@
   each domain's per-hour emission, and asserts the global invariants
   `GRANT_WITHIN_GLOBAL_CAP`, `ITEM_FAUCET_MINTS_NO_CURRENCY`, and
   `NOOP_MINTS_NOTHING`.
+- [`../balance.md`](../balance.md) — REFERENCE: the auto-generated economy balance page
+  (`tools/gen_balance.py` regenerates it from the shipped catalogs / sim tunables / caps /
+  suite floors; CI enforces freshness via `--check`).
