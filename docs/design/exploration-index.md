@@ -11,3 +11,7 @@
   quest/encounter core + v1 bounded-menu catalog + shared encounter interface.
 - [`survival-d1-rebaseline.md`](survival-d1-rebaseline.md) — resolves the factual
   contradiction in the survival plan's D1 baseline (D-0004).
+- [`survival-sim-harness.md`](survival-sim-harness.md) — survival P2 sim harness: a pure
+  deterministic sim driving the shipped mining energy engine per difficulty; pins the
+  Q-0087 casual/grinder/gap curves as tests (Easy byte-identical to shipped bars per
+  D-0004, Medium/Hard sim-pinned gradient).
