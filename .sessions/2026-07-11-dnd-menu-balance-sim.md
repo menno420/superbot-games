@@ -1,6 +1,6 @@
 # 2026-07-11 · D&D menu-balance sim (bounded economy, no pay-to-win)
 
-> **Status:** `born-red`
+> **Status:** `complete`
 >
 > 📊 Model: Opus 4.8 · 2026-07-11T15:08:22Z · D&D menu-balance sim (bounded economy, no pay-to-win)
 
