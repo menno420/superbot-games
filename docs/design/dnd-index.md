@@ -28,5 +28,3 @@
 - [`quest-encounter-engine.md`](quest-encounter-engine.md) — the shipped, sim-pinned
   deterministic quest/encounter engine (`games/exploration/quest/**`) the story game
   extends rather than duplicates.
-</content>
-</invoke>

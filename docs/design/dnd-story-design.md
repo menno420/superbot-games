@@ -360,5 +360,3 @@ skeleton PR uses whichever form is current at that commit.)*
   neutral ids. (Q-0267; §5.)
 - **Menu width is code-computed & capped** — chat activity widens option *count* only
   (`leverage.menu_width`, 2..4), never amounts or outcomes. (`leverage.py:16`; §3, §4.4.)
-</content>
-</invoke>

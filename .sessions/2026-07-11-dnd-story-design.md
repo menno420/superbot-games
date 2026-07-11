@@ -60,5 +60,3 @@ Best-effort porting oracle checked via the public raw path: `cogs/adventure.py`,
 `cogs/story.py`, `cogs/dnd.py`, `cogs/dungeon.py` on `menno420/superbot@main` all return
 **HTTP 404** — no story/DM module is present/reachable in old superbot. The design is
 therefore grounded entirely in the shipped `superbot-games` engine, not a port.
-</content>
-</invoke>
