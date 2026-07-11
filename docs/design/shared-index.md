@@ -18,3 +18,9 @@
   migration, host owns storage / this repo owns the shape) plus the owner's cross-server
   transfer directive as three named invariants — `TRANSFER_CONSERVATION`,
   `TRANSFER_FRACTION_CAP`, `NO_INSTANT_RICHEST` — with percentages left OWNER-DECIDES.
+- [`economy-sim.md`](economy-sim.md) — REFERENCE: the cross-domain economy sim
+  (`games/shared/sim/economy_sim.py`) enumerates every reward source across
+  mining, fishing, dnd, and exploration by driving the shipped resolvers, pins
+  each domain's per-hour emission, and asserts the global invariants
+  `GRANT_WITHIN_GLOBAL_CAP`, `ITEM_FAUCET_MINTS_NO_CURRENCY`, and
+  `NOOP_MINTS_NOTHING`.
