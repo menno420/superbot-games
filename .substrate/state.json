@@ -7,7 +7,7 @@
     "soft_target_sessions": 50
   },
   "graduation_proposed": false,
-  "kit_version": "1.11.0",
+  "kit_version": "1.12.0",
   "last_compaction_session": 0,
   "mode": "guided",
   "mode_history": [
@@ -20,7 +20,7 @@
   "open_questions": [],
   "planted_doc_hashes": {
     ".session-journal.md": "8fbe1fc3b52a8c3005ce4d7e81ac758616628d80a6c386d08a0763e7081cbe5d",
-    "CONSTITUTION.md": "53b7e67031ab9e4b91655ea918d837103ebc057dcf01bfcccb692329b978b4ab",
+    "CONSTITUTION.md": "6b8cb8961e5570a24aa94d5d5873e85c244d9f0d15ee0818a9e2a40f2b560704",
     "control/claims/README.md": "8ef495683709b8c135bab26808a5d1b3cac3938f6b193981666d073258bb8693",
     "control/inbox.md": "ec3374c42d06dc2192b7fd94db357bfab16a932f10d1c718b2b0bd6f2199aacb",
     "control/status.md": "789f674180cad9a8bc71eb68616edf8f71b343d5e8e161f52fefe31938a53493",
