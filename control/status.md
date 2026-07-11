@@ -1,8 +1,8 @@
 # superbot-games · status
 
-updated: 2026-07-10T23:57:37Z
-phase: single-seat unification — ORDER 001 (CI collection-scope fix + seat unification) in flight as a READY PR
-health: green — main is strict-GREEN on kit v1.7.1; all 121 pure-domain tests pass locally
+updated: 2026-07-11T00:21:47Z
+phase: fishing walking skeleton shipped — READY PR to main (green-pending), builds on merged ORDER 001 (#24) unified base
+health: green — full suite 147 pure-domain tests pass (99 tests/ [73 mining + 26 fishing] + 48 games/exploration/tests/); `bootstrap.py check --strict` exit 0
 orders: acked=001,002 done=002
 
 ## Boot record
@@ -12,22 +12,38 @@ single-seat status file**, replacing the gen-1 pointer stub — one seat owns al
 `control/status-exploration.md` files are now **GEN-1 HISTORY archives** (banners added
 this session); do not resurrect the two-lane split.
 
+## Last shipped — fishing walking skeleton (2026-07-11)
+- `games/fishing/` pure package (mirrors `games/mining/core`): deterministic catch
+  resolver (`resolve_cast`, NO LLM), a neutral-id species theme-data table (Q-0267), an
+  independent fishing-salted splitmix64 stream, and a sim-pin harness. 26 tests under
+  `tests/fishing/` (collected by the `tests/` root). Design doc
+  `docs/design/fishing-catch-skeleton.md`. Branch `feat/fishing-skeleton`, PR to `main`.
+- **Substrate REUSED (imported directly):** `games.mining.core.energy` (a cast spends
+  `CAST_COST` through the shared engine) + `games.mining.core.equipment.EffectiveStats`
+  (`fishing_power`/`bite_luck`, Q-0175 — the only advantage levers). **EXTENDED (new
+  independent pattern):** the fishing-salted splitmix64 stream + species theme table +
+  catch resolver/sim, mirroring mining's determinism + sim-pin patterns.
+- **CI:** fishing tests sit under `tests/fishing/`, already collected by the merged #24
+  workflow's hardcoded `tests/` root — the floor was raised 121 → 147 (added
+  "+ 26 (tests/fishing/)") so a dropped fishing suite trips it loudly. Builds ON #24's
+  all-suites-collection + count-floor, not around it.
+- **⚑ needs-owner:** if branch protection walls the merge of an agent-authored unreviewed
+  PR (expected Self-Approval wall), the owner clicks Merge once CI is green.
+
 ## Orders
 `orders: acked=001,002 done=002`
-- ORDER 001 — **in progress → done-on-merge** of this PR (CI collection-scope fix + seat
-  unification; see below).
+- ORDER 001 — **done** (merged #24: CI collection-scope fix + single-seat unification).
 - ORDER 002 — **done**.
 
 ### ORDER 001 — PR state
 - branch: `order-001-collection-scope`
-- what it changes: CI now collects **all** pure-domain suites (`tests/` +
-  `games/exploration/tests/`) with a **121-count floor** so a dropped/renamed suite fails
+- what it changed: CI now collects **all** pure-domain suites (`tests/` +
+  `games/exploration/tests/`) with a count floor so a dropped/renamed suite fails
   loudly instead of shrinking coverage silently; GEN-1 HISTORY banners on the five lane
   files; kit-version drift fix (v1.2.0 → v1.7.1) in the two archived status files; root
   README rewritten to single-seat reality (Q-0267 theme-readiness); this status file
   converted from the gen-1 pointer stub to unified status.
-- PR: #24 https://github.com/menno420/superbot-games/pull/24
-- CI: https://github.com/menno420/superbot-games/pull/24/checks
+- PR: #24 https://github.com/menno420/superbot-games/pull/24 — **MERGED**.
 
 ### ORDER 002 — supersession note
 ORDER 002 predates owner directive Q-0265; Q-0265's continuous send_later-chain +
@@ -42,6 +58,6 @@ Routine armed 2026-07-10T23:47:02Z by coordinator worker seat, verified via list
 - No denials; no walls hit.
 
 ## Queue (inherited)
-- next: fishing walking skeleton reusing mining's encounter/energy substrate;
-- then: unified inventory/resource contract;
+- done: fishing walking skeleton reusing mining's energy/determinism substrate (this PR).
+- next: unified inventory/resource contract;
 - then: theme-slot audit per Q-0267.
