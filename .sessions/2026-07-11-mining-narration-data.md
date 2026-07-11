@@ -1,6 +1,6 @@
 # 2026-07-11 · Mining encounter narration → theme data (Q-0267 leak #1)
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus · 2026-07-11T01:02:54Z · extract mining encounter narration to theme data (Q-0267 leak #1)
 

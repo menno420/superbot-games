@@ -72,7 +72,7 @@ Grounded in code read this session. This is the load-bearing section.
 | Feature labels / glyphs / legend | `grid.py:187-200` (`_FEATURE_GLYPH`, `_FEATURE_LABEL`, `MAP_LEGEND`) | ✅ | All keyed on the neutral `CellFeature` enum; `describe_cell` (`grid.py:252-257`) assembles from the label data. |
 | Move phrases (locations) | `grid.py:57-64` (`_MOVE_PHRASE`) | ✅ | Direction phrases keyed on neutral direction tokens. |
 | Barren-cell flavour | `grid.py:177` (inside `apply_cell_to_loot`) | ⚠️ | A player-facing literal "The rock here is barren — slim pickings." is inlined **in a branch**, not placed in the sibling `_FEATURE_LABEL`/`_STRIKE_NOTE` tables — inconsistent with the module's own pattern. |
-| Encounter narration + monster noun | `encounters.py:160,253,269,309,321,335,342` (inside `_NONE_OUTCOME` + the `_resolve_*` fns) | ❌ | **All narration is hardcoded f-string literals inside the resolution branches**, and the enemy noun "creature" (`:321,335`) has **no data table at all**. Highest-severity leak: a theme noun living in mechanics logic. |
+| Encounter narration + monster noun | `encounters.py` — `_NARRATION` table + `_CREATURE_NOUN` row, keyed on the neutral `_Narration` slot enum; `_narrate()` assembles copy, the `_resolve_*` fns hold zero player strings | ✅ | **RESOLVED (R1, this PR).** Narration relocated from the resolver branches into a module-level data table (mirroring `grid._STRIKE_NOTE`); the "creature" noun is now a swappable row. Byte-identical to the old literals (golden test `tests/mining/test_encounter_narration.py`). Re-theme = edit data only. |
 | Energy restore values | `energy.py:31-35` (`RESTORE_VALUES`) | ⚠️ | Data table, but keyed on the food display noun ("ration", "cooked fish"). |
 | Energy bar glyphs | `energy.py:132-136` (`bar()`) | ⚠️ | Emoji "⚡" + "▰▱" glyphs inlined in the formatting function (minor; ambient gauge, no theme noun). |
 | Name aliases | `names.py:19-37` (`ALIASES`) | ✅ | Shorthand→canonical map in a module-level table (theme-coupled by nature, but data-resident). |
@@ -115,15 +115,17 @@ Grounded in code read this session. This is the load-bearing section.
 Ordered by severity: a **noun inside mechanics logic** is worse than a
 **noun-as-key** is worse than a **stray label / prose duplication**.
 
-**Severity 1 — noun in mechanics logic (❌):**
+**Severity 1 — noun in mechanics logic (❌ → ✅ RESOLVED):**
 
-1. **Mining encounter narration + the "creature" noun** —
-   `encounters.py:160,253,269,309,321,335,342`. Every encounter's player-facing
-   string is an f-string literal *inside* the resolver branches, and the enemy
-   noun **"creature"** (`:321` `"⚔️ You fend off the creature and grab …"`,
-   `:335` `"🏃 The creature is too tough …"`) has **no data table anywhere**.
-   This is the one system with zero theme-data surface for its narration — the
-   opposite of fishing (`species.py`) and grid (`_STRIKE_NOTE`).
+1. ~~**Mining encounter narration + the "creature" noun**~~ — **RESOLVED (R1,
+   this PR, `feat/mining-narration-data`).** Was: every encounter's player-facing
+   string was an f-string literal *inside* the resolver branches, and the enemy
+   noun **"creature"** had no data table anywhere. Now: a module-level
+   `_NARRATION` table (keyed on the neutral `_Narration` slot enum) + a
+   `_CREATURE_NOUN` row; a pure `_narrate()` assembles every string and the
+   `_resolve_*` branches hold zero player literals — matching fishing
+   (`species.py`) and grid (`_STRIKE_NOTE`). Byte-identical output, pinned by a
+   golden test.
 
 **Severity 2 — noun doubles as the mechanic key (❌):**
 
@@ -153,7 +155,8 @@ Ordered by severity: a **noun inside mechanics logic** is worse than a
    same noun identity) and need no separate work once the neutral-id migration
    lands.
 
-**Headline tally:** **15 ✅ · 12 ⚠️ · 3 ❌** across 30 audited surfaces. The
+**Headline tally:** **16 ✅ · 12 ⚠️ · 2 ❌** across 30 audited surfaces (mining
+encounter narration flipped ❌→✅ in `feat/mining-narration-data`, R1). The
 world games are *mostly* theme-ready: fishing, titles, structures, quest
 catalog, and mining's grid/stat tables are clean data. The concentration of
 leakage is (a) mining encounter narration and (b) the item-identity model — both
@@ -203,10 +206,14 @@ big-bang. **None of these block shipping today**: every leak is cosmetic-refacto
 scope (moving a noun to data), the games are playable and sim-pinned as-is.
 
 - **R1 — Mining encounter narration table (closes ❌ #1; smallest high-value
-  fix).** Add a module-level `_NARRATION` table to `encounters.py` keyed on the
-  neutral `(EncounterKind, Resolution)` pair (and a `monster` noun row), and have
-  the `_resolve_*` fns `.format(...)` a template off it — mirroring `grid.py`'s
-  `_STRIKE_NOTE`. Byte-identical output; pins the strings with a test.
+  fix).** ✅ **SHIPPED** (this PR, `feat/mining-narration-data`). Added a
+  module-level `_NARRATION` table to `encounters.py` keyed on a neutral
+  `_Narration` slot enum (finer than `(EncounterKind, Resolution)` so the two
+  distinct FLED copies each get a row) plus a `_CREATURE_NOUN` row; a pure
+  `_narrate(...)` helper `.format(...)`s the template and the `_resolve_*` fns hold
+  **zero** player strings — mirroring `grid.py`'s `_STRIKE_NOTE`. Proven
+  byte-identical by a golden characterization test captured from the pre-change
+  resolver (`tests/mining/test_encounter_narration.py`).
 - **R2 — Sweep mining's stray literals into their sibling tables.** Move the
   `grid.py:177` barren line into `_FEATURE_LABEL`/`_STRIKE_NOTE`; move
   `market.py:181-192` section labels and `taxonomy.py:75-82` category nouns into
