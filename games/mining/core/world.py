@@ -41,6 +41,31 @@ BIOME_EMOJI: dict[Biome, str] = {
     Biome.MAGMA: "🌋",
 }
 
+# ---------------------------------------------------------------------------
+# --- position / descent copy (theme-swappable, Q-0267 mining R2) -----------
+# The player-visible position line and descend hints live HERE, in module-level
+# templates keyed on a neutral slot — never welded into the functions. This
+# mirrors grid.py's `_STRIKE_NOTE` and the merged encounters.py `_NARRATION`:
+# `describe_position` / `descend_hint` look up the template and fill the numbers
+# + biome label at the call site, so a re-skin edits only this block without
+# touching the depth-gating logic. `BIOME_LABELS` / `BIOME_EMOJI` above were
+# already clean data and stay put. Byte-identical to the pre-extraction f-strings
+# (pinned by test_world_hints.py) — a pure relocation, not a copy change.
+# ---------------------------------------------------------------------------
+
+#: The ``"<emoji> <Label> (depth N/MAX)"`` position line; `{label}` is the biome
+#: emoji+label, `{depth}`/`{max_depth}` the clamped band index and world floor.
+_POSITION_TEMPLATE = "{label} (depth {depth}/{max_depth})"
+
+#: Descend-hint copy: whether a descent is blocked and what unlocks the next band.
+_DESCEND_HINT: dict[str, str] = {
+    "max": "You have the gear to reach the deepest bands.",
+    "next": (
+        "Equip a brighter light to descend to {label} "
+        "(needs depth access {access})."
+    ),
+}
+
 
 def clamp_depth(depth: int) -> int:
     """Constrain *depth* to the valid ``[0, MAX_DEPTH]`` band range."""
@@ -87,19 +112,16 @@ def describe_position(depth: int) -> str:
     """Human-readable ``"<emoji> <Label> (depth N/MAX)"`` for embeds."""
     biome = biome_for_depth(depth)
     label = f"{BIOME_EMOJI[biome]} {BIOME_LABELS[biome]}"
-    return f"{label} (depth {clamp_depth(depth)}/{MAX_DEPTH})"
+    return _POSITION_TEMPLATE.format(label=label, depth=clamp_depth(depth), max_depth=MAX_DEPTH)
 
 
 def descend_hint(stats: EffectiveStats) -> str:
     """Why a descend is blocked / what unlocks the next band — for UX copy."""
     reach = max_accessible_depth(stats)
     if reach >= MAX_DEPTH:
-        return "You have the gear to reach the deepest bands."
+        return _DESCEND_HINT["max"]
     next_biome = BIOME_ORDER[reach + 1]
-    return (
-        f"Equip a brighter light to descend to {BIOME_LABELS[next_biome]} "
-        f"(needs depth access {reach + 1})."
-    )
+    return _DESCEND_HINT["next"].format(label=BIOME_LABELS[next_biome], access=reach + 1)
 
 
 __all__ = [

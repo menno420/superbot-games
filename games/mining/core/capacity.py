@@ -36,6 +36,27 @@ MAX_VAULT_LEVEL = 6
 _VAULT_UPGRADE_BASE_COST = 2_000
 _VAULT_UPGRADE_COST_STEP = 1_500
 
+# ---------------------------------------------------------------------------
+# --- warning copy (theme-swappable, Q-0267 mining R2) ----------------------
+# The two capacity nudges' player-visible strings live HERE, in a module-level
+# table keyed on a neutral slot — never welded into the warning function. This
+# mirrors grid.py's `_STRIKE_NOTE` and the merged encounters.py `_NARRATION`:
+# the functions look up the row and fill `{used}`/`{cap}` from the CapStatus, so
+# a re-skin edits only this block without touching the threshold logic. Byte-
+# identical to the pre-extraction f-strings (pinned by test_capacity_warnings.py)
+# — a pure relocation, not a copy change. Closes theme-audit leak (mining R2).
+# ---------------------------------------------------------------------------
+_CAP_WARNING: dict[str, str] = {
+    "pack": (
+        "⚠️ Your pack is full (**{used}/{cap}** item types) — "
+        "stash spare loot at the 🏦 Vault to keep mining tidy."
+    ),
+    "vault": (
+        "⚠️ Your vault is over capacity (**{used}/{cap}** item "
+        "types) — `!vaultupgrade` adds more room."
+    ),
+}
+
 
 def distinct_types(store: Mapping[str, int]) -> int:
     """Number of distinct item-types actually held (quantity > 0)."""
@@ -104,20 +125,14 @@ def pack_warning(status: CapStatus) -> str | None:
     """The hub/action nudge when the pack is at/over its soft cap (else ``None``)."""
     if not status.at_cap:
         return None
-    return (
-        f"⚠️ Your pack is full (**{status.used}/{status.cap}** item types) — "
-        "stash spare loot at the 🏦 Vault to keep mining tidy."
-    )
+    return _CAP_WARNING["pack"].format(used=status.used, cap=status.cap)
 
 
 def vault_warning(status: CapStatus) -> str | None:
     """The over-capacity nudge for the vault (else ``None``)."""
     if not status.over_cap:
         return None
-    return (
-        f"⚠️ Your vault is over capacity (**{status.used}/{status.cap}** item "
-        "types) — `!vaultupgrade` adds more room."
-    )
+    return _CAP_WARNING["vault"].format(used=status.used, cap=status.cap)
 
 
 __all__ = [
