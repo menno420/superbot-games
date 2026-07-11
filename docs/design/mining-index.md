@@ -11,3 +11,7 @@
   (loot/flavour v1), full design + sim-pin table + evidence.
 - [`mining-plugin-layout.md`](mining-plugin-layout.md) — superbot-next plugin contract
   mapping for the pure mining domain port.
+- [`theme-readiness.md`](theme-readiness.md) — Q-0267 delta supplement to the merged
+  theme-slot audit (#28): three additional player-visible mining surfaces
+  (`capacity.py` warnings, `world.py` descent hints / biome tables, `skills.py` branch
+  labels) classified DATA / MIXED / CODE, so the Q-0267 inventory is complete.
