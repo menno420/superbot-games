@@ -2,8 +2,8 @@
 
 > **⟵ GEN-1 HISTORY.** The two-lane split is archived; the single world-games seat owns `games/**` and the unified `control/inbox.md` + `control/status.md`. Read this as an archive, do not resurrect the split.
 
-updated: 2026-07-10T00:20Z
-phase: gen-1 mining complete — pure domain + grid-encounters first slice shipped to main. Gen-1 lane is closed and archived; gen-2 boots only from what is committed on main.
+updated: 2026-07-11T (archive-prep VERIFY + TOP-UP; verified against main HEAD 5d38593)
+phase: gen-1 mining complete — ARCHIVE-READY. Pure domain + grid-encounters first slice shipped to main. Gen-1 lane is closed and archived; gen-2 boots only from what is committed on main. Archive note: docs/retro/archive-ready-2026-07-10-mining.md (verified true state, ⚑ owner-actions, resume read-order, gen-2 next 1–3 with block status, cross-project D-0043 wait).
 health: green — main is strict-GREEN. 73 mining tests pass; `bootstrap.py check --strict` exit 0. All mining PRs are MERGED; nothing parked, nothing broken.
 kit: substrate-kit v1.7.1 — adopted on main by exploration's PR #3 (merged); mining CONSUMES it ("adopt once" per docs/lanes.md). Mining's own adoption PR #4 was CLOSED as redundant (kit-adoption race — exploration filed first).
 routine: NOT ARMED — no scheduler tool available this session ("No such tool available: mcp__claude-code-remote__send_later"); no timed self-wake was scheduled. Next wake is owner-initiated or webhook-driven (PR events). Gen-2 boot docs: `docs/retro/next-boot-mining-2026-07-09.md` (read FIRST) → `docs/retro/queue-state-mining-2026-07-09.md` (done/next).
@@ -25,7 +25,8 @@ orders (control/inbox-mining.md): acked=001,002,003,004,005.
 - No new wind-down/succession *inbox order* exists — the wind-down was delivered as PR #14's docs (succession package), not an inbox order. Acknowledged here.
 
 ⚑ needs-owner:
-- Aggregate `control/status.md` two-writer question (kit hardcodes a single `control/status.md` vs this repo's per-lane files). Owner call: take the upstream substrate-kit fix or formalize the aggregate as manager-written-only. Per-lane status is the right model — do not collapse it. (Standing; unchanged.)
+- **Model-line vs. no-id-in-artifacts conflict — OWNER-DECISION pending.** The kit's strict gate (PL-004 session telemetry) hard-requires a `📊 Model:` line on every session card, which brushes against the standing "no model identifier in any repo artifact" rule. WHAT: pick a formal resolution. WHY-IT-MATTERS: without a ruling agents guess whether the card line violates the rule. FIX OPTIONS: (a) kit carve-out — family-level model line is the ONE sanctioned place a model family may appear (never exact internal id, never in commit/PR text); or (b) amend the standing rule to name that carve-out. UNBLOCKS: the last ambiguity between staying CI-green and the no-id rule. OWNER-ONLY: yes (doctrine ruling). CURRENT RESOLUTION IN FORCE: family-level `📊 Model:` kept in the CARD only (never commit/PR text) to stay CI-green — already delivered fleet-wide as ORDER 003 (#46) and flagged in control/status.md ⚑ item (2). Evidence: any recent .sessions/*.md card + `bootstrap.py check --strict` gate behavior. So the conflict is CAPTURED with a working resolution; only the formal ruling is outstanding.
+- Aggregate `control/status.md` single-file kit item (standing, now practically moot). Kit hardcodes a single `control/status.md`; gen-1 mining ran per-lane files. The fleet has since moved to a single world-games writer of `control/status.md`, so no mining action depends on this; recorded for completeness only.
 - The gen-1 merge-wall ⚑ is RESOLVED — the owner authorized review-and-merge; #5/#11/#14 all landed. No open owner-click merge actions remain.
 
 self-initiated (flagged, veto-able):

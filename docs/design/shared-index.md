@@ -13,6 +13,11 @@
   - advisory claim: [`../claims/world-games-inventory-contract.md`](../claims/world-games-inventory-contract.md)
   - migration PR-1 stands up the pure-domain seam `games/shared/inventory/` —
     implementation claim: [`../claims/world-games-inventory-seam.md`](../claims/world-games-inventory-seam.md)
+- [`persistence-design.md`](persistence-design.md) — DESIGN: versioned, per-domain-namespaced
+  `PlayerState` save/load contract (deterministic canonical JSON, forward-only two-tier
+  migration, host owns storage / this repo owns the shape) plus the owner's cross-server
+  transfer directive as three named invariants — `TRANSFER_CONSERVATION`,
+  `TRANSFER_FRACTION_CAP`, `NO_INSTANT_RICHEST` — with percentages left OWNER-DECIDES.
 - [`economy-sim.md`](economy-sim.md) — REFERENCE: the cross-domain economy sim
   (`games/shared/sim/economy_sim.py`) enumerates every reward source across
   mining, fishing, dnd, and exploration by driving the shipped resolvers, pins

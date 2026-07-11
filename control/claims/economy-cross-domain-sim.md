@@ -1,0 +1,1 @@
+- `economy-cross-domain-sim` · **close-out record (PR #54)** — cross-domain emission sim + invariants; green+clean, parked ⚑ owner-merge; next: merge then economy follow-up · games/shared/sim/economy_sim.py · 2026-07-11
