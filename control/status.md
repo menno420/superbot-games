@@ -1,63 +1,67 @@
 # superbot-games · status
 
-updated: 2026-07-11T00:21:47Z
-phase: fishing walking skeleton shipped — READY PR to main (green-pending), builds on merged ORDER 001 (#24) unified base
-health: green — full suite 147 pure-domain tests pass (99 tests/ [73 mining + 26 fishing] + 48 games/exploration/tests/); `bootstrap.py check --strict` exit 0
-orders: acked=001,002 done=002
+updated: 2026-07-11T00:31:33Z
+phase: unified inventory/resource contract DESIGN DOC shipped — READY PR to main (green-pending); plan doc only, no system code refactored
+health: green — full suite 147 pure-domain tests pass (99 tests/ [73 mining + 26 fishing] + 48 games/exploration/tests/); no system code/README/tests.yml/inbox touched
+last-shipped: (pending PR #) — docs/design/world-inventory-resource-contract.md
+orders: acked=001,002 done=001,002
 
 ## Boot record
-Landed on origin/main HEAD `b134961` (substrate-kit v1.7.1). This is the **unified
-single-seat status file**, replacing the gen-1 pointer stub — one seat owns all of
-`games/**` and reports here. The per-lane `control/status-mining.md` /
-`control/status-exploration.md` files are now **GEN-1 HISTORY archives** (banners added
-this session); do not resurrect the two-lane split.
+Landed on origin/main HEAD `9b09b99` (PR #25 fishing skeleton merged; PR #24 unified
+single-seat base merged). Branch `feat/inventory-resource-contract` off origin/main.
+This seat owns all of `games/**` and reports here (single-seat status file).
 
-## Last shipped — fishing walking skeleton (2026-07-11)
-- `games/fishing/` pure package (mirrors `games/mining/core`): deterministic catch
-  resolver (`resolve_cast`, NO LLM), a neutral-id species theme-data table (Q-0267), an
-  independent fishing-salted splitmix64 stream, and a sim-pin harness. 26 tests under
-  `tests/fishing/` (collected by the `tests/` root). Design doc
-  `docs/design/fishing-catch-skeleton.md`. Branch `feat/fishing-skeleton`, PR to `main`.
-- **Substrate REUSED (imported directly):** `games.mining.core.energy` (a cast spends
-  `CAST_COST` through the shared engine) + `games.mining.core.equipment.EffectiveStats`
-  (`fishing_power`/`bite_luck`, Q-0175 — the only advantage levers). **EXTENDED (new
-  independent pattern):** the fishing-salted splitmix64 stream + species theme table +
-  catch resolver/sim, mirroring mining's determinism + sim-pin patterns.
-- **CI:** fishing tests sit under `tests/fishing/`, already collected by the merged #24
-  workflow's hardcoded `tests/` root — the floor was raised 121 → 147 (added
-  "+ 26 (tests/fishing/)") so a dropped fishing suite trips it loudly. Builds ON #24's
-  all-suites-collection + count-floor, not around it.
-- **⚑ needs-owner:** if branch protection walls the merge of an agent-authored unreviewed
-  PR (expected Self-Approval wall), the owner clicks Merge once CI is green.
+## Last shipped — unified inventory/resource contract (design doc, 2026-07-11)
+- **`docs/design/world-inventory-resource-contract.md`** — a PLAN/reference doc (NOT an
+  implementation; no system code refactored). Enumerates the SIX divergent reward shapes
+  across four systems with file:line citations and proposes ONE pure-domain contract.
+  - **The divergence (§1, load-bearing, all cited):** mining `Reward(item:str,amount:int)`
+    (`encounters.py:129-134`), mining dig `(ore,amount)` (`rewards.py:90-96`), mining
+    explore `(desc,item|None,delta<0)` (`rewards.py:137-155`), fishing
+    `Catch(species_id,size)` (`catch.py:90-95`), quest `RewardBundle(global_xp,game_xp,
+    currency,capability)` (`models.py:56-63`), shared encounter free-form
+    `payload:Mapping[str,object]` (`interface.py:38-45`). Plus: mining item identity =
+    lowercased display string as catalog+inventory+player key (`items.py:66`) — a Q-0267
+    violation — vs fishing's correct neutral `species_id`+data table (`species.py`);
+    inventory everywhere a bare `dict[str,int]`; capacity in distinct-types soft-cap
+    (`capacity.py:27,40`); `register_fish_species` bridge drops the neutral id
+    (`items.py:282-304`).
+  - **The contract (§2):** `ItemId` (neutral) + `ItemMeta` + `ItemCatalog` Protocol
+    (nouns-in-data, Q-0267); `Stack(item,qty,attrs)` (fish size as an attr);
+    `ProgressionDelta` + `Grant(items,progression)` — one reward shape subsuming all six;
+    `InventoryView`/`CapacityPolicy` Protocols + `CapStatus`, host store left open.
+  - **Home (§3):** `games/shared/inventory/` claim-first, mirroring the shipped
+    `games/shared/encounter/` seam; one thin adapter per system (extend-not-duplicate).
+  - **Migration (§4):** 6 incremental merged-on-green PRs, dependency-first, no big-bang.
+  - **Integrity (§5):** determinism preserved; no-pay-to-win (contract CARRIES amounts,
+    never computes them — each system stays sim-pinned); Q-0267 theme-readiness.
+- **`docs/claims/world-games-inventory-contract.md`** — ADVISORY claim (design-only, no
+  code change), reserving the prospective `games/shared/inventory/` path per docs/lanes.md.
+- **Collection:** `python3 -m pytest tests/ games/exploration/tests/ -q` → **147 passed**
+  (matches the #24/#25 floor). This is a docs-only PR — no code, README, tests.yml, or
+  inbox edited.
+
+## ⚑ needs-owner
+- **PR owner-click.** If branch protection walls the merge of this agent-authored,
+  human-unreviewed PR (the expected Self-Approval / Merge-Without-Review wall, documented
+  in `docs/retro/next-boot-mining-2026-07-09.md:23-28`), the OWNER clicks Merge once CI is
+  green. Terminal state for this work is "PR READY + CI green + ⚑ owner-click".
+- **Design decisions flagged in doc §6** (not blocking this doc; decide before the
+  implementation slices): (a) neutral-id namespace + whether to rename mining's persisted
+  inventory keys; (b) whether `currency` belongs in the shared contract at all; (c) one
+  shared `ItemCatalog` vs per-system catalogs.
 
 ## Orders
-`orders: acked=001,002 done=002`
-- ORDER 001 — **done** (merged #24: CI collection-scope fix + single-seat unification).
-- ORDER 002 — **done**.
-
-### ORDER 001 — PR state
-- branch: `order-001-collection-scope`
-- what it changed: CI now collects **all** pure-domain suites (`tests/` +
-  `games/exploration/tests/`) with a count floor so a dropped/renamed suite fails
-  loudly instead of shrinking coverage silently; GEN-1 HISTORY banners on the five lane
-  files; kit-version drift fix (v1.2.0 → v1.7.1) in the two archived status files; root
-  README rewritten to single-seat reality (Q-0267 theme-readiness); this status file
-  converted from the gen-1 pointer stub to unified status.
-- PR: #24 https://github.com/menno420/superbot-games/pull/24 — **MERGED**.
-
-### ORDER 002 — supersession note
-ORDER 002 predates owner directive Q-0265; Q-0265's continuous send_later-chain +
-cron-failsafe shape supersedes 002's hourly-Class-A cadence, not its task — routine
-"superbot-games failsafe wake" (cron `15 */2 * * *`) armed by the coordinator seat.
-
-## Routine / wake mechanics
-Routine armed 2026-07-10T23:47:02Z by coordinator worker seat, verified via list_triggers (never trusted creation output alone):
-- create_trigger(name="superbot-games failsafe wake", cron_expression="15 */2 * * *", persistent_session_id=coordinator session, prompt=exact Q-0265 failsafe text) → trigger id trig_019ZgWyL78Rx1sr6LhvL8NE3, enabled=true, next_run_at=2026-07-11T00:15:00Z, persist_session=true.
-- list_triggers verification: matching entry confirmed; embedded prompt verified byte-for-byte: "FAILSAFE WAKE (superbot-games, Q-0265): if your send_later continuation chain is alive, verify that in one line and end. If it stalled, resume the work loop (sync HEAD -> inbox -> slice after slice, each merged-on-green) and re-arm the chain (~15 min) before ending."
-- send_later chain link armed: message "continue the work loop", delay 15 min → {"fire_at":"2026-07-11T00:03:00Z","trigger_id":"trig_01KojfxKVb9sx63LPntSL9SJ"}.
-- No denials; no walls hit.
+`orders: acked=001,002 done=001,002`
+- ORDER 001 — done (merged #24). ORDER 002 — done (superseded by Q-0265, see history).
 
 ## Queue (inherited)
-- done: fishing walking skeleton reusing mining's energy/determinism substrate (this PR).
-- next: unified inventory/resource contract;
-- then: theme-slot audit per Q-0267.
+- done: fishing walking skeleton (#25); unified inventory/resource contract design doc
+  (this PR).
+- next: implement migration PR-1 (stand up `games/shared/inventory/` seam) per the doc
+  §4; then theme-slot audit per Q-0267.
+
+## Notes
+blockers: none. This is a plan doc — the actual `games/shared/inventory/` seam is a
+later, separate merged-on-green PR (doc §4 step PR-1), at which point the advisory claim
+is superseded by a real claim + the interface-change announcement (docs/lanes.md:28-30).
