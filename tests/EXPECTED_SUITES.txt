@@ -16,5 +16,6 @@
 # does not reintroduce the per-test churn the per-suite floors fixed.
 tests/mining
 tests/fishing
+tests/dnd
 tests/shared/inventory
 games/exploration/tests
