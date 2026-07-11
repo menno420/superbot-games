@@ -1,6 +1,6 @@
 # 2026-07-11 · D&D story game — walking skeleton (bounded-menu resolver)
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Opus 4.8 · 2026-07-11T14:00:16Z · D&D walking skeleton (bounded-menu resolver)
 
