@@ -1,6 +1,6 @@
 # 2026-07-11 · ORDER 003 — model-attribution ground truth (family-level 📊 Model line)
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Opus 4.8 · 2026-07-11T13:20:07Z · ORDER 003 model-attribution rule
 
