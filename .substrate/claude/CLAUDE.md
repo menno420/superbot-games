@@ -20,6 +20,14 @@ superbot-games is built in Python 3.10.
    append the finding same session.
 4. `docs/AGENT_ORIENTATION.md` — the task-specific reading router.
 
+## Kit machinery — search hygiene
+
+`bootstrap.py` (~12k generated lines) and `.substrate/` (kit state + a byte
+backup of the previous dist) are substrate-kit machinery, not project code.
+Exclude them from repo-wide searches: `grep -r --exclude=bootstrap.py
+--exclude-dir=.substrate …`, or ripgrep `rg -g '!bootstrap.py' -g
+'!.substrate' …`.
+
 ## Architecture — layers & import rules
 
 Games ship as plugin packages under games/<lane>/** (game-mining, game-exploration); shared engine code lives under games/shared/** (encounter engine, shared domain) and is claim-first. Each game's core is deterministic, seedable, and sim-tested — the core owns all outcomes; presentation is a separate, thin layer. Packages are pure-domain, built against the old superbot code as oracle, and consumed by the rebuilt bot menno420/superbot-next via its manifest/plugin contract.
