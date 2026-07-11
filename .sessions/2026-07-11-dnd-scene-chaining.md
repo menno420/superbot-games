@@ -1,6 +1,6 @@
 # 2026-07-11 · D&D story game — scene-chaining (data-driven bounded transitions)
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Opus 4.8 · 2026-07-11T15:18:58Z · D&D scene-chaining (data-driven bounded transitions)
 
