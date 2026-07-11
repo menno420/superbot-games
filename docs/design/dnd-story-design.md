@@ -360,3 +360,50 @@ skeleton PR uses whichever form is current at that commit.)*
   neutral ids. (Q-0267; §5.)
 - **Menu width is code-computed & capped** — chat activity widens option *count* only
   (`leverage.menu_width`, 2..4), never amounts or outcomes. (`leverage.py:16`; §3, §4.4.)
+
+## 9. Production DM model (decision)
+
+**Decision.** The production Dungeon Master runs on a **Claude Haiku-class model**
+(currently **Haiku 4.5**; adopt the newer Haiku as it is released). It is chosen
+deliberately for **speed, cost, and reliability** — the DM turn sits in the interactive
+loop, so a small, fast, cheap model keeps the story responsive and the per-guild budget
+sustainable (plan §3 budget/degrade). No larger model is required, and none is used, for
+the resolution path.
+
+**Why a small cheap model is safe here (the bounded-menu contract is designed for exactly
+this).** The DM does **one** thing: pick a single `option_id` from an enumerated menu of
+**≤ 4** pre-approved buttons (§4.2/§4.3). It never computes an amount, never mints a
+reward, never mutates state, never authors a new option, and never sees a seed, an
+effect id, or quest state. Everything mechanical is owned by deterministic code (§4.4/§4.5),
+so the model's *entire* authority is a one-token classification over a tiny fixed set. Its
+worst case is bounded by construction:
+
+- On a **valid** pick → a legal, game-approved, code-priced outcome (`≤ GLOBAL_MAX`).
+- On **any** bad output — an off-menu / hallucinated id, a malformed or non-`DMChoice`
+  payload, a timeout / null, or injection-shaped text — the resolver deterministically
+  **clamps to `scene.default_option_id`**, a narrate-only no-op that mints nothing and
+  advances nothing (§4.4).
+
+This "never raises / always clamps to the no-op default" property is no longer just an
+argument: it is **fuzz-proven** by a seeded, zero-new-dependency property-fuzzer
+(`tests/dnd/test_resolver_fuzz.py`) that hammers `resolve()` with hundreds of adversarial
+DM outputs — random/unicode/empty/huge off-menu ids, injection-shaped and control-char
+flavour, wrong-typed and non-`DMChoice` payloads — across every scene in the catalog and
+asserts each one clamps to the safe no-op with no exception escaping. Because a cheap
+model's *only* failure modes (an occasional off-menu guess, a truncated or malformed
+response, latency/timeout) all land on that fuzz-proven clamp path, using Haiku costs
+**no safety** — it can only ever pick a pre-approved button or fall back to the no-op.
+
+**Prompt-budget guidance (keep the cheap model fast and cheap).** Send the model the
+*minimum* it needs to choose well and nothing more:
+
+- **Send:** the short scene prose (resolved from the theme catalog) and the enumerated
+  allowed options as `{ id, text }` pairs only — exactly the §4.2 payload. That is the
+  whole prompt.
+- **Do NOT send:** seeds, amounts, effect ids, quest/engine state, reward tiers, or other
+  scenes. The model neither needs nor is trusted with any of it.
+- **Flavour is optional and truncated:** the DM's returned `flavor` is display-only and
+  hard-capped at `FLAVOR_CAP` (240) before it is ever stored or shown; never ask the model
+  for long prose, and never round-trip prior flavour back into the prompt. Keeping the
+  prompt small (short prose + ≤ 4 labels) is what keeps a Haiku-class DM fast, cheap, and
+  well within the per-session `AIToolBudget` (plan §3.6).
