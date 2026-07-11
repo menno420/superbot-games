@@ -1,6 +1,6 @@
 # 2026-07-11 · Survival sim harness (games/exploration/survival/)
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus · 2026-07-11T01:05:51Z · exploration P2 survival sim harness (re-land after shared-checkout race)
 
@@ -23,7 +23,36 @@ tests, so a survival-difficulty tuning is *proven against the bar before it ship
 
 ## What shipped
 
-_(filled on flip to complete)_
+- **`games/exploration/survival/` pure package** (stdlib-only, no Discord/DB/IO):
+  - **`difficulty.py`** — `Difficulty` enum (EASY/MEDIUM/HARD), frozen
+    `SurvivalTunables(max_energy, regen_seconds, cost)`, and `TUNABLES`. Easy imports
+    mining's shipped constants directly (`energy.MAX_ENERGY/REGEN_SECONDS/DIG_COST`) →
+    provably byte-identical to the base game (D-0004); Medium `(50, 15s, 1)` / Hard
+    `(40, 20s, 1)` are the sim-pinned first-candidate gradient.
+  - **`sim.py`** — pure `run(*, seeds=range(400), difficulties=…) -> SurvivalReport`
+    driving the **real shipped mining energy engine** (`settle`/`can_dig`/`spend`/
+    `seconds_until`) per difficulty and reading three Q-0087 curves back out. The
+    sustained/hr number is *produced by the engine* (an empty-bar greedy digger driven
+    over a simulated hour), not hardcoded. `format_report` + `__main__`.
+  - **`__init__.py`** — the public surface.
+- **`games/exploration/tests/test_survival_sim.py`** — 7 tests: Easy byte-identical to
+  shipped bars; sustained 360/240/180; burst 60/50/40; monotone gradient; casual == 30
+  across difficulties; `run()`-twice determinism; no-pay-to-win (food is a shared
+  difficulty-independent refill).
+- **CI floor** `204 → 211` (73 mining + 26 fishing + 55 exploration + 57 shared/inventory)
+  in `.github/workflows/tests.yml`. Full suite **211 passed** locally.
+- **`docs/design/survival-sim-harness.md`** (`reference`) — purpose, pinned tunables +
+  curve tables (real sim output), D-0004, and the scope fence (health/hunger, D-0008
+  caps, overlay = follow-ups). Linked from `docs/current-state.md`.
+
+## Sim-pin headline
+
+Driving the shipped energy engine per difficulty: **casual reach is 30/day on every
+difficulty** (a well-spaced day never energy-blocks — capability is never gated behind
+energy, Q-0087). The *grinder* faucet tightens with difficulty — sustained 360 → 240 →
+180 digs/hr (= 3600 ÷ regen), burst 60 → 50 → 40, capability-gap 98.0 → 65.7 → 49.3 —
+so difficulty is a *grind* gradient, never a wall on casual play, and food cannot buy
+Hard past Easy's faucet (no pay-to-win). Easy is byte-identical to the shipped bars.
 
 ## 💡 Session idea
 
