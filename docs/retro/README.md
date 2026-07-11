@@ -22,3 +22,8 @@
 - [queue-state-mining-2026-07-09.md](queue-state-mining-2026-07-09.md) — mining roadmap/queue state at wind-down.
 - [env-vars-mining-2026-07-09.md](env-vars-mining-2026-07-09.md) — mining environment variable names (gen-2 handoff).
 - [archive-ready-2026-07-10-mining.md](archive-ready-2026-07-10-mining.md) — mining gen-1 ARCHIVE-READY note: verified true state at main `5d38593`, every open ⚑ owner-action, resume read-order, gen-2 next 1–3 with block status, and the cross-project D-0043 wait.
+
+## World-games seat — close-out + archive (2026-07-11)
+
+- [close-out-world-games-2026-07-11.md](close-out-world-games-2026-07-11.md) — world-games gen-2 seat close-out self-review: what shipped, went-wrong (each cited), durable lessons/dev-conventions, chat-only knowledge capture (a–e), and the parked roadmap/follow-ups.
+- [archive-ready-2026-07-11.md](archive-ready-2026-07-11.md) — world-games seat ARCHIVE-READY note: true state at main `5d38593`, every ⚑ owner-action, resume spec incl. wake re-arm, and cross-project dependencies.

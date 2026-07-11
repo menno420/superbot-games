@@ -1,0 +1,1 @@
+- `persistence-save-state-contract` · **close-out record (PR #53)** — save-state + transfer contract (docs); green+clean, parked ⚑ owner-merge; next: merge; ⚑ transfer debit % OWNER-DECIDES · docs/design/persistence-design.md · 2026-07-11
