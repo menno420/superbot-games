@@ -8,7 +8,7 @@ tighten as species/gear grow. Mirrors ``tests/mining/test_encounters.py``'s sim-
 
 from __future__ import annotations
 
-from games.fishing.core import species
+from games.fishing.core import catch, species
 from games.fishing.sim import catch_sim as sim
 
 # --- pinned bounds (see the design doc's sim-pin table; trivially wide for a skeleton) ---
@@ -77,3 +77,74 @@ def test_sim_report_is_deterministic() -> None:
     for name in a.by_tier:
         assert a.by_tier[name].species_counts == b.by_tier[name].species_counts
         assert a.by_tier[name].bites == b.by_tier[name].bites
+    for key in a.by_spot_tier:
+        assert a.by_spot_tier[key].species_counts == b.by_spot_tier[key].species_counts
+
+
+# --- per-spot (biome) sim-pins ----------------------------------------------
+# Pinned from this slice's sim run (see docs/design/fishing-catch-skeleton.md §5). Honest,
+# not trivially wide: the spot biomes give a clear, ordered gradient. Bands carry enough
+# margin to absorb the small-sweep sampling noise but would redden on a real profile change.
+
+# Per-spot fresh (zero-gear) bite-rate bands — the tide pool bites readily, deep water is
+# stingy (but always well above the honest MIN_BITE_CHANCE floor).
+_FRESH_BITE_BY_SPOT = {
+    "tide_pool": (0.60, 0.72),
+    "dock": (0.48, 0.60),
+    "deep_water": (0.40, 0.52),
+}
+# Per-spot fresh rare-tail share bands — deep water is a rare-tail biome, the tide pool is not.
+_FRESH_RARE_BY_SPOT = {
+    "tide_pool": (0.03, 0.13),
+    "dock": (0.15, 0.27),
+    "deep_water": (0.34, 0.48),
+}
+
+
+def test_bite_rate_gradient_across_spots_at_zero_gear() -> None:
+    report = _run()
+    fresh = {s: report.spot_tier(s, "fresh").bite_rate for s in report.spots}
+    # The spot bite_bias orders the biomes: shallow calm > neutral dock > cold deep water.
+    assert fresh["tide_pool"] > fresh["dock"] > fresh["deep_water"]
+    for spot, (lo, hi) in _FRESH_BITE_BY_SPOT.items():
+        assert lo <= fresh[spot] <= hi, (spot, fresh[spot])
+    # Even the stingiest biome stays well above the honest floor (fair access, no gating).
+    assert fresh["deep_water"] > catch.MIN_BITE_CHANCE
+
+
+def test_rare_tail_gradient_across_spots_at_zero_gear() -> None:
+    report = _run()
+    rare = {s: report.spot_tier(s, "fresh").rare_share(_RARE) for s in report.spots}
+    # The spot weight profiles order the rare-tail share: deep water >> dock >> tide pool.
+    assert rare["deep_water"] > rare["dock"] > rare["tide_pool"]
+    for spot, (lo, hi) in _FRESH_RARE_BY_SPOT.items():
+        assert lo <= rare[spot] <= hi, (spot, rare[spot])
+
+
+def test_mean_size_gradient_across_spots_at_zero_gear() -> None:
+    report = _run()
+    size = {s: report.spot_tier(s, "fresh").mean_size for s in report.spots}
+    # Bigger fish live in deeper water — the size gradient follows the rare-tail gradient.
+    assert size["deep_water"] > size["dock"] > size["tide_pool"]
+
+
+def test_gear_gradient_holds_within_every_spot() -> None:
+    report = _run()
+    for spot in report.spots:
+        fresh = report.spot_tier(spot, "fresh")
+        geared = report.spot_tier(spot, "geared")
+        master = report.spot_tier(spot, "master")
+        # Within each biome, gear still quickens bites and biases toward the rare tail…
+        assert fresh.bite_rate < geared.bite_rate < master.bite_rate, spot
+        assert fresh.rare_share(_RARE) < geared.rare_share(_RARE) < master.rare_share(_RARE), spot
+        # …and a bite is never guaranteed even at the calmest biome, best gear.
+        assert master.bite_rate < 1.0, spot
+
+
+def test_fair_access_at_every_spot_and_tier() -> None:
+    report = _run()
+    for (spot, tier), st in report.by_spot_tier.items():
+        # The common minnow and the legendary carp are BOTH landed at every (spot, tier) —
+        # no biome and no gear tier gates a species out of reach.
+        assert st.species_counts.get("minnow", 0) > 0, (spot, tier)
+        assert st.species_counts.get("legend_carp", 0) > 0, (spot, tier)

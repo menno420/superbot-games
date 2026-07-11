@@ -44,13 +44,13 @@ jobs:
           python3 -m pip install --quiet pytest
           # ORDER 001 count floor: every pure-domain suite must stay collected.
           # 79 (tests/mining) + 26 (tests/fishing/) + 20 (fishing inventory adapter)
-          # + 48 (games/exploration/tests/) + 57 (tests/shared/inventory/) = 230 at this
-          # commit; a dropped/renamed suite trips this floor instead of silently shrinking
-          # coverage.
+          # + 48 (games/exploration/tests/) + 57 (tests/shared/inventory/) = 230
+          # + 18 (fishing spot biomes) = 248 at this commit; a dropped/renamed suite trips
+          # this floor instead of silently shrinking coverage.
           COLLECTED=$(python3 -m pytest tests/ games/exploration/tests/ --collect-only -q 2>/dev/null | grep -cE '::')
           echo "collected tests: $COLLECTED"
-          if [ "$COLLECTED" -lt 230 ]; then
-            echo "::error::pytest collected $COLLECTED tests, below floor 230 — a suite is not being collected"
+          if [ "$COLLECTED" -lt 248 ]; then
+            echo "::error::pytest collected $COLLECTED tests, below floor 248 — a suite is not being collected"
             exit 1
           fi
           python3 -m pytest tests/ games/exploration/tests/ -q

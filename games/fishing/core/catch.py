@@ -41,6 +41,7 @@ import random
 from dataclasses import dataclass
 
 from games.fishing.core import species as species_table
+from games.fishing.core import spots as spot_table
 from games.fishing.core.rng import fishing_seed
 from games.mining.core import energy as energy_model
 from games.mining.core.equipment import EffectiveStats
@@ -59,11 +60,16 @@ CAST_COST = 2
 
 # --- Bite chance ------------------------------------------------------------
 # Base chance a cast gets a bite at all (before gear). bite_luck raises it by
-# BITE_LUCK_PER_POINT per point, capped at MAX_BITE_CHANCE so a maxed rod still
-# sometimes comes up empty (a bite is never guaranteed — honest variance).
+# BITE_LUCK_PER_POINT per point; the chosen spot's `bite_bias` (spots.py DATA) nudges it
+# up (calm shallows) or down (cold deep water). The result is clamped to
+# [MIN_BITE_CHANCE, MAX_BITE_CHANCE] so a maxed rod still sometimes comes up empty (a bite
+# is never guaranteed) and a stingy spot can never kill bites entirely (fair access).
 BASE_BITE_CHANCE = 0.55
 BITE_LUCK_PER_POINT = 0.08
 MAX_BITE_CHANCE = 0.90
+# The floor a spot's negative bite_bias can never push below — the worst biome still bites
+# often enough that a zero-gear angler keeps catching (honest, no gating).
+MIN_BITE_CHANCE = 0.30
 
 # --- Species pick bias ------------------------------------------------------
 # fishing_power shifts the weighted pick toward bigger/rarer species: a species'
@@ -120,23 +126,39 @@ _TOO_TIRED = CastOutcome(
 )
 
 
-def _bite_chance(stats: EffectiveStats) -> float:
-    """Chance a cast gets a bite, raised by earned ``bite_luck`` (capped)."""
-    raised = BASE_BITE_CHANCE + max(0, stats.bite_luck) * BITE_LUCK_PER_POINT
-    return min(MAX_BITE_CHANCE, raised)
+def _bite_chance(stats: EffectiveStats, spot: spot_table.Spot) -> float:
+    """Chance a cast gets a bite: base + earned ``bite_luck`` + the spot's ``bite_bias``.
+
+    Clamped to ``[MIN_BITE_CHANCE, MAX_BITE_CHANCE]`` — a maxed rod at the calmest biome
+    still sometimes comes up empty, and the stingiest biome still bites often enough that a
+    zero-gear angler keeps catching. For the neutral default spot (``bite_bias`` 0.0) the
+    added ``0.0`` and the floor (base 0.55 ≥ 0.30) are inert, so the result is identical to
+    the pre-spots resolver.
+    """
+    raised = BASE_BITE_CHANCE + max(0, stats.bite_luck) * BITE_LUCK_PER_POINT + spot.bite_bias
+    return min(MAX_BITE_CHANCE, max(MIN_BITE_CHANCE, raised))
 
 
-def _pick_species(stats: EffectiveStats, rng: random.Random) -> species_table.Species:
-    """Weighted species pick, biased toward the bigger/rarer tail by ``fishing_power``.
+def _pick_species(
+    stats: EffectiveStats, spot: spot_table.Spot, rng: random.Random
+) -> species_table.Species:
+    """Weighted species pick — biased by ``fishing_power`` AND the *spot* catch profile.
 
-    ``fishing_power=0`` → the base rarity weights exactly (the common species dominate),
-    so a zero-gear player still catches across the common range. More power scales the
-    higher-``size_rank`` weights up — a bias, never a gate (every species stays reachable).
+    Each species' base ``rarity_weight`` is scaled by two independent, purely multiplicative
+    levers: the gear lever ``(1 + fishing_power · POWER_BIAS_PER_POINT · (size_rank−1))``
+    (rank-1 never boosted; ``fishing_power=0`` → the base weights exactly) and the spot's
+    per-species ``multiplier_for`` (spots.py DATA — the shallows favour the small common
+    tail, the deeps favour the big rare tail). Both are a **bias, never a gate**: every
+    spot multiplier is strictly positive and the common species keep a large base weight, so
+    a zero-gear player still lands the whole table at every spot. For the neutral default
+    spot every multiplier is ``1.0`` (an exact identity → the pre-spots weighting).
     """
     power = max(0, stats.fishing_power)
     rows = species_table.all_species()
     weights = [
-        row.rarity_weight * (1.0 + power * POWER_BIAS_PER_POINT * (row.size_rank - 1))
+        row.rarity_weight
+        * (1.0 + power * POWER_BIAS_PER_POINT * (row.size_rank - 1))
+        * spot.multiplier_for(row.species_id)
         for row in rows
     ]
     return rng.choices(rows, weights=weights, k=1)[0]
@@ -171,20 +193,29 @@ def resolve_cast(
     if energy < CAST_COST:
         return _TOO_TIRED
 
+    # The spot's DATA profile — its weight multipliers + bite nudge. An unknown/None
+    # spot_id falls back to the neutral default (an exact identity), no raise, no advantage.
+    spot = spot_table.profile_for(spot_id)
+
     chooser = rng or random.Random(fishing_seed(seed, spot_id))
 
-    if chooser.random() >= _bite_chance(effective):
+    if chooser.random() >= _bite_chance(effective, spot):
         return CastOutcome(
             bit=False,
             catch=None,
-            narration="🎣 You cast out and wait… but nothing bites this time.",
+            narration=f"🎣 You cast into the {spot.name.lower()}… but nothing bites this time.",
             energy_cost=CAST_COST,
         )
 
-    row = _pick_species(effective, chooser)
+    row = _pick_species(effective, spot, chooser)
     size = _roll_size(row, chooser)
     catch = Catch(species_id=row.species_id, size=size)
-    narration = f"{row.emoji} {row.flavor} — you land a {row.name} ({size} cm)!"
+    # Narration assembled from DATA — the spot row's nouns (name/emoji) and the species
+    # row's nouns (emoji/flavor/name), never a hard-coded per-spot or per-species string.
+    narration = (
+        f"{spot.emoji} At the {spot.name} — {row.emoji} {row.flavor} — "
+        f"you land a {row.name} ({size} cm)!"
+    )
     return CastOutcome(
         bit=True,
         catch=catch,
@@ -198,6 +229,7 @@ __all__ = [
     "BASE_BITE_CHANCE",
     "BITE_LUCK_PER_POINT",
     "MAX_BITE_CHANCE",
+    "MIN_BITE_CHANCE",
     "POWER_BIAS_PER_POINT",
     "SIZE_PER_RANK",
     "SIZE_JITTER",
