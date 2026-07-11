@@ -1,6 +1,6 @@
 # 2026-07-11 · Shared inventory seam (games/shared/inventory/) — contract migration PR-1
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus · 2026-07-11T00:48:52Z · shared inventory seam (contract migration PR-1)
 
@@ -33,8 +33,51 @@ The slice must:
 
 ## What shipped
 
-<!-- filled in the last content commit when code lands -->
-- (born-red — populated on the final content commit)
+- **`games/shared/inventory/` pure package** (mirrors `games/shared/encounter/`), all
+  stdlib-only, no Discord/DB/IO:
+  - **`interface.py`** — the design doc §2 types as frozen dataclasses +
+    `@runtime_checkable` Protocols: `ItemId` (neutral str alias) with an
+    `is_valid_item_id`/`item_id` validator that rejects non-neutral display nouns
+    (`"diamond"`, `"Lucky Charm"`); `ItemMeta` (the only re-theme surface, Q-0267);
+    `Stack(item, qty, attrs)` — `attrs` normalised to a read-only proxy, `qty` may be
+    negative (a loss, §2c); `ProgressionDelta(global_xp, game_xp, currency, capability)`;
+    `Grant(items, progression)` — the ONE reward shape; `CapStatus(used, cap)` with
+    `remaining`/`at_cap`; the `ItemCatalog` / `InventoryView` / `CapacityPolicy`
+    Protocols. Pure helpers: `EMPTY_GRANT`/`empty_grant`, `merge_grants`, `add_delta`
+    (associative, capability last-writer-wins), `scale_delta`.
+  - **`reference.py`** — `DictItemCatalog`, an IMMUTABLE dict-backed `ReferenceInventory`
+    (`add`/`add_grant` return a NEW inventory — pure, no in-place mutation; negative qty
+    clamps at 0), and `DefaultCapacityPolicy` pinned to mining's `PACK_SOFT_CAP=40`
+    (distinct-types soft cap, §7.5 regression pin).
+  - **`conformance.py`** — the reusable §7 suite future adapters re-run: round-trip
+    identity (§7.1), no-spend-lever (§7.2, introspects the types for a coin/purchase/pay
+    param), determinism pass-through (§7.3), theme-data-only nouns under a re-skin
+    (§7.4), capacity-in-distinct-types (§7.5), plus a `run_conformance` entry point.
+  - **`README.md` + `__init__.py`** — public-surface note, the claim/announce rule, the
+    public API, and the invariant list.
+- **`tests/shared/inventory/`** — 57 tests (collected by the existing `tests/` gate):
+  `test_interface.py` (construction/frozen-ness/id-validation/helper algebra),
+  `test_reference.py` (round-trips, catalog lookup, cap under/at/over, Protocol
+  `isinstance`), `test_conformance.py` (the §7 suite run against the reference impls +
+  its failure modes). Full suite **204 passed** (73 mining + 26 fishing + 48 exploration
+  + 57 inventory).
+- **CI floor** bumped `147 → 204` in `.github/workflows/tests.yml` (comment + `-lt`
+  check, `+ 57 (tests/shared/inventory/)`).
+- **Claim + announce** — `docs/claims/world-games-inventory-seam.md` (`binding`,
+  supersedes the advisory contract claim), linked from `docs/current-state.md`; the new
+  interface announced in `control/status.md` (shared-interface-change rule).
+- **Deferred (not resolved here):** the three ⚑ owner-decisions in the design doc §6
+  (neutral-id namespace / mining rename; whether `currency` belongs in the contract; one
+  shared vs per-system catalogs) and all per-system adapters (PRs 2..6).
+
+### Design-doc conformance / spec gaps filled
+
+Implemented §2 verbatim. Two minimal gap-fills, both noted in code: (1) §2b's docstring
+says `qty >= 1` but §2c/§6-D explicitly allow a negative `qty` for a loss — resolved
+toward §2c (no positivity check; the contract carries, never polices), documented on
+`Stack`. (2) §2d named only the two scalar `InventoryView` queries (`held`,
+`distinct_types`); added a `stacks()` method so the conformance suite can enumerate a hold
+without knowing its ids up front — flagged as a gap-fill in the Protocol docstring.
 
 ## 💡 Session idea
 
