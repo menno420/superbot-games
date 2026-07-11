@@ -45,6 +45,12 @@ class Resolution:
     ``clamped`` is True whenever the DM's output was rejected and fell back to the
     scene default (the safety path). ``reward`` / ``event`` are code-owned (``None``
     for a narrate-only outcome); ``flavor`` is display-only, already length-capped.
+
+    ``next_scene_id`` is the chosen option's PRE-DEFINED destination — pure DATA lifted
+    straight off the option, NEVER supplied or computed by the DM. On the clamp path it
+    is the DEFAULT option's own ``next_scene_id`` (deterministic), so an off-menu /
+    hallucinated choice can never steer to an arbitrary scene: the worst case is the
+    default's fixed transition (typically ``None`` = stay). ``None`` means stay/end.
     """
 
     scene_id: str
@@ -54,6 +60,7 @@ class Resolution:
     event: Optional[GameEvent]
     flavor: str
     clamped: bool
+    next_scene_id: Optional[str]
 
 
 def _sanitize_flavor(raw: object) -> str:
@@ -114,6 +121,10 @@ def resolve(
         event=outcome.event,
         flavor=flavor,
         clamped=clamped,
+        # The destination is DATA on the CHOSEN option — on the clamp path ``chosen`` is
+        # the default option, so this is the default's own fixed transition. The DM never
+        # supplies it; it can only ever be one of the scene's pre-defined edges.
+        next_scene_id=chosen.next_scene_id,
     )
 
 
