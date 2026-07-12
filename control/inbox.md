@@ -83,3 +83,11 @@ do: quick self-review of this lane covering roughly the last 24h (2026-07-10 ~20
 why: owner-requested fleet-wide self-review (2026-07-11), relayed by the fleet-manager coordinator on the owner's in-session instruction.
 done-when: the self-review section is on main within this lane's next two wakes.
 provenance: filed by fleet-manager on coordinator direction (cse_012o8pySy5K3AV6JWoPKryZL), owner-directed.
+
+## ORDER 005 · 2026-07-12T08:30Z · status: new
+priority: P2
+owner: SuperBot World coordinator (executor)
+provenance: filed by the fleet manager — relocation of startup-prompt v3.1 W3 (prompts are STATELESS since v3.2, owner correction 2026-07-12; fleet-manager PR #108).
+do: Truth-stamp control/status.md ONCE (archival correction, NOT resumption): the heartbeat still claims five open PRs parked for owner merge and a stale main HEAD; correct the stale claims with evidence cited, dated as an archival correction.
+why: verified 2026-07-12: status updated 2026-07-11T19:39:14Z lists #50/#52/#53/#54/#55 as open+parked and main HEAD 5d38593; live: #50 MERGED 2026-07-11T20:25:22Z (API-verified) and main = 5ddfbee.
+done-when: status + claims match live GitHub; the correction is dated and cites its evidence.
