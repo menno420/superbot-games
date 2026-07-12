@@ -1,8 +1,8 @@
 # world-games · status
-updated: 2026-07-12T00:57:03Z
+updated: 2026-07-12T01:56:32Z
 phase: docs-correction — landed a docs-only PR correcting stale "plugin contract in flight" claims; no feature-code change. Close-out/archive-prep from the prior wake still stands (5 feature PRs parked for owner merge).
 ladder (per-slice, all four at PURE CORE — workflow/host-adapter rungs NOT yet built):
-  - mining      — PURE CORE shipped (games/mining/core/, 96 tests). workflow + host-adapter = named-next.
+  - mining      — PURE CORE shipped (games/mining/core/, 96 tests). workflow (rung 2) = SCOPED-AND-FLAGGED (not built) pending a ⚑ audit-schema decision — see docs/design/mining-workflow-seam.md, PR #60 (READY + green). host-adapter = named-next.
   - exploration — PURE CORE shipped (games/exploration/, 55 tests). workflow + host-adapter = named-next.
   - dnd         — PURE CORE shipped (tests/dnd, 31 tests). workflow + host-adapter = named-next.
   - fishing     — PURE CORE shipped (tests/fishing, 64 tests). workflow + host-adapter = named-next.
@@ -11,7 +11,7 @@ health: green — main merged work green; local verify on the PR branch: tests/c
 last-shipped: kit substrate-kit v1.12.0 → v1.12.1 (#58). main HEAD 5ddfbee, kit substrate-kit v1.12.1.
 open-PR (this wake): #59 docs/plugin-contract-binding-correction — docs-only correction of stale "plugin contract in flight" claims (README + docs/founding-plan-mining.md + docs/design/mining-plugin-layout.md §3 shape note). READY (not draft); auto-merge NOT armed. Branch head af8e9f2 (+ this heartbeat commit). CI: opened this wake; a born-red CI webhook right after the first push is expected noise (born-red session card, since flipped complete). Owner merge is the only path (agent self-merge is platform-classifier-blocked; do NOT attempt).
 orders: acked=001,002,003,004 done=001,002,003
-⚑ needs-owner: ORDER 004 (self-review) — SATISFIED on main: artifact at docs/retro/close-out-world-games-2026-07-11.md (authored 201f8dd/#47, relocated at close-out 3a4eb98/#57); done=004 is backed by real, spec-compliant content, not a bare marker. Remaining owner items: the OWNER-ACTION block below + docs/retro/archive-ready-2026-07-11.md.
+⚑ needs-owner: ORDER 004 (self-review) — SATISFIED on main: artifact at docs/retro/close-out-world-games-2026-07-11.md (authored 201f8dd/#47, relocated at close-out 3a4eb98/#57); done=004 is backed by real, spec-compliant content, not a bare marker. Remaining owner items: the OWNER-ACTION block below + docs/retro/archive-ready-2026-07-11.md. ⚑ mining WORKFLOW seam (rung 2) — audit-schema decision (D1 which schema / D2 audit item-grants, a divergence from the oracle) needs owner/lab ratification; scoped in docs/design/mining-workflow-seam.md, PR #60.
 notes: prior-wake self-review + lessons → docs/retro/close-out-world-games-2026-07-11.md · archive resume spec → docs/retro/archive-ready-2026-07-11.md · per-PR state → control/claims/ · session card → .sessions/2026-07-12-plugin-contract-binding-correction.md · telemetry → telemetry/model-usage.jsonl
 
 ## Open PRs
