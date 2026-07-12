@@ -1,0 +1,1 @@
+- `mining-host-adapter-scoping` · **scope rung-3 host-adapter vs binding plugin contract** — verdict + preconditions, docs-only · docs/design/mining-host-adapter.md · 2026-07-12
