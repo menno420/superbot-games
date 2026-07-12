@@ -1,6 +1,6 @@
 # 2026-07-12 · plugin-contract binding correction (docs: fix stale "in flight" claims)
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Opus 4.8 · 2026-07-12T00:45:30Z · plugin-contract binding correction
 
