@@ -68,6 +68,15 @@ and mining already has a **partial** domain there (core loop live; deep systems 
 the **D-0043** named successor port). The pure core this session ships is exactly the
 material that D-0043 port will consume. Captured contract shape:
 
+> **Shape finalized since capture (2026-07-09).** The contract's *shape* has since been
+> finalized as **binding** at `menno420/superbot-next docs/game-plugin-contract.md@d3dba9b`
+> (ledger D-0056) and differs from the shape captured below: the binding contract makes
+> plugins installable Python packages on the `sb.plugins` entry-point group exporting
+> `MANIFEST`/`MANIFESTS`, adds a `@provider` ref (alongside `@handler`/`@panel`/`@workflow`),
+> and defines a `plugin_pin` → `plugins.lock.json` → boot-time-verify pin lifecycle (drift
+> ⇒ `FAILED_STARTUP(plugin_gate)`). Treat `docs/game-plugin-contract.md@d3dba9b` as the
+> authoritative shape; the capture below records this doc's earlier reading.
+
 - **Manifest root:** `sb/spec/manifest.py` → `@dataclass(frozen=True) SubsystemManifest`
   with facet slots: `key, version, commands, panels, settings, stores, events,
   capabilities, data_invariants, wizard_sections`. The compiler is **duck-typed** over

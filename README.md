@@ -12,9 +12,12 @@ The single seat owns all of `games/**` and coordinates through the unified `cont
 are archived alongside the lanes contract.
 
 Games ship as **plugin packages** that the rebuilt bot (`menno420/superbot-next`) consumes
-via its manifest/plugin contract. That contract is in flight there (superbot-next's inbox
-ORDER 002); until it lands, all work here stays plugin-side — pure-domain packages built
-against the old superbot code as oracle, with the host-facing seams left open.
+via its manifest/plugin contract. That contract is now **defined and binding** —
+`menno420/superbot-next docs/game-plugin-contract.md@d3dba9b` (ledger D-0056, owner decision
+2026-07-09). Work here still stays plugin-side: pure-domain packages built against the
+superbot economy as oracle, with the host-facing adapters left as a later ladder rung. What
+changed is that those seams can now be built against a concrete, versioned contract rather
+than waiting for one to land.
 
 Player-visible nouns (names, flavor, emoji) stay isolated in **data, not code**, so the
 fleet's core/skin split can reach the world games later — build the mechanics against
