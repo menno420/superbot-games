@@ -11,6 +11,9 @@
   (loot/flavour v1), full design + sim-pin table + evidence.
 - [`mining-plugin-layout.md`](mining-plugin-layout.md) — superbot-next plugin contract
   mapping for the pure mining domain port.
+- [`mining-workflow-seam.md`](mining-workflow-seam.md) — rung-2 scoping doc for the
+  WORKFLOW audited seam (`services/mining_workflow.py`); captures the oracle's two
+  audit mechanisms and raises the ⚑ audit-schema owner/lab decision (D1 / D2).
 - [`theme-readiness.md`](theme-readiness.md) — Q-0267 delta supplement to the merged
   theme-slot audit (#28): three additional player-visible mining surfaces
   (`capacity.py` warnings, `world.py` descent hints / biome tables, `skills.py` branch
