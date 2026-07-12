@@ -1,6 +1,6 @@
 # 2026-07-12 · mining WORKFLOW audited-seam scoping (rung 2 · ⚑ audit-schema decision)
 
-> **Status:** `in-progress`
+> **Status:** ✅ `complete`
 >
 > 📊 Model: Opus 4.8 · 2026-07-12T01:51:48Z · mining workflow-seam scoping
 
