@@ -1,1 +1,0 @@
-- `truth-stamp-claims-sweep` · **truth-stamp current-state + sweep merged claims** — stamp docs/current-state.md In-flight snapshot superseded @fbf5202; delete 5 merged-PR claim files · docs/current-state.md, control/claims/ · 2026-07-12
