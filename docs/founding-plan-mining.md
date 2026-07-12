@@ -23,11 +23,12 @@ superbot-next's decision D-0043 shipped mining's core loop and declared the full
   D-0043's accounting) plus `disbot/services/mining_workflow.py` (~1,430 lines) in
   `menno420/superbot`. Shipped behavior is the spec; when a doc and the oracle disagree,
   the oracle wins.
-- **Target:** superbot-next's manifest/plugin contract. That contract is **in flight**
-  there (superbot-next's inbox ORDER 002). **Until it lands, work stays plugin-side:** a
-  pure-domain package — Discord-free core, injectable RNG/clock, unit-tested against
-  oracle behavior — whose host-facing seams are designed to dock onto the contract when it
-  arrives, never blocked waiting on it.
+- **Target:** superbot-next's manifest/plugin contract. That contract is now **defined and
+  binding** at `menno420/superbot-next docs/game-plugin-contract.md@d3dba9b` (ledger D-0056,
+  owner decision 2026-07-09). **Work stays plugin-side by choice of ladder ordering** (pure
+  core first), not because the contract is missing: a pure-domain package — Discord-free
+  core, injectable RNG/clock, unit-tested against oracle behavior — whose host-facing seams
+  are designed to dock onto the now-concrete contract, never blocked waiting on it.
 - **Shape:** `games/mining/` — pure domain core (grid, energy, wear, skills, structures,
   workshop, market, rewards, titles, loadouts, character…), a workflow layer mirroring
   `mining_workflow`'s audited op seams, and a thin adapter boundary left open for the
