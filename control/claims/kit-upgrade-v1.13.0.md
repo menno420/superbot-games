@@ -1,1 +1,0 @@
-- `claude/kit-upgrade-v1.13.0` · substrate-kit distribution upgrade v1.12.1 → v1.13.0 (kit-owned files only; no lane/control content) · bootstrap.py, substrate.config.json, .substrate/*, .github/workflows/substrate-gate.yml (if regenerated), .sessions/2026-07-12-kit-v1130-upgrade.md · 2026-07-12
