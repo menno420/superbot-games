@@ -1,6 +1,6 @@
 # 2026-07-12 · rung-3 host-adapter scoping (mining) + ⚑ packaging/hermeticity decision
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Opus 4.8 · 2026-07-12T21:16:23Z · rung-3 host-adapter scoping
 
