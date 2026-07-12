@@ -11,11 +11,31 @@
 - Exploration P1 engine (`games/exploration/quest/`, 48 tests incl. balance-pin sim) and
   the shared encounter seam (`games/shared/encounter/`) — merged #3, sim-pinned;
   re-audit only on a reported regression or when D-0008's upstream bands arrive.
-- substrate-kit v1.2.0 engagement (adopted in #3; CI gate installed by the wake-up PR).
+- substrate-kit v1.15.0 engagement (adopted in #3; CI gate installed by the wake-up PR).
 
 ## In flight
 
-(Verify against live source control — this section is a dated snapshot; 2026-07-09 wind-down.)
+(Truth-stamped 2026-07-12 at HEAD fbf5202, substrate-kit v1.15.0 — the prior
+2026-07-09 wind-down snapshot below is superseded.)
+
+**Zero open PRs.** The 2026-07-09 in-flight items all resolved: **#13**
+exploration gen-1 succession, **#5 / #11** mining domain port + grid-encounters
+slice, and the P2 survival sim harness have merged; PRs through **#60** are on
+main.
+
+Parked (not being built until ratified): the rung-2 mining WORKFLOW-seam
+**audit-schema decision** — D1 (which audit schema mining adopts) and D2
+(whether state-changing item-grant actions are audited, a divergence from the
+oracle where they are UNAUDITED) — is scoped in
+[`design/mining-workflow-seam.md`](design/mining-workflow-seam.md) and awaits
+owner/lab ⚑ ratification.
+
+Next buildable rung: the **host-adapter** against superbot-next's binding plugin
+contract (`docs/game-plugin-contract.md@d3dba9b`, D-0056).
+
+---
+
+_Superseded 2026-07-09 wind-down snapshot (kept for provenance):_
 
 - **#13** — exploration gen-1 WIND-DOWN: succession package (whole-life retro, succession
   doc, gen-2 Custom Instructions proposal, tested env setup script, gen-2 feedback,
@@ -26,6 +46,9 @@
   harness** on the D-0004 option-(a) baseline.
 
 ## Recently shipped (newest first)
+
+_(Note 2026-07-12: this list stops at #12 and is behind — roughly 48 merges through
+#60 have landed since; the authoritative history is in git, not enumerated here.)_
 
 - **#12** (2026-07-09) — exploration: ORDER 005 PING-ACK (dispatch 17:54:33Z →
   discovery 19:54:00Z → ack on main; measured no-live-session pickup ≈ 2h).
