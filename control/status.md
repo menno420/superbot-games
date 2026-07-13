@@ -10,7 +10,7 @@ ladder (per-slice, all four at PURE CORE — workflow/host-adapter rungs NOT yet
 health: green — main merged work green; local verify on the PR branch: tests/check_suite_floors.py TOTAL 310 (all floors met), pytest tests/ games/exploration/tests/ = 310 passed, tools/gen_balance.py --check clean, bootstrap.py check --strict exit 0 (after session card flipped complete).
 last-shipped: kit substrate-kit v1.12.0 → v1.12.1 (#58). main HEAD 9efe599 (this branch is based on 5ddfbee/#58, which is fine; main has since advanced via fleet-manager PR #61 — see the Archival correction section below), kit substrate-kit v1.12.1.
 open-PR (this wake): #59 docs/plugin-contract-binding-correction — docs-only correction of stale "plugin contract in flight" claims (README + docs/founding-plan-mining.md + docs/design/mining-plugin-layout.md §3 shape note). READY (not draft); auto-merge NOT armed. Branch head af8e9f2 (+ this heartbeat commit). CI: opened this wake; a born-red CI webhook right after the first push is expected noise (born-red session card, since flipped complete). Owner merge is the only path (agent self-merge is platform-classifier-blocked; do NOT attempt).
-orders: acked=001,002,003,004,005,006 done=001,002,003,005,006 (004 satisfied — see ⚑ below; 006 = NIGHT REPORT section at end of this file)
+orders: acked=001,002,003,004,005,006,007 done=001,002,003,005,006,007 (004 satisfied — see ⚑ below; 006 = NIGHT REPORT section at end of this file; 007 = ORDER 007 section at end of this file — the four SIM-REQUEST closures are recorded in control/outbox.md, and the V043 wiring + V044 guard are landed-or-explicitly-scheduled via PR #83 per the order's done-when)
 ⚑ needs-owner: ORDER 004 (self-review) — SATISFIED on main: artifact at docs/retro/close-out-world-games-2026-07-11.md (authored 201f8dd/#47, relocated at close-out 3a4eb98/#57); done=004 is backed by real, spec-compliant content, not a bare marker. Remaining owner items: the OWNER-ACTION block below + docs/retro/archive-ready-2026-07-11.md. ⚑ mining WORKFLOW seam (rung 2) — audit-schema decision (D1 which schema / D2 audit item-grants, a divergence from the oracle) needs owner/lab ratification; scoped in docs/design/mining-workflow-seam.md, PR #60.
 notes: prior-wake self-review + lessons → docs/retro/close-out-world-games-2026-07-11.md · archive resume spec → docs/retro/archive-ready-2026-07-11.md · per-PR state → control/claims/ · session card → .sessions/2026-07-12-plugin-contract-binding-correction.md · telemetry → telemetry/model-usage.jsonl
 
@@ -93,3 +93,42 @@ Net: the close-out lane's deliverables all LANDED on main; nothing in the sectio
 1. Build on the D2/SIM-REQUEST answers as they land (wire sim-pinned numbers verbatim).
 2. Rung-3 mining host-adapter if the packaging decision is ratified (docs/design/mining-host-adapter.md).
 3. Generative polish wave (playability follow-ups) on owner green-light.
+
+## ORDER 007 ACK — 2026-07-13T17:45:47Z (Q-0264 verdict fan-out)
+
+> This file is a frozen archive; this section is written ONLY under the explicit
+> at-HEAD ORDER 007 (control/inbox.md @ d6a9526, landed via PR #80, merged
+> 2026-07-13T13:44:13Z — API-verified), whose done-when REQUIRES a status ack
+> (`orders: acked=007`). Doc-conflict note, recorded rather than silently
+> resolved: the seat brief calls this file a read-only ARCHIVE, while the newer
+> at-HEAD ORDER 007 requires the ack here — the order + the control/README.md
+> bus grammar outrank the brief (same precedent as the ORDER 006 night-report
+> section above).
+
+- **V042 · mining-economy-tuning — APPROVE:** ratified, every packet-pinned
+  constant unchanged; disposition + the two reporting-only flags (TOOL-LADDER
+  amount-inert ×1.13/×1.25; FAUCET-BYPASS 0.8 coins/dig → idea-engine
+  PROPOSAL 035, sim-ready) recorded on the closed SIM-REQUEST in
+  control/outbox.md. Earn-rate anchor on record: 4.571–7.328 coins/dig ×
+  360 digs/h.
+- **V043 · fishing-economy-tuning — APPROVE-WITH-CONSTANTS:** wired VERBATIM
+  via PR #83 (`claude/order-007-verdict-fanout`): sell curve 8/13/27/80,
+  `game_xp = size_rank` per catch, `xp_to_next(L) = 50·L`, milestones L10/L25,
+  levels stat-neutral, audited `sell` leg with sell-OR-cook exclusivity
+  (`games/fishing/core/economy.py`, `games/fishing/inventory/adapter.py`,
+  `services/fishing_workflow.py`).
+- **V044 · dnd-escort-double-mint — MINT-AT-MOST-ONCE:** guard landed via
+  PR #83 (`DnDState.bundle_minted` + choose() guard,
+  `services/dnd_workflow.py`); the 2× characterization test flipped to 1×.
+- **V045 · exploration-reward-bands — RATIFY-WITH-NULL:** placeholders +
+  Medium 50/15s/1 / Hard 40/20s/1 ratified verbatim; honest NULL on the
+  numeric band import recorded as EXPECTED (Q-0087 carries no numeric
+  constants at the pin; import waits on the upstream superbot P0 harness —
+  D-0008's artifact). Recorded on the closed SIM-REQUEST in control/outbox.md.
+- **done-when state:** the four SIM-REQUESTs are closed/answered in
+  control/outbox.md (this PR); acked=007 is on the orders line above. done=007
+  per the order's own clause ("once the V043 wiring + V044 guard land or are
+  explicitly scheduled"): PR #83 is open READY with both landed on its head,
+  scheduled to auto-land on the card flip via the #67 card-guarded enabler.
+  Suite 516 → 546 locally at the PR head; substrate-gate red on #83 pre-flip
+  is the DESIGNED born-red hold, not a defect.
