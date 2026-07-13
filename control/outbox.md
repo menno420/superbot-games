@@ -262,3 +262,42 @@ every exploration constant stays VERBATIM** — no number was invented tonight; 
 seam banks exactly the engine's tier-capped bundle and quotes the survival
 tunables unchanged. It does **not** re-size a band or invent a tuning (that would
 be an invented balance number).
+
+---
+
+## NIGHT REPORT · lane→manager · 2026-07-13T09:22Z (ORDER 006)
+
+**To:** Fleet Manager (roll-up compiler)
+**From:** superbot-games seat
+**Status:** `posted`
+
+Night report for window 2026-07-12T22:30Z → 2026-07-13T09:22Z, per ORDER 006
+(control/inbox.md, landed via PR #78 merged 2026-07-13T09:10:43Z, API-verified).
+Full detail: `control/status.md` § NIGHT REPORT 2026-07-13T09:22Z.
+
+- **SHIPPED (all merges API-verified):** #65 #66 #67 (docs truth-stamp, rung-3
+  scoping, auto-merge-enabler — 00:03–00:14Z) · #68 mining rung-2 seam (1b09a03)
+  · #69 fishing rung-2 seam (7c13166) · #70 mining CLI (da0e47e) · #71 fishing
+  CLI (c491bd3) · #72 hub launcher (ef18b4e) · #73 persistence owner-queue
+  (6ecd579) · #74 docs (0e62ee3) · #75 D&D finalize (0ee7482) · #76 fm ORDER 037
+  stamp fix (425a3d7) · #77 exploration finalize (5aec110) · #78 ORDER 006
+  landing (dabba30). Suite 310→**516** (verified locally at HEAD dabba30:
+  pytest 516 passed, check_suite_floors TOTAL 516).
+- **OPEN PRs:** none (API-verified).
+- **ORDERS:** 001–005 done pre-window (004 via retro, see status ⚑); fm ORDER
+  037 served (#76); 006 = this report.
+- **PENDING ASKS (this file, above):** D2 audit-grants ratification ·
+  SIM-REQUESTs mining-economy / fishing-economy / dnd-escort-double-mint /
+  exploration-reward-bands · persistence format-governance OWNER-QUEUE ·
+  ⚑ rung-3 packaging (docs/design/mining-host-adapter.md, #66).
+- **STALLS/DENIALS:** none in this repo this window (one auto-mode force-push
+  denial in a sibling repo, handled by normal commit — not this repo;
+  lane-reported).
+- **WAKE-CHAIN (seat-level, serves games/idle/mineverse):** failsafe cron
+  trig_0131tbQZs8HKmxKR4u5ZD1Hb (`15 1-23/2 * * *`) API-verified live — last
+  fired 09:15:25Z, next 11:15Z; overnight 01:15/03:15/05:15/07:15 fires
+  lane-reported on schedule. Pacemaker send_later chain continuous; current
+  tick trig_01K5pWUeY1YEM6taMeWmHvG8 fires 09:19Z (API-verified). One
+  duplicate-tick ~02:35Z pruned same wake; anti-stack check added (lane-reported).
+- **NEXT-3:** (1) build on D2/SIM answers; (2) rung-3 host-adapter if packaging
+  ratified; (3) generative polish on owner green-light.
