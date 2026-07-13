@@ -1,3 +1,0 @@
-# Claim · test coverage — games/mining/sim/encounters_sim
-
-- `claude/night-coverage-encounters-sim` · **night-coverage-encounters-sim** — raise real test coverage on `games/mining/sim/encounters_sim.py` (68%: 119 stmts, 38 missed; lines 97–101 the `_percentile` helper, 172–213 the whole `format_report` balance renderer untested) per the ORDER 008(b) production-grade standing directive; pin the percentile helper's edge/rounding behavior and the report renderer's section order, zero-denominator branches, and empty-aggregate skips at EXISTING constants; tests-only, zero gameplay-constant changes · expected files: tests/mining/test_encounters_sim.py, .sessions/, telemetry/model-usage.jsonl, control/claims/ · 2026-07-14
