@@ -1,0 +1,1 @@
+- `document-playable-games` · **docs (README)** — add a "Playing the games" section documenting the three new playable entrypoints (`python3 -m games` hub + `python3 -m games.mining` / `python3 -m games.fishing` standalones) · README.md · 2026-07-13
