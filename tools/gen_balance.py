@@ -53,6 +53,7 @@ from games.exploration.quest import leverage as quest_leverage
 from games.exploration.quest.models import RewardTier
 from games.exploration.survival import difficulty as survival_difficulty
 from games.fishing.core import catch as fishing_catch
+from games.fishing.core import economy as fishing_economy
 from games.fishing.core import species as fishing_species
 from games.fishing.core import spots as fishing_spots
 from games.mining.core import capacity as mining_capacity
@@ -280,7 +281,7 @@ def render() -> str:
     out.append("")
     out.append(
         "_Sources: `games/fishing/core/catch.py`, `games/fishing/core/species.py`, "
-        "`games/fishing/core/spots.py`._"
+        "`games/fishing/core/spots.py`, `games/fishing/core/economy.py`._"
     )
     out.append("")
 
@@ -319,6 +320,47 @@ def render() -> str:
     ]
     spot_rows.sort()
     out += _table(("spot_id", "bite_bias"), spot_rows)
+    out.append("")
+
+    out.append("### Fishing economy (V043) (`economy.py`)")
+    out.append("")
+    out.append(
+        "The sim-pinned VERDICT 043 sell + progression curves, wired verbatim "
+        "(ORDER 007). The seam's `sell` consumes the fish from the haul — "
+        "sell-OR-cook, never both. Levels are STAT-NEUTRAL readouts: they never "
+        "feed `fishing_power` / `bite_luck` or any resolver lever."
+    )
+    out.append("")
+    out.append(
+        "Per-species sell value (`SELL_VALUES`) + per-catch XP "
+        "(`ProgressionDelta.game_xp = size_rank`, read off `species.py`):"
+    )
+    out.append("")
+    sell_rows = [
+        (
+            species_id,
+            _num(fishing_economy.sell_value(species_id)),
+            _num(fishing_species.get(species_id).size_rank),
+        )
+        for species_id in sorted(fishing_economy.SELL_VALUES)
+    ]
+    out += _table(("species_id", "sell (coins)", "xp per catch"), sell_rows)
+    out.append("")
+    out.append(
+        f"Progression: `XP_PER_LEVEL` = {_num(fishing_economy.XP_PER_LEVEL)} — "
+        f"advancing FROM level L costs `xp_to_next(L) = "
+        f"{_num(fishing_economy.XP_PER_LEVEL)}·L` "
+        f"(base level {_num(fishing_economy.BASE_LEVEL)}). Milestones SURFACE "
+        "(a readout, never a stat) at "
+        + " / ".join(f"L{_num(m)}" for m in fishing_economy.MILESTONE_LEVELS)
+        + "; the cumulative XP each needs is derived from the same curve:"
+    )
+    out.append("")
+    milestone_rows = [
+        (f"L{_num(m)}", _num(fishing_economy.cumulative_xp_for(m)))
+        for m in fishing_economy.MILESTONE_LEVELS
+    ]
+    out += _table(("milestone", "total xp to reach"), milestone_rows)
     out.append("")
 
     # --- 6. DND --------------------------------------------------------------

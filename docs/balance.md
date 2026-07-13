@@ -98,7 +98,7 @@ Surface ore weights (`ORE_WEIGHTS`, depth 0):
 
 ## Fishing
 
-_Sources: `games/fishing/core/catch.py`, `games/fishing/core/species.py`, `games/fishing/core/spots.py`._
+_Sources: `games/fishing/core/catch.py`, `games/fishing/core/species.py`, `games/fishing/core/spots.py`, `games/fishing/core/economy.py`._
 
 ### Catch resolver (`catch.py`)
 
@@ -128,6 +128,26 @@ _Sources: `games/fishing/core/catch.py`, `games/fishing/core/species.py`, `games
 | deep_water | -0.08 |
 | dock | 0 |
 | tide_pool | 0.1 |
+
+### Fishing economy (V043) (`economy.py`)
+
+The sim-pinned VERDICT 043 sell + progression curves, wired verbatim (ORDER 007). The seam's `sell` consumes the fish from the haul — sell-OR-cook, never both. Levels are STAT-NEUTRAL readouts: they never feed `fishing_power` / `bite_luck` or any resolver lever.
+
+Per-species sell value (`SELL_VALUES`) + per-catch XP (`ProgressionDelta.game_xp = size_rank`, read off `species.py`):
+
+| species_id | sell (coins) | xp per catch |
+| --- | --- | --- |
+| bass | 13 | 2 |
+| legend_carp | 80 | 4 |
+| minnow | 8 | 1 |
+| pike | 27 | 3 |
+
+Progression: `XP_PER_LEVEL` = 50 — advancing FROM level L costs `xp_to_next(L) = 50·L` (base level 1). Milestones SURFACE (a readout, never a stat) at L10 / L25; the cumulative XP each needs is derived from the same curve:
+
+| milestone | total xp to reach |
+| --- | --- |
+| L10 | 2250 |
+| L25 | 15000 |
 
 ## DND
 
@@ -169,7 +189,7 @@ The per-suite pytest count floors the CI coverage ratchet enforces (ORDER-001).
 | `services/tests` | 164 |
 | `tests/dnd` | 43 |
 | `tests/exploration` | 15 |
-| `tests/fishing` | 94 |
+| `tests/fishing` | 104 |
 | `tests/mining` | 103 |
 | `tests/shared/inventory` | 57 |
 | `tests/shared/sim` | 7 |

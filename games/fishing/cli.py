@@ -7,16 +7,21 @@ species/spot data tables), rung 2 shipped the audited WORKFLOW seam
 action), but nothing actually *drove* the seam — there was no way to sit down and
 cast a line. This module is that driver: a text REPL that holds one mutable
 :class:`~services.fishing_workflow.FishingState`, an in-memory
-:class:`~services.audit.InMemorySink`, and dispatches player commands to the one
-seam action (``cast``) plus the read-only navigation verbs (``spot`` / ``spots``
-/ ``status`` / ``haul``).
+:class:`~services.audit.InMemorySink`, and dispatches player commands to the two
+seam actions (``cast`` and the V043 ``sell`` leg —
+:func:`~services.fishing_workflow.sell`, the audited sell-OR-cook mutation path)
+plus the read-only navigation verbs (``spot`` / ``spots`` / ``status`` /
+``haul``).
 
 It is deliberately **thin and non-balance**: every bite chance, catch weight,
-size and narration string is read VERBATIM from the seam/core (this module
-invents no balance number). Its only additions are UX / orchestration — a status
-header, a discoverable ``spots`` listing (+ valid-id hints when you mistype a
-spot), a clear help screen, and an end-of-session summary (casts made, fish
-caught by species, audit rows recorded).
+size, sell value, XP amount and narration string is read VERBATIM from the
+seam/core (this module invents no balance number and duplicates no economy
+logic — a sell routes through the seam's audited :func:`sell`, and the coins /
+level / milestone readouts only format what the seam/economy module already
+computed). Its only additions are UX / orchestration — a status header, a
+discoverable ``spots`` listing (+ valid-id hints when you mistype a spot), a
+clear help screen, and an end-of-session summary (casts made, fish caught by
+species, coins, audit rows recorded).
 
 Testability: the loop is factored so a test can drive a scripted session with no
 TTY — :func:`run_commands` takes a list of command strings (plus an optional
@@ -33,6 +38,7 @@ from datetime import datetime, timezone
 from services import fishing_workflow as fw
 from services.audit import InMemorySink
 
+from games.fishing.core import economy
 from games.fishing.core import spots as spot_table
 from games.fishing.core import species as species_table
 from games.mining.core import energy
@@ -43,10 +49,10 @@ STARTER_SPOT = "dock"
 
 PROMPT = "fishing> "
 
-#: The one verb that routes to a state-changing seam action (as opposed to the
+#: The verbs that route to a state-changing seam action (as opposed to the
 #: read-only ``spot`` / ``spots`` / ``status`` / ``haul`` / ``help`` and the
-#: ``quit`` control verbs).
-_ACTION_VERBS = frozenset({"cast"})
+#: ``quit`` control verbs) — ``cast`` and the V043 ``sell`` leg.
+_ACTION_VERBS = frozenset({"cast", "sell"})
 
 
 # ---------------------------------------------------------------------------
@@ -95,10 +101,18 @@ def _render_haul(haul: dict[str, int]) -> str:
 
 
 def status_lines(state: fw.FishingState) -> list[str]:
-    """The status header: energy bar, current spot, running haul."""
+    """The status header: energy bar, coins, level readout, spot, running haul.
+
+    The coins / level lines are V043 surfacing only: the level is the
+    STAT-NEUTRAL :func:`games.fishing.core.economy.level_for_xp` readout over
+    the seam-accumulated ``game_xp`` — nothing here computes or feeds a stat.
+    """
+    level = economy.level_for_xp(state.game_xp)
     return [
         "─" * 44,
         f"  energy: {energy.bar(state.energy)}",
+        f"  coins:  {state.coins}",
+        f"  level:  L{level} ({state.game_xp} xp)",
         f"  spot:   {_spot_label(state.spot_id)}",
         f"  haul:   {_render_haul(state.haul)}",
         "─" * 44,
@@ -125,6 +139,7 @@ def help_lines() -> list[str]:
     return [
         "Commands:",
         "  cast                 cast once at your current spot — spend energy, maybe land a fish",
+        "  sell <species> [qty] sell landed fish at the sim-pinned value (default: all you hold)",
         f"  spot <id>            move to a fishing spot (valid: {valid})",
         "  spots                list every spot + its vibe",
         "  status / haul        show energy, current spot, and your running haul",
@@ -150,6 +165,10 @@ def summary_lines(
     if caught:
         lines.append(f"  by species:      {_render_haul(state.haul)}")
     lines += [
+        f"  coins:           {state.coins}",
+        f"  fishing level:   L{economy.level_for_xp(state.game_xp)} ({state.game_xp} xp)",
+    ]
+    lines += [
         f"  audit records:   {len(sink.records)}",
         f"  final spot:      {_spot_label(state.spot_id)}",
         "Tight lines — thanks for playing!",
@@ -167,18 +186,36 @@ class StepResult:
     lines: list[str] = field(default_factory=list)
     quit: bool = False
     is_cast: bool = False  # routed to the state-changing ``cast`` seam verb
+    is_sell: bool = False  # routed to the state-changing ``sell`` seam verb (V043)
     ok: bool = False  # the seam Result was ``ok`` (a committed mutation)
 
 
 def _cast_extra(state: fw.FishingState, result: fw.FishingResult) -> list[str]:
-    """UX-only lines printed after a cast — energy + running haul (non-balance).
+    """UX-only lines printed after a cast — milestones, energy, xp, haul.
 
     The seam already returns the honest narration (a bite, an empty cast, or the
     too-tired 😴 rest) as ``result.message``; this only surfaces the *player*
-    state that moved, without inventing any economy number.
+    state that moved, without inventing any economy number. The milestone /
+    xp / level values are quoted VERBATIM off the seam's
+    :class:`~services.fishing_workflow.FishingResult` (V043 surfacing — a
+    milestone is a readout, never a stat).
+    """
+    lines = [f"  🏅 milestone — fishing level {m} reached!" for m in result.milestones]
+    lines.append(f"  energy: {energy.bar(state.energy)}")
+    if result.xp_gained:
+        lines.append(f"  xp:     +{result.xp_gained} → L{result.level_after} ({state.game_xp} xp)")
+    lines.append(f"  haul:   {_render_haul(state.haul)}")
+    return lines
+
+
+def _sell_extra(state: fw.FishingState) -> list[str]:
+    """UX-only lines printed after a committed sell — coins + remaining haul.
+
+    The seam's :class:`~services.fishing_workflow.SellResult` message already
+    carries the sim-pinned amounts; this only surfaces the refreshed balance.
     """
     return [
-        f"  energy: {energy.bar(state.energy)}",
+        f"  coins:  {state.coins}",
         f"  haul:   {_render_haul(state.haul)}",
     ]
 
@@ -197,8 +234,12 @@ def step(
     prints the help, and an unknown spot id is handled gracefully (the core
     resolves an unknown spot to its neutral default, so the CLI just nudges the
     player with the valid ids and does NOT switch). A ``cast`` prints the seam's
-    Result message plus the refreshed energy/haul; a too-tired cast prints the
-    honest rest message and records nothing.
+    Result message plus the refreshed energy/xp/haul (and any crossed V043
+    milestone); a too-tired cast prints the honest rest message and records
+    nothing. A ``sell`` routes through the seam's audited
+    :func:`~services.fishing_workflow.sell` and prints its honest message —
+    committed sells also print the refreshed coins/haul; the seam's no-ops
+    (unknown species, too few held) change nothing and record nothing.
     """
     tokens = line.strip().split()
     if not tokens:
@@ -233,7 +274,30 @@ def step(
     if verb not in _ACTION_VERBS:
         return StepResult(lines=[f"Unknown command: {verb!r}.", *help_lines()])
 
-    # The one state-changing action — cast at the current spot.
+    if verb == "sell":
+        # The V043 sell leg — routed through the seam's audited ``sell()``, the
+        # SINGLE mutation path (sell-OR-cook exclusivity lives there, not here).
+        if not args:
+            return StepResult(lines=["Usage: sell <species> [qty]  (see 'haul' for what you hold)"])
+        species = args[0].lower()
+        qty: int | None = None
+        if len(args) > 1:
+            try:
+                qty = int(args[1])
+            except ValueError:
+                return StepResult(lines=[f"Quantity must be a number, got {args[1]!r}."])
+        if qty is None:
+            # Mirror the mining CLI's default: sell everything you hold (or ask
+            # the seam for 1, whose honest "You only have 0×" no-op answers).
+            held = state.haul.get(species, 0)
+            qty = held if held > 0 else 1
+        sell_result = fw.sell(state, species, qty, sink=sink, now=now)
+        out = [sell_result.message]
+        if sell_result.ok:
+            out += _sell_extra(state)
+        return StepResult(lines=out, is_sell=True, ok=sell_result.ok)
+
+    # The other state-changing action — cast at the current spot.
     result = fw.cast(state, sink=sink, rng=rng, now=now)
     out = [result.message]
     out += _cast_extra(state, result)
@@ -251,7 +315,8 @@ class SessionResult:
     state: fw.FishingState
     sink: InMemorySink
     casts_made: int  # ``cast`` commands routed to the seam (ok OR too-tired)
-    ok_casts: int  # casts that committed (== len(sink.records))
+    ok_casts: int  # casts that committed (one audit row each; a committed
+    # ``sell`` records its own row, so ``len(sink.records)`` >= ``ok_casts``)
 
     @property
     def text(self) -> str:
