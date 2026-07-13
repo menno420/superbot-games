@@ -1,6 +1,6 @@
 # 2026-07-13 · document the playable game entrypoints (README · docs)
 
-> **Status:** 🚧 `in-progress`
+> **Status:** ✅ `complete`
 >
 > 📊 Model: Opus 4.8 · 2026-07-13 · document playable game entrypoints
 
