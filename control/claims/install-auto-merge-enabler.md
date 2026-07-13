@@ -1,1 +1,0 @@
-- `claude/install-auto-merge-enabler` · **install auto-merge-enabler workflow** — uniform fleet landing per owner directive 2026-07-12 (fm ORDER 029); adapted from idea-engine@819a8d5 · `.github/workflows/auto-merge-enabler.yml` · 2026-07-12
