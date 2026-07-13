@@ -8,7 +8,7 @@ discipline the oracle's ``world_registry`` established:
    clear, and that a ``WorldEntry`` opener is an opaque callable the registry
    stores without inspecting. It must NOT import ``games.*`` (the neutrality
    guard).
-2. ``games/__main__.py`` — the hub launcher: ``run_hub`` lists both wired games
+2. ``games/__main__.py`` — the hub launcher: ``run_hub`` lists the wired games
    and dispatches ``play mining`` / ``play fishing`` (and a bare number) to the
    RIGHT entry's opener, proven via an INJECTED fake launcher (no real
    sub-session is ever spawned); unknown ids, quit, and EOF/end-of-list are
@@ -134,13 +134,13 @@ def test_world_registry_module_imports_no_games_package() -> None:
 # ---------------------------------------------------------------------------
 def test_wire_games_registers_both_playable_games_in_order() -> None:
     wire_games(world_registry)
-    assert [e.game_id for e in world_registry.all_entries()] == ["mining", "fishing"]
+    assert [e.game_id for e in world_registry.all_entries()] == ["mining", "fishing", "dnd"]
 
 
 def test_wire_games_is_idempotent() -> None:
     wire_games(world_registry)
     wire_games(world_registry)
-    assert [e.game_id for e in world_registry.all_entries()] == ["mining", "fishing"]
+    assert [e.game_id for e in world_registry.all_entries()] == ["mining", "fishing", "dnd"]
 
 
 def test_wired_openers_are_callable() -> None:
