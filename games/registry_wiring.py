@@ -1,15 +1,15 @@
 """Composition root — bind each playable game into the neutral world registry.
 
 This is the ONE place that knows a concrete game's launcher. It imports the
-per-game CLIs (``games.mining.cli`` / ``games.fishing.cli``) and constructs a
-:class:`~services.world_registry.WorldEntry` for each, passing the CLI's
-``main`` as the entry's opaque ``opener``. The neutral registry
+per-game CLIs (``games.mining.cli`` / ``games.fishing.cli`` / ``games.dnd.cli``)
+and constructs a :class:`~services.world_registry.WorldEntry` for each, passing
+the CLI's ``main`` as the entry's opaque ``opener``. The neutral registry
 (``services/world_registry.py``) never imports a game — this module supplies the
 ``games -> registry`` edge from ABOVE, so the services layer stays free of any
 ``services -> games`` dependency (the oracle's opener-as-opaque-callable rule).
 
 Wiring is idempotent: :func:`wire_games` clears then re-registers, so calling it
-more than once (or from a test) yields exactly the two entries in a stable order
+more than once (or from a test) yields exactly the three entries in a stable order
 and never double-registers.
 """
 
@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from services import world_registry
 
+from games.dnd import cli as dnd_cli
 from games.fishing import cli as fishing_cli
 from games.mining import cli as mining_cli
 
@@ -36,11 +37,17 @@ _GAMES = (
         "Cast a line across biomes and land a haul over the audited cast seam.",
         fishing_cli.main,
     ),
+    (
+        "dnd",
+        "🐉  D&D",
+        "Guide an escort through a bounded-menu story over the audited resolver seam.",
+        dnd_cli.main,
+    ),
 )
 
 
 def wire_games(registry=world_registry) -> None:
-    """Register both playable games into *registry* (idempotent clear-then-add).
+    """Register every playable game into *registry* (idempotent clear-then-add).
 
     Takes the registry module (or a compatible stand-in exposing ``clear`` /
     ``register``) so a test can inject a fake and assert what got wired without
