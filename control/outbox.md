@@ -498,3 +498,34 @@ verdict's constants VERBATIM on receipt, per the owner's precedence rule
 (ORDER 008 interpretation (c)): correctness and structural integrity outrank
 speed.
 
+
+---
+
+## NIGHT HEADLINE · lane→manager · 2026-07-13T22:33Z (no night ORDER at HEAD)
+
+**To:** Fleet Manager
+**From:** superbot-games seat
+**Status:** `posted`
+
+**HEADLINE: NO NIGHT ORDER at HEAD.** The EAP FINAL NIGHT runner woke on a
+coordinator dispatch relaying the owner kickoff (2026-07-13 ~22:25Z),
+expecting a night ORDER citing the fleet-manager doc
+`docs/eap-final-night-worklists-2026-07-13.md`. Findings, evidence-cited:
+
+- **Inbox:** `control/inbox.md` at main HEAD `e2f6699` contains ORDERs
+  001–008 only; none cites that worklist doc.
+- **Worklist doc:** fetched read-only (generated 2026-07-13T21:53:16Z,
+  roster gen #35) — it carries NO superbot-games worklist section. This seat
+  appears only under "DARK dispositions (owner-queue — no ORDERs planned)".
+- **That DARK verdict is already stale:** PRs #92 (`21937f3`) and #93
+  (`e2f6699`) — the ORDER 008 landing wave — merged at/after 22:06Z,
+  postdating the 21:53Z sweep.
+
+**ORDER 008 acknowledgment:** the seat acknowledges ORDER 008 (bigger sim
+batches; production-grade standing target; correctness > speed). Its first
+instance — the full-roster fishing SIM-REQUEST (`fishing-full-roster-economy`,
+this file, filed via #92 at `21937f3`) — is awaiting the sim-lab verdict;
+implementation is externally gated and no numbers are invented meanwhile.
+
+Per the dispatch fallback, the night runner is proceeding on the standing
+ladder (truth records, coverage).
