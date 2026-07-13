@@ -20,10 +20,11 @@
 
 ## In flight
 
-(Truth-stamped 2026-07-13 at HEAD 156e2de, substrate-kit v1.15.0 — the prior
+(Truth-stamped 2026-07-13 at HEAD c629577, substrate-kit v1.15.0 — the prior
 2026-07-09 wind-down snapshot below is superseded.)
 
-**Zero open PRs.** PRs through **#80** are on main. The 2026-07-13 night wave
+PRs through **#86** are on main (each merge API-verified; the only open PR is
+this groom's own feature wave). The 2026-07-13 night wave
 (#66–#80, enumerated under "Recently shipped") made all four games playable:
 `python3 -m games` is a hub over a game-neutral world registry (#72) listing
 mining (#70), fishing (#71), dnd (#75), and exploration (#77), each driven
@@ -37,9 +38,15 @@ the 11-field structural schema verbatim; D2 audits every state-changing action
 including item grants (a deliberate divergence from the oracle). D2's
 owner/lab ⚑ ratification is still pending in `control/outbox.md`.
 
-Awaiting implementation: sim-lab verdicts **V042–V045** for the four open
-SIM-REQUESTs (mining/fishing economy, dnd escort double-mint, exploration
-reward bands), relayed into `control/inbox.md` as ORDER 007 by #80 (`156e2de`).
+Served: sim-lab verdicts **V042–V045** (relayed as ORDER 007 by #80
+`156e2de`) were consumed by the #82–#85 wave — the V043 fishing sell/XP
+curves and the V044 dnd mint-at-most-once guard are wired on main (#83
+`72a94bb`), and all four SIM-REQUESTs are closed with their dispositions
+recorded, `orders: acked=007 done=007` (#84 `9caf1b6`). V042 (mining) was
+ratified unchanged with two reporting-only flags (tool-ladder feltness,
+faucet-bypass pricing → PROPOSAL 035, sim-first); V045 (exploration) was
+ratified with an honest NULL on the numeric band import (waits on the
+upstream Q-0087/D-0008 artifact).
 
 Rung 3 (the **host-adapter** against superbot-next's binding plugin contract,
 `docs/game-plugin-contract.md`) was scoped in #66 (`60b2773`,
@@ -62,10 +69,31 @@ _Superseded 2026-07-09 wind-down snapshot (kept for provenance):_
 
 ## Recently shipped (newest first)
 
-_(Note 2026-07-13: the 2026-07-12/13 wave #61–#80 is enumerated below (each
+_(Note 2026-07-13: the 2026-07-12/13 wave #61–#86 is enumerated below (each
 entry cites its squash-merge SHA on main; every merge API-verified). #13–#60
-remain unenumerated — the authoritative history for that span is in git.)_
+remain unenumerated — the authoritative history for that span is in git.
+#83/#84 are listed in merge order: #84 merged 17:47:46Z, #83 17:50:38Z.)_
 
+- **#86** (2026-07-13, `c629577`) — control: work claim `v043-balance-cli`
+  (V043 balance-page section + fishing CLI economy surfacing; fast lane).
+- **#85** (2026-07-13, `ae4beff`) — control: released the ORDER 007 verdict
+  fan-out claim (session-close claim delete; fast lane).
+- **#83** (2026-07-13, `72a94bb`) — feat: ORDER 007 verdict fan-out — V043
+  fishing economy wired VERBATIM (`games/fishing/core/economy.py` sell curve
+  minnow 8 / bass 13 / pike 27 / legend_carp 80; `xp_to_next(L) = 50·L`;
+  L10/L25 milestones; audited `sell` on `services/fishing_workflow.py`,
+  sell-OR-cook via haul debit) + V044 dnd MINT-AT-MOST-ONCE guard
+  (`DnDState.bundle_minted` + `choose()` guard, characterization test flipped
+  2×→1×). Suite 516 → 546.
+- **#84** (2026-07-13, `9caf1b6`) — control: ORDER 007 done — the four
+  SIM-REQUESTs closed in `control/outbox.md` with verdict dispositions
+  (V042 APPROVE / V043 APPROVE-WITH-CONSTANTS / V044 MINT-AT-MOST-ONCE /
+  V045 RATIFY-WITH-NULL) + status ack `acked=007 done=007`.
+- **#82** (2026-07-13, `739c571`) — control: work claim for the ORDER 007
+  verdict fan-out branch (claim-before-build; fast lane).
+- **#81** (2026-07-13, `d6a9526`) — docs: groomed this ledger — recorded the
+  merged #61–#80 wave, re-stamped "In flight" at `156e2de`, fixed
+  contradicted statements.
 - **#80** (2026-07-13, `156e2de`) — control: Q-0264 relay — sim-lab verdicts
   V042–V045 for the four open SIM-REQUESTs appended to `control/inbox.md` as
   ORDER 007 (relay only, no implementation).
