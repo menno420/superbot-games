@@ -1,0 +1,3 @@
+# Claim · test coverage — games/shared/sim/economy_sim.py
+
+- `claude/night-coverage-economy-sim` · **night-coverage-economy-sim** — raise real test coverage on `games/shared/sim/economy_sim.py` (the cross-domain economy-ledger seam: 75% covered, lines 358–397 + invariant failure branches untested) per the ORDER 008(b) production-grade standing directive; pin `format_report`, the invariant detectors' FAIL paths, and the report-shape invariants at EXISTING constants; tests-only, zero gameplay-constant changes, no sim-verdict-needing surface · expected files: tests/shared/sim/test_economy_sim.py, .sessions/, telemetry/model-usage.jsonl, control/claims/ · 2026-07-13
