@@ -158,18 +158,52 @@ def test_reward_folds_engine_bundle_verbatim():
     assert state.currency == expected.currency
 
 
-def test_reward_accumulates_across_the_escort_double_mint_arc():
-    """The one arc that fires escort_step twice mints the reward 2x (the SIM-REQUEST)."""
+def test_escort_arc_mints_at_most_once_across_the_double_mint_arc():
+    """The arc that fires escort_step twice mints ONCE (VERDICT 044 / ORDER 007).
+
+    Flipped from the pre-verdict characterization (which asserted the 2× double
+    mint, filed as the SIM-REQUEST): the ``bundle_minted`` one-shot guard now
+    suppresses the second mint — the second escort_step still resolves and
+    records, but as a narrate-only transition, and the totals stay at 1×.
+    """
     state = _state()
     sink = InMemorySink()
     r1 = dw.choose(state, "advance_escort", sink=sink, now=FIXED_NOW)  # mint #1 -> gate
     dw.choose(state, "circle_to_treeline", sink=sink, now=FIXED_NOW)  # narrate -> treeline
-    r3 = dw.choose(state, "signal_escort", sink=sink, now=FIXED_NOW)  # mint #2 -> ended
+    r3 = dw.choose(state, "signal_escort", sink=sink, now=FIXED_NOW)  # guarded -> ended
     unit = r1.reward
-    assert state.currency == unit.currency * 2
-    assert state.game_xp == unit.game_xp * 2
-    assert state.global_xp == unit.global_xp * 2
-    assert r3.reward == unit  # each mint is the same tier-capped bundle
+    assert state.bundle_minted is True
+    assert state.currency == unit.currency  # 1x, not 2x
+    assert state.game_xp == unit.game_xp
+    assert state.global_xp == unit.global_xp
+    assert r3.reward is None  # the repeat mint is suppressed by the guard
+    # The suppressed choose still records — as a scene transition, not a reward.
+    assert sink.records[2].target == "scene:treeline_watch"
+    assert len(sink.records) == 3  # every choose still records exactly one row (D2)
+
+
+def test_stay_loop_never_re_mints_without_bound():
+    """The ended beat's stay-loop re-fires escort_step freely but never re-mints."""
+    state = _state(scene_id="treeline_watch")
+    sink = InMemorySink()
+    first = dw.choose(state, "signal_escort", sink=sink, now=FIXED_NOW)  # mint #1
+    assert first.reward is not None
+    unit = first.reward
+    for _ in range(10):  # the unbounded stay-loop the verdict measured (10/10 re-mints)
+        repeat = dw.choose(state, "signal_escort", sink=sink, now=FIXED_NOW)
+        assert repeat.reward is None
+        assert repeat.record.target == "scene:treeline_watch"  # narrate-only row
+    assert state.currency == unit.currency  # still exactly one mint folded
+    assert state.game_xp == unit.game_xp
+    assert state.global_xp == unit.global_xp
+    assert len(sink.records) == 11  # one row per choose, none of them a reward row
+
+
+def test_bundle_minted_defaults_false_and_first_mint_sets_it():
+    state = _state()
+    assert state.bundle_minted is False
+    dw.choose(state, "advance_escort", sink=InMemorySink(), now=FIXED_NOW)
+    assert state.bundle_minted is True
 
 
 def test_narrate_only_choice_mints_no_reward():

@@ -106,6 +106,13 @@ class DnDState:
       ``leverage.menu_width`` to widen the surfaced option COUNT 2..4 — NEVER
       amounts). Distinct from the reward ``game_xp`` above; the skeleton grows no
       chat activity, so it stays at its floor (width 2).
+    * ``bundle_minted`` — the MINT-AT-MOST-ONCE guard (sim-lab VERDICT 044,
+      relayed as ORDER 007 in ``control/inbox.md``): the escort ``safe_passage``
+      bundle mints at most ONCE per session. The scene catalog wires
+      ``escort_step`` to two options on one arc (and the ended beat's stay-loop
+      can re-fire it without bound), so an unguarded session re-mints legally —
+      the one-shot flag closes both the 2× arc and the unbounded stay-loop
+      without inventing any number.
     """
 
     scene_id: str = START_SCENE
@@ -116,6 +123,7 @@ class DnDState:
     game_xp: int = 0
     currency: int = 0
     capability: Optional[str] = None
+    bundle_minted: bool = False
 
 
 # ---------------------------------------------------------------------------
@@ -130,7 +138,9 @@ class DnDResult:
     to the safe default). ``prev_scene`` / ``next_scene`` are the scene chosen
     FROM and the pre-defined scene moved TO (``next_scene`` is ``None`` when the
     beat concludes / stays). ``reward`` is the code-owned bundle minted this
-    choose (``None`` for a narrate-only outcome). ``ended`` is ``True`` when the
+    choose (``None`` for a narrate-only outcome, and ``None`` when the
+    MINT-AT-MOST-ONCE guard suppressed a repeat mint — VERDICT 044). ``ended``
+    is ``True`` when the
     chosen option has no successor scene. ``message`` is the option's
     player-visible copy, VERBATIM from ``data/scenes.py``.
     """
@@ -248,10 +258,21 @@ def choose(
         player_id=state.player_id,
     )
 
+    # MINT-AT-MOST-ONCE guard (VERDICT 044 / ORDER 007): the escort bundle mints
+    # at most once per session — a repeat resolution's reward is suppressed (the
+    # choose still resolves + records as a narrate-only transition). The engine's
+    # tier-capped bundle itself stays VERBATIM; the guard invents no number.
+    reward = resolution.reward
+    if reward is not None:
+        if state.bundle_minted:
+            reward = None
+        else:
+            state.bundle_minted = True
+
     # Fold the code-owned reward BEFORE building the record, so the record's
     # before/after reward summary brackets this choose's mint honestly.
     reward_before = _reward_summary(state)
-    _fold_reward(state, resolution.reward)
+    _fold_reward(state, reward)
     reward_after = _reward_summary(state)
 
     next_scene = resolution.next_scene_id
@@ -260,7 +281,7 @@ def choose(
         state.scene_id = next_scene  # advance along the option's PRE-DEFINED edge
 
     now_dt = _resolve_now(now)
-    if resolution.reward is not None:
+    if reward is not None:
         # A minted reward: the primary mutation is the reward grant (mirrors
         # fishing's bite recording the haul, not the energy side effect).
         target = f"reward:{prev_scene}"
@@ -296,7 +317,7 @@ def choose(
         resolution=resolution,
         prev_scene=prev_scene,
         next_scene=next_scene,
-        reward=resolution.reward,
+        reward=reward,
         ended=ended,
         message=text_for(chosen.text_key),
         record=record,
