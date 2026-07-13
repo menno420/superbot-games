@@ -20,3 +20,4 @@ tests/dnd
 tests/shared/inventory
 games/exploration/tests
 tests/shared/sim
+services/tests
