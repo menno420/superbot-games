@@ -119,14 +119,24 @@ def test_catch_to_stack_shapes_the_expected_stack() -> None:
     assert stack.attrs["size_rank"] == species_table.get("legend_carp").size_rank
 
 
-def test_catch_to_grant_wraps_one_stack_with_empty_progression() -> None:
+def test_catch_to_grant_wraps_one_stack_with_v043_progression() -> None:
     catch = _catch("pike", size=40)
     grant = adapter.catch_to_grant(catch)
     assert len(grant.items) == 1
     assert grant.items[0].item == "fish.pike"
     assert grant.items[0].qty == 1
-    # Fishing defines no XP/currency today — progression is the empty identity.
-    assert grant.progression == ProgressionDelta()
+    # V043 (ORDER 007): game_xp = size_rank per catch, VERBATIM off the species
+    # row. No currency on a catch — coins come only from the separate sell leg.
+    assert grant.progression == ProgressionDelta(game_xp=species_table.get("pike").size_rank)
+    assert grant.progression.currency == 0
+    assert grant.progression.global_xp == 0
+
+
+def test_catch_to_grant_game_xp_is_size_rank_for_every_species() -> None:
+    # The V043 progression curve is a pure read of the species table (verbatim).
+    for row in species_table.all_species():
+        grant = adapter.catch_to_grant(_catch(row.species_id))
+        assert grant.progression.game_xp == row.size_rank
 
 
 def test_catch_to_grant_is_deterministic() -> None:

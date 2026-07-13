@@ -24,6 +24,7 @@ from datetime import datetime, timezone
 import pytest
 
 from games.fishing.core import catch
+from games.fishing.core import economy
 from games.fishing.inventory import adapter
 from games.mining.core import energy as energy_model
 from games.mining.core.equipment import EffectiveStats
@@ -162,7 +163,9 @@ def test_core_stays_importable_and_pure_without_the_seam():
     before = set(sys.modules)
     core = importlib.import_module("games.fishing.core")
     modules = [m.name for m in pkgutil.iter_modules(core.__path__)]
-    assert len(modules) == 4, "the fishing core must stay exactly 4 modules"
+    # 5 modules since the V043 economy wiring (ORDER 007): catch / economy /
+    # rng / species / spots — pinned so a new module can't slip in untested.
+    assert sorted(modules) == ["catch", "economy", "rng", "species", "spots"]
     for m in modules:
         importlib.import_module(f"games.fishing.core.{m}")
     loaded = set(sys.modules) - before
@@ -371,5 +374,122 @@ def test_inmemory_sink_satisfies_the_sink_protocol():
 
 def test_fishing_result_is_frozen():
     r = fw.cast(_state(), sink=InMemorySink(), now=FIXED_NOW)
+    with pytest.raises(Exception):
+        r.ok = False  # frozen
+
+
+# ---------------------------------------------------------------------------
+# V043 economy wiring (ORDER 007) — progression fold + the sell leg
+# ---------------------------------------------------------------------------
+def test_bite_folds_v043_game_xp_equal_to_size_rank():
+    """A landed catch folds game_xp = size_rank VERBATIM (V043 progression)."""
+    from games.fishing.core import species as species_table
+
+    state = _state()
+    sink = InMemorySink()
+    r = fw.cast(state, sink=sink, now=FIXED_NOW)  # deterministic bass bite
+    assert r.bit is True
+    expected = species_table.get("bass").size_rank
+    assert r.xp_gained == expected
+    assert state.game_xp == expected
+    assert r.level_after == economy.level_for_xp(state.game_xp)
+
+
+def test_empty_cast_gains_no_xp_and_no_coins():
+    state = _state(seed=SEED_EMPTY)
+    r = fw.cast(state, sink=InMemorySink(), now=FIXED_NOW)
+    assert r.ok is True and r.bit is False
+    assert r.xp_gained == 0
+    assert (state.game_xp, state.coins) == (0, 0)
+    assert r.milestones == ()
+
+
+def test_catch_grants_no_currency_directly():
+    """Coins come ONLY from the sell leg — a catch mints no currency (V043)."""
+    state = _state()
+    fw.cast(state, sink=InMemorySink(), now=FIXED_NOW)  # bass bite
+    assert state.coins == 0
+
+
+def test_sell_credits_the_v043_value_and_consumes_the_fish():
+    state = _state(haul={"pike": 1})
+    sink = InMemorySink()
+    r = fw.sell(state, "pike", sink=sink, now=FIXED_NOW, mutation_id_factory=_fixed_id)
+    assert r.ok is True
+    assert r.coins_delta == economy.sell_value("pike") == 27  # verbatim V043
+    assert state.coins == 27
+    assert state.haul["pike"] == 0  # the fish is CONSUMED (sell-OR-cook)
+    assert len(sink.records) == 1
+    rec = sink.records[0]
+    _assert_well_formed(rec)
+    assert rec.mutation_type == fw.MUTATION_SELL
+    assert rec.target == "coins"
+    assert (rec.prev_value, rec.new_value) == ("0", "27")
+
+
+@pytest.mark.parametrize(
+    "species,value",
+    [("minnow", 8), ("bass", 13), ("pike", 27), ("legend_carp", 80)],
+)
+def test_sell_curve_is_verbatim_per_species(species, value):
+    state = _state(haul={species: 2})
+    r = fw.sell(state, species, 2, sink=InMemorySink(), now=FIXED_NOW)
+    assert r.ok and r.coins_delta == value * 2
+    assert state.coins == value * 2
+
+
+def test_one_fish_yields_sell_or_cook_never_both():
+    """The exclusivity mechanism: a sold fish leaves the haul, so NO second
+    economy leg (a second sell today, a cook leg tomorrow) can consume it."""
+    state = _state(haul={"minnow": 1})
+    sink = InMemorySink()
+    first = fw.sell(state, "minnow", sink=sink, now=FIXED_NOW)
+    assert first.ok is True
+    second = fw.sell(state, "minnow", sink=sink, now=FIXED_NOW)
+    assert second.ok is False  # the one fish was already consumed
+    assert state.coins == economy.sell_value("minnow")  # credited exactly once
+    assert len(sink.records) == 1  # the failed re-sell recorded NOTHING
+
+
+def test_sell_no_ops_record_nothing():
+    sink = InMemorySink()
+    # Unknown species — no sim-pinned value, honest no-op.
+    r1 = fw.sell(_state(haul={"kraken": 3}), "kraken", sink=sink, now=FIXED_NOW)
+    # Non-positive quantity.
+    r2 = fw.sell(_state(haul={"bass": 1}), "bass", 0, sink=sink, now=FIXED_NOW)
+    # More than held.
+    r3 = fw.sell(_state(haul={"bass": 1}), "bass", 2, sink=sink, now=FIXED_NOW)
+    assert (r1.ok, r2.ok, r3.ok) == (False, False, False)
+    assert sink.records == []
+
+
+def test_milestone_surfaces_when_a_cast_crosses_l10():
+    """Crossing L10 SURFACES the milestone on the result (V043)."""
+    from games.fishing.core import species as species_table
+
+    rank = species_table.get("bass").size_rank
+    # Park the pool 1 XP short of the L10 threshold; the next bass bite crosses it.
+    state = _state(game_xp=economy.cumulative_xp_for(10) - 1)
+    r = fw.cast(state, sink=InMemorySink(), now=FIXED_NOW)  # deterministic bass bite
+    assert r.bit is True and r.xp_gained == rank
+    assert r.milestones == (10,)
+    assert r.level_after == 10
+
+
+def test_levels_are_stat_neutral_at_the_seam():
+    """Two anglers differing ONLY in game_xp/level cast IDENTICALLY (V043:
+    levels stay STAT-NEUTRAL — the level readout feeds no resolver lever)."""
+    fresh = _state(game_xp=0)
+    veteran = _state(game_xp=economy.cumulative_xp_for(25))  # L25 angler
+    r_fresh = fw.cast(fresh, sink=InMemorySink(), now=FIXED_NOW, mutation_id_factory=_fixed_id)
+    r_vet = fw.cast(veteran, sink=InMemorySink(), now=FIXED_NOW, mutation_id_factory=_fixed_id)
+    assert r_fresh.outcome == r_vet.outcome  # same seed+spot -> byte-identical cast
+    assert r_fresh.species == r_vet.species
+    assert r_fresh.size == r_vet.size
+
+
+def test_sell_result_is_frozen():
+    state = _state(haul={"bass": 1})
+    r = fw.sell(state, "bass", sink=InMemorySink(), now=FIXED_NOW)
     with pytest.raises(Exception):
         r.ok = False  # frozen

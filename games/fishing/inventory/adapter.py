@@ -111,12 +111,21 @@ def catch_to_stack(catch: Catch) -> Stack:
 def catch_to_grant(catch: Catch) -> Grant:
     """Wrap a :class:`Catch` as the ONE reward shape — a :class:`Grant` of one stack.
 
-    Progression is left EMPTY: fishing's resolver defines no XP/currency for a catch today
-    (``catch.py`` carries only ``species_id`` + ``size``). When fishing grows progression,
-    fill ``ProgressionDelta`` here — the shape is ready. Carrying an explicit empty delta
-    keeps the grant deterministic (equal ``Catch`` → frozen-equal ``Grant``).
+    Progression carries the V043 sim-pinned curve VERBATIM (sim-lab VERDICT 043,
+    relayed as ORDER 007 item (2) in ``control/inbox.md`` @ ``d6a9526``):
+    ``ProgressionDelta.game_xp = size_rank`` per catch — the rank is read straight
+    off the species row, never rolled or scaled here. No currency is granted on a
+    catch (coins come only from the separate SELL leg, so one fish yields
+    sell-OR-cook, never both). Levels derived from this XP stay STAT-NEUTRAL
+    (:mod:`games.fishing.core.economy`). The delta is a pure function of the
+    species row, so the grant stays deterministic (equal ``Catch`` →
+    frozen-equal ``Grant``).
     """
-    return Grant(items=(catch_to_stack(catch),), progression=ProgressionDelta())
+    row = species_table.get(catch.species_id)
+    return Grant(
+        items=(catch_to_stack(catch),),
+        progression=ProgressionDelta(game_xp=row.size_rank),
+    )
 
 
 def cast_to_grant(outcome: CastOutcome) -> Grant:
