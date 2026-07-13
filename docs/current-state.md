@@ -8,30 +8,45 @@
 
 ## Stability baseline
 
-- Exploration P1 engine (`games/exploration/quest/`, 48 tests incl. balance-pin sim) and
+- Exploration P1 engine (`games/exploration/quest/`, engine suite now 55 tests
+  incl. balance-pin sim — 48 at the #3 merge, grown since) and
   the shared encounter seam (`games/shared/encounter/`) — merged #3, sim-pinned;
   re-audit only on a reported regression or when D-0008's upstream bands arrive.
-- substrate-kit v1.15.0 engagement (adopted in #3; CI gate installed by the wake-up PR).
+- substrate-kit v1.15.0 engagement (adopted in #3; CI gate installed by the wake-up PR;
+  last kit upgrade #64 `0082ee2`).
+- CI auto-merge-enabler (#67 `dd867c8`) — supersedes the post-#40 manual-merge
+  doctrine per the owner's uniform-landing directive (fm ORDER 029); the
+  in-progress-card SKIP guard arms a PR only after its session card flips complete.
 
 ## In flight
 
-(Truth-stamped 2026-07-12 at HEAD fbf5202, substrate-kit v1.15.0 — the prior
+(Truth-stamped 2026-07-13 at HEAD 156e2de, substrate-kit v1.15.0 — the prior
 2026-07-09 wind-down snapshot below is superseded.)
 
-**Zero open PRs.** The 2026-07-09 in-flight items all resolved: **#13**
-exploration gen-1 succession, **#5 / #11** mining domain port + grid-encounters
-slice, and the P2 survival sim harness have merged; PRs through **#60** are on
-main.
+**Zero open PRs.** PRs through **#80** are on main. The 2026-07-13 night wave
+(#66–#80, enumerated under "Recently shipped") made all four games playable:
+`python3 -m games` is a hub over a game-neutral world registry (#72) listing
+mining (#70), fishing (#71), dnd (#75), and exploration (#77), each driven
+through an audited rung-2 WORKFLOW seam sharing `services/audit.py`
+(#68 / #69 / #75 / #77).
 
-Parked (not being built until ratified): the rung-2 mining WORKFLOW-seam
-**audit-schema decision** — D1 (which audit schema mining adopts) and D2
-(whether state-changing item-grant actions are audited, a divergence from the
-oracle where they are UNAUDITED) — is scoped in
-[`design/mining-workflow-seam.md`](design/mining-workflow-seam.md) and awaits
-owner/lab ⚑ ratification.
+No longer parked: the rung-2 mining WORKFLOW seam **was built** in #68
+(`1b09a03`) on the REVERSIBLE §5 default of
+[`design/mining-workflow-seam.md`](design/mining-workflow-seam.md) — D1 adopts
+the 11-field structural schema verbatim; D2 audits every state-changing action
+including item grants (a deliberate divergence from the oracle). D2's
+owner/lab ⚑ ratification is still pending in `control/outbox.md`.
 
-Next buildable rung: the **host-adapter** against superbot-next's binding plugin
-contract (`docs/game-plugin-contract.md@d3dba9b`, D-0056).
+Awaiting implementation: sim-lab verdicts **V042–V045** for the four open
+SIM-REQUESTs (mining/fishing economy, dnd escort double-mint, exploration
+reward bands), relayed into `control/inbox.md` as ORDER 007 by #80 (`156e2de`).
+
+Rung 3 (the **host-adapter** against superbot-next's binding plugin contract,
+`docs/game-plugin-contract.md`) was scoped in #66 (`60b2773`,
+[`design/mining-host-adapter.md`](design/mining-host-adapter.md)): verdict
+**partially buildable** — gated on a ⚑ packaging/hermeticity owner decision.
+Standalone-CLI save/load is likewise decision-gated: the persistence
+format-governance owner-queue entry landed in #73 (`6ecd579`).
 
 ---
 
@@ -47,9 +62,55 @@ _Superseded 2026-07-09 wind-down snapshot (kept for provenance):_
 
 ## Recently shipped (newest first)
 
-_(Note 2026-07-12: this list stops at #12 and is behind — roughly 48 merges through
-#60 have landed since; the authoritative history is in git, not enumerated here.)_
+_(Note 2026-07-13: the 2026-07-12/13 wave #61–#80 is enumerated below (each
+entry cites its squash-merge SHA on main; every merge API-verified). #13–#60
+remain unenumerated — the authoritative history for that span is in git.)_
 
+- **#80** (2026-07-13, `156e2de`) — control: Q-0264 relay — sim-lab verdicts
+  V042–V045 for the four open SIM-REQUESTs appended to `control/inbox.md` as
+  ORDER 007 (relay only, no implementation).
+- **#79** (2026-07-13, `57f69be`) — control: ORDER 006 night report
+  2026-07-13 (dated section in `control/status.md` + outbox entry).
+- **#78** (2026-07-13, `dabba30`) — control: ORDER 006 night-report request
+  (owner ask 2026-07-13, fm relay; inbox append).
+- **#77** (2026-07-13, `5aec110`) — exploration finalize: audited quest seam
+  (`services/exploration_workflow.py`) + `python -m games.exploration` +
+  hub registration (game 4). Grand total 516 tests.
+- **#76** (2026-07-13, `425a3d7`) — control: repaired the malformed
+  `updated:` stamp in `control/status-mining.md` (fm ORDER 037).
+- **#75** (2026-07-13, `0ee7482`) — dnd finalize: audited resolver seam
+  (`services/dnd_workflow.py`) + `python -m games.dnd` + hub registration
+  (escort double-mint filed as a SIM-REQUEST, not patched).
+- **#74** (2026-07-13, `0e62ee3`) — docs: README "Playing the games" section
+  documenting the hub + standalone entrypoints.
+- **#73** (2026-07-13, `6ecd579`) — control: owner-queue entry — standalone-CLI
+  save/load blocked on a persistence format-governance decision (contract-impl
+  vs flat-local · namespace mapping · load-vs-audit rule).
+- **#72** (2026-07-13, `ef18b4e`) — hub: game-neutral in-repo world registry
+  (`services/world_registry.py`) + `python -m games` launcher (opener-as-opaque-
+  callable; no `services -> games` edge).
+- **#71** (2026-07-13, `c491bd3`) — fishing: playable standalone CLI
+  (`python -m games.fishing`) over the audited cast seam.
+- **#70** (2026-07-13, `da0e47e`) — mining: playable standalone CLI
+  (`python -m games.mining`) over the audited seam.
+- **#69** (2026-07-13, `7c13166`) — fishing rung-2 WORKFLOW audited seam
+  (`services/fishing_workflow.py`) reusing the game-neutral `services/audit.py`.
+- **#68** (2026-07-13, `1b09a03`) — mining rung-2 WORKFLOW audited seam
+  (`services/mining_workflow.py`) on the §5 D1/D2 reversible default; factors
+  out the game-neutral `services/audit.py` (11-field record + `Sink`).
+- **#65** (2026-07-13, `64b3371`) — docs: truth-stamp of this ledger + sweep of
+  5 merged-PR claim files.
+- **#66** (2026-07-13, `60b2773`) — docs: scoped the rung-3 mining host-adapter
+  vs the binding plugin contract — verdict partially buildable + ⚑
+  packaging/hermeticity owner decision.
+- **#67** (2026-07-13, `dd867c8`) — ci: auto-merge-enabler installed (owner
+  directive 2026-07-12, fm ORDER 029) — uniform fleet landing with the
+  in-progress-card SKIP guard; supersedes the post-#40 manual-merge doctrine.
+- **#64** (2026-07-12, `0082ee2`) — kit: substrate-kit v1.14.0 → v1.15.0.
+- **#63** (2026-07-12, `bdc4cd1`) — kit: substrate-kit v1.13.0 → v1.14.0.
+- **#62** (2026-07-12, `93b739a`) — kit: substrate-kit v1.12.1 → v1.13.0.
+- **#61** (2026-07-12, `9efe599`) — control: ORDER 005 archival truth-stamp of
+  the stale heartbeat.
 - **#12** (2026-07-09) — exploration: ORDER 005 PING-ACK (dispatch 17:54:33Z →
   discovery 19:54:00Z → ack on main; measured no-live-session pickup ≈ 2h).
 - **#9** (2026-07-09) — mining: self-review retro (ORDER 004) + project review.
