@@ -1,0 +1,3 @@
+# claim
+
+- `claude/exploration-finalization` · **build** — finalize the EXPLORATION game: an audited WORKFLOW seam (`services/exploration_workflow.py`, offer/accept/apply_action/grant over the quest engine + survival energy + shared encounter resolver, reusing `services/audit.py`), a bounded-menu `python -m games.exploration` CLI (no AI-DM, no generative content), and one hub-registration row · expected files: `services/exploration_workflow.py`, `games/exploration/cli.py`, `games/exploration/__main__.py`, `games/registry_wiring.py`, `services/tests/test_exploration_workflow.py`, `tests/exploration/test_cli.py`, `services/tests/test_world_registry.py`, floor + suite-registry files, `control/outbox.md` · 2026-07-13
