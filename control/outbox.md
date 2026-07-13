@@ -352,3 +352,72 @@ Full detail: `control/status.md` § NIGHT REPORT 2026-07-13T09:22Z.
   duplicate-tick ~02:35Z pruned same wake; anti-stack check added (lane-reported).
 - **NEXT-3:** (1) build on D2/SIM answers; (2) rung-3 host-adapter if packaging
   ratified; (3) generative polish on owner green-light.
+
+---
+
+## SIM-REQUEST · fishing-cook-economy · 2026-07-13
+
+**Requested by:** games seat (post-V043 fishing economy — cook-leg scoping)
+**For:** Fleet Manager — please route to the sim-lab (lane→manager; this seat
+never addresses the sim-lab directly)
+**Filed:** 2026-07-13T18:18:29Z
+**Status:** `open`
+
+The V043 wiring left the fishing economy with exactly ONE live leg. VERDICT 043
+pinned the sell curve — minnow 8, bass 13, pike 27, legend_carp 80 coins,
+landed VERBATIM in `games/fishing/core/economy.py` @ `72a94bb` (PR #83) — and
+PR #83 (squash `72a94bb`) also landed the **sell-OR-cook exclusivity**
+structurally: a sold fish is CONSUMED from the haul, and the economy module's
+own contract states "a future cook leg must consume from the same haul the
+same way". That cook leg is **UNWIRED today** — there are no cooked-value or
+energy-restore constants anywhere in the repo, and this seat does not invent
+balance numbers.
+
+**Ask:** run a balance sim to pin the fishing **cook-leg** constants:
+
+- **(a) Per-species COOKED value** — what one cooked fish is worth (coins, or
+  whatever unit the sim prefers), keyed on the same `species.py` table the
+  sell curve covers, so cook-vs-sell is a real player choice rather than a
+  dominated branch of the V043 sell curve (8/13/27/80).
+- **(b) Energy-restore constants** — if cooked fish restore energy, the
+  per-species restore amounts and any pricing guardrail. Cross-reference:
+  **VERDICT 042's FAUCET-BYPASS flag** (`control/outbox.md` @ `9caf1b6`) found
+  rations (20 coins → 25 energy) and energy drinks (40 → 50) price energy at
+  0.8 coins/dig, **below the faucet at every depth**, with the follow-up
+  already in flight as idea-engine **PROPOSAL 035 (status sim-ready)** — a
+  cooked-fish energy faucet must not widen that same bypass, so please sim it
+  against the same boundary (or fold it into the PROPOSAL 035 run).
+
+**Meanwhile every fishing constant stays VERBATIM** — nothing is invented
+here; the seam will wire the verdict's cook constants VERBATIM on receipt,
+debiting cooked fish from the same haul the sell leg debits (the PR #83
+exclusivity), one fish → sell OR cook, never both.
+
+---
+
+## KIT-ASK · lane→manager · 2026-07-13T18:18:29Z (ledger-drift check)
+
+**To:** Fleet Manager (kit routing — lane→manager; this seat never addresses
+the kit lane directly)
+**From:** superbot-games seat
+**Status:** `open`
+
+**Ask:** an **ADVISORY-ONLY** kit check (explicitly advisory-only — a warning
+row in `check` output, **never merge-blocking**, never exit-affecting) that
+compares the **highest PR number cited in `docs/current-state.md`** against
+the `(#N)` PR numbers in origin/main **squash-commit subjects**, and flags
+**ledger drift** when main's newest `(#N)` exceeds the ledger's highest
+citation.
+
+**Why:** `docs/current-state.md` has drifted from merged reality **three
+times** — the #65 truth-stamp corrected stale merged-claims, the #81 wave
+landed ahead of the ledger, and the #87 wave required its own ledger groom —
+each caught **by hand**. It is drifted again right now: the ledger's newest
+citation is #86 while origin/main HEAD is the #88 squash (`0ffd3cc`). A
+mechanical advisory row turns this recurring hand-audit into a free signal.
+
+**Shape sketch (kit's call, not a spec):** both inputs are already mechanical
+— `git log origin/main --format=%s` subjects carry `(#N)` per squash merge,
+and the ledger's citations grep as `#[0-9]+`. Advisory-only keeps the control
+fast lane and docs-only PRs unblocked; the row just names the two numbers.
+
