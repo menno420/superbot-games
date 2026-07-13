@@ -120,3 +120,63 @@ a hand-edited weight, and never a number invented at the seam:
 and (b) a fishing progression curve. **Meanwhile every fishing constant stays
 VERBATIM** — no numbers were invented tonight; the seam quotes the core
 constants unchanged and audits only the one action the core actually defines.
+
+---
+
+## OWNER-QUEUE · DECISION · standalone-CLI persistence (save/load) · 2026-07-13
+
+**Raised by:** games seat (standalone-CLI polish — scoping pass, no code)
+**For:** owner ratification
+**Status:** `open` (no code shipped; this is a decision request)
+
+Both standalone CLIs now drive their audited seams end to end
+(`python3 -m games.mining` / `python3 -m games.fishing`), but neither can SAVE —
+close the terminal and the run is gone. Save/load is the last standalone-polish
+item. A scoping pass shows the blocker is **not the data shape** but **format
+governance**: PR #53 just merged the canonical persistence contract, and this
+seat will not silently ship a second, contract-divergent serialization on top of
+it. Flagging the coupled decisions before the build, per the six-field ⚑
+OWNER-ACTION grammar:
+
+- **⚑ WHAT:** decide how session persistence (save/load) for the mining +
+  fishing standalone CLIs should work — three coupled sub-decisions.
+  **(1) Format ownership.** Implement PR #53's prescribed namespaced/versioned
+  `PlayerState` contract (`docs/design/persistence-design.md` §2/§3/§4) in this
+  repo, OR ship a CLI-local flat JSON that diverges from the just-merged
+  contract — noting §1 assigns filesystem/storage to the host
+  (`menno420/superbot-next`), **not** this repo, so raw CLI file I/O may not
+  belong here at all (this repo owns the *contract*; the host owns the *bytes*).
+  **(2) Field→namespace mapping.** The contract leaves the mapping unspecified
+  for the actual state shapes: per §2 ("wealth is not double-stored") `coins` +
+  `inventory` must land in the `shared-inventory` namespace, while
+  `haul`/`depth`/`structures`/`seed` have **no** assigned namespace — the owner
+  must place them (or ratify a `mining`/`fishing` domain-namespace home).
+  **(3) load-vs-audit rule.** Confirm that `load` reconstructs state **without**
+  emitting audit rows — which depends on the still-open **D2** audit-boundary
+  ratification in this same file (a `load` that re-plays actions through the
+  seam would forge audit history).
+- **⚑ WHERE:** `services/mining_workflow.py` `MiningState` /
+  `services/fishing_workflow.py` `FishingState` (the state the seams mutate);
+  the contract `docs/design/persistence-design.md`; the drivers
+  `games/mining/cli.py` and `games/fishing/cli.py`.
+- **⚑ HOW:** the state dataclasses are cleanly JSON-serializable — plain
+  `int`/`str`/`dict` plus two all-int nested dataclasses (`EnergyState`:
+  `current`/`updated_at`, in `MiningState`; `EffectiveStats`, the optional stat
+  block in `FishingState`) — no RNG handles, no live instances held. So the
+  blocker is **format governance, not data shape**: once the owner picks
+  contract-impl vs flat-local (plus the namespace mapping and the load/audit
+  rule), it is a mechanical build with nothing to invent.
+- **⚑ RISK:** ↩️ reversible — no code has shipped; this is a decision request,
+  reversible by choosing either format before any serializer exists.
+- **⚑ WHY-IT-MATTERS:** a game you cannot save is thin — but shipping a second,
+  contract-divergent serialization days after PR #53 merged the canonical
+  contract would **fragment** persistence into two rival on-disk formats. Owner
+  governance before the build is cheaper than a later reconciliation.
+- **⚑ UNBLOCKS:** save/load for both standalone CLIs — the last standalone-polish
+  item.
+- **⚑ VERIFIED-NEEDED:** the **D2** audit-boundary ratification (same file)
+  gates sub-decision (3); the persistence-design contract is `status: plan`
+  (docs-only — zero implementing `serialize`/`deserialize`/`PlayerState` code,
+  grep-confirmed), so there is no in-repo serializer to reuse yet. **No balance
+  number is invented here** — the state field shapes are quoted from the seams
+  VERBATIM.
