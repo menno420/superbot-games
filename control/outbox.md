@@ -18,7 +18,23 @@
 
 **Requested by:** games seat (rung-2 mining workflow-seam build)
 **For:** owner / lab balance sim
-**Status:** `open`
+**Status:** `closed` — answered by sim-lab **VERDICT 042 · APPROVE** (Q-0264
+fan-out, relayed as ORDER 007 item (1), `control/inbox.md` @ `d6a9526` via
+PR #80; sim-lab `afe18f3` control/outbox.md VERDICT 042).
+
+**Verdict disposition (recorded 2026-07-13, ORDER 007):** RATIFIED — every
+packet-pinned constant stands UNCHANGED (descend gate shape, iron sword 60,
+Forge I 3,000 + 25 iron + 15 stone, Forge II 8,000 + 20 gold + 10 iron, …);
+no code change. Two flagged reporting-only rows, no action ordered:
+TOOL-LADDER — pickaxe (×1.13) and iron pickaxe (×1.25) are amount-INERT
+(E[amount] identical to bare hands under `BASE_ROLL_MAX=2` + `round()`) → a
+feltness question, sim-first if the seat wants the bottom tiers to pay;
+FAUCET-BYPASS — rations (20 coins → 25 energy) and energy drinks (40 → 50)
+price energy at 0.8 coins/dig, below the faucet at EVERY depth → sim-first
+whether the booster bypass is intended (follow-up already in flight as
+idea-engine PROPOSAL 035, status sim-ready). The verdict lands the mining
+lane's first absolute earn-rate anchor: **4.571–7.328 coins/dig × 360 digs/h
+sustained**.
 
 The rung-2 seam build ran a play-review over the pure mining core while wiring
 the audited write boundary. Two economy findings surfaced that the seam
@@ -84,7 +100,20 @@ contract-reach decision the scoping doc raised as the crux.
 
 **Requested by:** games seat (rung-2 fishing workflow-seam build)
 **For:** owner / lab balance sim
-**Status:** `open`
+**Status:** `closed` — answered by sim-lab **VERDICT 043 ·
+APPROVE-WITH-CONSTANTS** (Q-0264 fan-out, relayed as ORDER 007 item (2),
+`control/inbox.md` @ `d6a9526` via PR #80; sim-lab `afe18f3` VERDICT 043).
+
+**Verdict disposition (recorded 2026-07-13, ORDER 007):** WIRED VERBATIM via
+PR #83 (`claude/order-007-verdict-fanout`): (a) the sell curve — minnow 8,
+bass 13, pike 27, legend_carp 80 coins — and (b) the progression curve —
+`ProgressionDelta.game_xp = size_rank` per catch, `xp_to_next(L) = 50·L`,
+milestones surface at L10/L25, levels STAT-NEUTRAL — land in
+`games/fishing/core/economy.py` + `games/fishing/inventory/adapter.py` +
+`services/fishing_workflow.py` (new audited `sell` action; a sold fish is
+CONSUMED from the haul, so one fish yields sell-OR-cook, never both — a
+future cook leg must debit the same haul). Anchor on record:
+**4.42–10.20 coins/energy by (spot, tier) × 360 energy/h**.
 
 The rung-2 fishing seam build (`services/fishing_workflow.py`) wired the audited
 `cast` write boundary over the pure fishing core and ran a play-review while
@@ -187,7 +216,18 @@ OWNER-ACTION grammar:
 
 **Requested by:** games seat (D&D finalization — audited `choose` seam + CLI)
 **For:** owner / lab balance sim
-**Status:** `open`
+**Status:** `closed` — answered by sim-lab **VERDICT 044 · MINT-AT-MOST-ONCE**
+(Q-0264 fan-out, relayed as ORDER 007 item (3), `control/inbox.md` @ `d6a9526`
+via PR #80; sim-lab `afe18f3` VERDICT 044).
+
+**Verdict disposition (recorded 2026-07-13, ORDER 007):** the double mint is
+NOT intended — the escort loop re-mints legally without bound (C2 unbounded,
+C3 blesses no repeat minting; 10/10 repeats re-mint). GUARD LANDED via PR #83:
+one field `DnDState.bundle_minted: bool = False` + a small guard in `choose()`
+(`services/dnd_workflow.py`) — closes both the 2× arc and the unbounded
+stay-loop, invents no number; the characterization test in
+`services/tests/test_dnd_workflow.py` is FLIPPED from asserting 2× to 1×.
+Scene rewiring was REJECTED as the guard.
 
 The D&D finalization wired the audited `choose` write boundary
 (`services/dnd_workflow.py`) over the pure bounded-menu resolver and ran a
@@ -224,7 +264,18 @@ an invented balance number).
 
 **Requested by:** games seat (exploration finalization — audited quest seam + CLI)
 **For:** owner / lab balance sim
-**Status:** `open`
+**Status:** `closed` — answered by sim-lab **VERDICT 045 · RATIFY-WITH-NULL**
+(Q-0264 fan-out, relayed as ORDER 007 item (4), `control/inbox.md` @ `d6a9526`
+via PR #80; sim-lab `afe18f3` VERDICT 045).
+
+**Verdict disposition (recorded 2026-07-13, ORDER 007):** RATIFIED — the
+`TIER_CAPS` placeholders stand VERBATIM, and the survival gradient Medium
+`50/15s/1` and Hard `40/20s/1` are ratified exactly as pinned; no code change.
+Honest NULL on the numeric band import: the null registered as EXPECTED —
+Q-0087 carries no numeric constants at the pin, so there is nothing to import
+yet. The numeric band import WAITS on the upstream superbot P0 artifact
+(survival P0 balance-sim harness — Q-0087's methodology, D-0008's artifact);
+re-open a reconciliation entry when that artifact lands.
 
 The exploration finalization wired the audited quest write boundary
 (`services/exploration_workflow.py`) over the deterministic quest engine +
