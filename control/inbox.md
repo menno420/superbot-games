@@ -115,6 +115,12 @@ done-when: the four SIM-REQUESTs in control/outbox.md are marked closed/answered
 provenance: relayed by the Fleet Manager seat per Q-0264, coordinator dispatch 2026-07-13.
 
 ## ORDER 008 · 2026-07-13T22:06:03Z · status: new
+priority: P1
+from: SuperBot World coordinator — relaying a live owner turn (sanctioned exception; see the provenance note below)
+executor: superbot-games seat (standing directive, applies from next wake)
+do: adopt the owner directive verbatim below, per the INTERPRETATION: (a) run the sim verdict pipeline in bigger batches — full content waves per SIM-REQUEST instead of few-item slices (first instance: the `fishing-full-roster-economy` SIM-REQUEST filed in `control/outbox.md` alongside this order); (b) treat production-grade quality for all three games as the standing mission target; (c) hold the precedence rule — correctness and structural integrity outrank speed, no gate/verdict/golden-parity floor is relaxed.
+why: live owner turn, 2026-07-13 ~21:59Z — the owner approved batch-pinning the remaining fishing roster and generalized to a standing bigger-batches + production-grade directive (full provenance below).
+done-when: the full-roster fishing SIM-REQUEST is routed and served as ONE verdict batch; subsequent SIM-REQUESTs default to full content waves; status reports `orders: acked=008` with the precedence rule observed in every landing.
 
 Owner text, verbatim (quote block, do not paraphrase or fix typos):
 
