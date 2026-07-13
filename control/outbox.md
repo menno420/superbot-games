@@ -217,3 +217,48 @@ every D&D value stays VERBATIM** — no number was invented tonight; the seam fo
 exactly the engine's tier-capped bundle and the two effect wirings are the
 catalog's, unchanged. The seam does **not** cap the second mint (capping would be
 an invented balance number).
+
+---
+
+## SIM-REQUEST · exploration-reward-bands · 2026-07-13
+
+**Requested by:** games seat (exploration finalization — audited quest seam + CLI)
+**For:** owner / lab balance sim
+**Status:** `open`
+
+The exploration finalization wired the audited quest write boundary
+(`services/exploration_workflow.py`) over the deterministic quest engine +
+survival energy axis + shared encounter resolver, and ran a play-review while
+driving it. Two balance surfaces are deliberate PLACEHOLDERS the seam quotes
+VERBATIM but **cannot** reconcile without inventing numbers (which it does not
+do) — they need an owner/lab balance sim / reconciliation:
+
+- **(a) Quest tier reward bands are conservative placeholders (D-0008).** The
+  per-tier ceilings in `games/exploration/quest/catalog.py` `TIER_CAPS` — tier I
+  `RewardBundle(global_xp=5, game_xp=25, currency=10)`, tier II
+  `(global_xp=10, game_xp=60, currency=25)`, tier III
+  `(global_xp=20, game_xp=120, currency=50)`, under `GLOBAL_MAX(global_xp=20,
+  game_xp=120, currency=50)` — are, per that module's own header note,
+  "deliberately conservative, in-band values chosen to be reconciled against the
+  real Q-0087 dual-track bands later" — **the exact superbot Q-0087 dual-track
+  band constants were NOT sourced into this repo.** The seam banks EXACTLY these
+  tier-capped bundles (`engine.grant_rewards`), unchanged. **Ask:** reconcile
+  `TIER_CAPS` against the canonical Q-0087 dual-track bands (import the real
+  constants; the engine + balance sim will re-pin to whatever lands).
+- **(b) Survival Medium/Hard tunables are a first-candidate gradient.** Per
+  `games/exploration/survival/difficulty.py`, `Difficulty.EASY` is provably
+  byte-identical to the shipped mining bar (D-0004: `max_energy=energy.MAX_ENERGY`,
+  `regen_seconds=energy.REGEN_SECONDS`, `cost=energy.DIG_COST`), but Medium
+  (`max_energy=50, regen_seconds=15, cost=1`) and Hard
+  (`max_energy=40, regen_seconds=20, cost=1`) are, per that module's header, "the
+  first-candidate gradient (sim-pinned here; exact tuning is consolidation-phase
+  work)". The seam debits `cost` per bounded action and seeds `energy` from
+  `max_energy`, both VERBATIM. **Ask:** run the survival balance sim to ratify /
+  tune the Medium/Hard gradient against the Q-0087 curves.
+
+**Ask (summary):** reconcile the exploration reward tier bands against the real
+Q-0087 dual-track bands and ratify the survival Medium/Hard gradient. **Meanwhile
+every exploration constant stays VERBATIM** — no number was invented tonight; the
+seam banks exactly the engine's tier-capped bundle and quotes the survival
+tunables unchanged. It does **not** re-size a band or invent a tuning (that would
+be an invented balance number).

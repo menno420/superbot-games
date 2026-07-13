@@ -18,6 +18,7 @@ from __future__ import annotations
 from services import world_registry
 
 from games.dnd import cli as dnd_cli
+from games.exploration import cli as exploration_cli
 from games.fishing import cli as fishing_cli
 from games.mining import cli as mining_cli
 
@@ -42,6 +43,12 @@ _GAMES = (
         "🐉  D&D",
         "Guide an escort through a bounded-menu story over the audited resolver seam.",
         dnd_cli.main,
+    ),
+    (
+        "exploration",
+        "🧭  Exploration",
+        "Take a bounded quest, resolve encounters, and survive the wild over the audited quest seam.",
+        exploration_cli.main,
     ),
 )
 
