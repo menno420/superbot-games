@@ -1,6 +1,6 @@
 # 2026-07-13 · fishing standalone CLI (playable loop · build)
 
-> **Status:** 🚧 `in-progress`
+> **Status:** ✅ `complete`
 >
 > 📊 Model: Opus 4.8 · 2026-07-13T01:26:25Z · fishing standalone CLI
 
@@ -30,8 +30,8 @@ cleanly. NO balance number is changed — every bite chance / cost / weight / na
 is quoted verbatim from the seam/core; the only additions are UX/orchestration
 (spot discoverability via the `spots` command + valid-id hints, a clear help
 screen, and the session summary). Fishing tuning stays a SIM-REQUEST in
-`control/outbox.md`. Tests land in `tests/fishing/test_cli.py`, bumping the
-`tests/fishing` floor from 65.
+`control/outbox.md`. Tests land in `tests/fishing/test_cli.py` (+14), bumping the
+`tests/fishing` floor 65 → 79.
 
 ## ⟲ Previous-session review
 
