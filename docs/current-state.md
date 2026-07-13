@@ -20,11 +20,11 @@
 
 ## In flight
 
-(Truth-stamped 2026-07-13 at HEAD c629577, substrate-kit v1.15.0 — the prior
+(Truth-stamped 2026-07-13 at HEAD ab442e7, substrate-kit v1.15.0 — the prior
 2026-07-09 wind-down snapshot below is superseded.)
 
-PRs through **#86** are on main (each merge API-verified; the only open PR is
-this groom's own feature wave). The 2026-07-13 night wave
+PRs through **#89** are on main (each merge API-verified; zero open PRs at
+scan time beyond this groom itself). The 2026-07-13 night wave
 (#66–#80, enumerated under "Recently shipped") made all four games playable:
 `python3 -m games` is a hub over a game-neutral world registry (#72) listing
 mining (#70), fishing (#71), dnd (#75), and exploration (#77), each driven
@@ -46,7 +46,17 @@ recorded, `orders: acked=007 done=007` (#84 `9caf1b6`). V042 (mining) was
 ratified unchanged with two reporting-only flags (tool-ladder feltness,
 faucet-bypass pricing → PROPOSAL 035, sim-first); V045 (exploration) was
 ratified with an honest NULL on the numeric band import (waits on the
-upstream Q-0087/D-0008 artifact).
+upstream Q-0087/D-0008 artifact). The wired V043 economy is now
+player/owner-visible (#87 `67de572`): a generated "Fishing economy (V043)"
+section on `docs/balance.md` plus fishing CLI `sell`/level/milestone
+readouts through the audited seam.
+
+Fishing's second economy leg is sim-gated: the cook leg (sell-OR-cook
+exclusivity already wired in #83) has NO pinned constants — a
+**fishing-cook-economy SIM-REQUEST** is open in `control/outbox.md`
+(#89 `ab442e7`, status `open`, awaiting a sim-lab verdict), alongside an
+advisory-only lane→manager KIT-ASK for a mechanical ledger-drift check on
+this file.
 
 Rung 3 (the **host-adapter** against superbot-next's binding plugin contract,
 `docs/game-plugin-contract.md`) was scoped in #66 (`60b2773`,
@@ -69,11 +79,26 @@ _Superseded 2026-07-09 wind-down snapshot (kept for provenance):_
 
 ## Recently shipped (newest first)
 
-_(Note 2026-07-13: the 2026-07-12/13 wave #61–#86 is enumerated below (each
+_(Note 2026-07-13: the 2026-07-12/13 wave #61–#89 is enumerated below (each
 entry cites its squash-merge SHA on main; every merge API-verified). #13–#60
 remain unenumerated — the authoritative history for that span is in git.
 #83/#84 are listed in merge order: #84 merged 17:47:46Z, #83 17:50:38Z.)_
 
+- **#89** (2026-07-13, `ab442e7`) — control: outbox appends — SIM-REQUEST
+  `fishing-cook-economy` (asks the sim to pin per-species cooked-value +
+  energy-restore constants; cross-refs VERDICT 042's faucet-bypass flag and
+  PROPOSAL 035) + advisory-only lane→manager KIT-ASK for a ledger-drift
+  check comparing this file's highest cited PR against main's squash
+  subjects (never merge-blocking).
+- **#88** (2026-07-13, `0ffd3cc`) — control: released the `v043-balance-cli`
+  claim (session-close claim delete; fast lane).
+- **#87** (2026-07-13, `67de572`) — feat: V043 economy surfaced — generated
+  "Fishing economy (V043)" section on `docs/balance.md` (sell/XP/milestone
+  values imported at generation time from `games/fishing/core/economy.py`,
+  zero hand-copied literals) + fishing CLI `sell` command with
+  coins/level/milestone readouts routed through the audited
+  `services/fishing_workflow.sell` + this ledger's #81–#86 groom.
+  Suite 546 → 556.
 - **#86** (2026-07-13, `c629577`) — control: work claim `v043-balance-cli`
   (V043 balance-page section + fishing CLI economy surfacing; fast lane).
 - **#85** (2026-07-13, `ae4beff`) — control: released the ORDER 007 verdict
