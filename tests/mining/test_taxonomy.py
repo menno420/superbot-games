@@ -67,3 +67,80 @@ def test_category_of_has_no_inline_player_label() -> None:
                     if sub.value != docstring and sub.value in labels:
                         offenders.append(repr(sub.value))
     assert not offenders, offenders
+
+
+# --- the 3-layer menu helpers (grouping / ordering / labels) ---------------
+# category_of is pinned above (Q-0267); the rest of the menu doctrine —
+# base_type, pluralize, the emoji lookups, grouped's rarity order,
+# types_by_category's body order, ordered_categories — sat untested.
+# Everything below runs at EXISTING constants (real catalog items).
+
+
+def test_base_type_is_the_lowercased_last_word() -> None:
+    """"iron sword" → "sword"; a single-word item is its own type; casing
+    never leaks into the type key."""
+    assert taxonomy.base_type("iron sword") == "sword"
+    assert taxonomy.base_type("Iron Sword") == "sword"
+    assert taxonomy.base_type("pickaxe") == "pickaxe"
+
+
+def test_pluralize_rules() -> None:
+    """Already-plural words stay (boots, leggings); sibilant endings take
+    "es" (torch → torches, box → boxes); everything else takes "s"."""
+    assert taxonomy.pluralize("boots") == "boots"
+    assert taxonomy.pluralize("leggings") == "leggings"
+    assert taxonomy.pluralize("torch") == "torches"
+    assert taxonomy.pluralize("box") == "boxes"
+    assert taxonomy.pluralize("sword") == "swords"
+
+
+def test_type_emoji_prefers_the_type_table_then_falls_to_kind() -> None:
+    """A base type in TYPE_EMOJI wins; an unlisted base falls back to the
+    sample item's kind emoji (dynamite → consumable 🧨, an unknown name
+    classifies as resource → ⛏️)."""
+    assert taxonomy.type_emoji("sword", "iron sword") == taxonomy.TYPE_EMOJI["sword"]
+    assert taxonomy.type_emoji("dynamite", "dynamite") == "🧨"
+    assert taxonomy.type_emoji("goo", "mystery goo") == "⛏️"
+
+
+def test_category_emoji_known_and_unknown() -> None:
+    """Every declared category has its emoji; an unknown label renders as
+    the empty string (no crash, no placeholder)."""
+    for cat in taxonomy.CATEGORY_ORDER:
+        assert taxonomy.category_emoji(cat) == taxonomy.CATEGORY_EMOJI[cat] != ""
+    assert taxonomy.category_emoji("Nonsense") == ""
+
+
+def test_grouped_buckets_by_base_type_and_orders_variants_by_rarity() -> None:
+    """Variants inside a group read starter → iron → gold → diamond
+    (material_rank, then name) regardless of input order; distinct base
+    types never share a bucket."""
+    shuffled = ["diamond pickaxe", "pickaxe", "gold pickaxe", "iron pickaxe", "iron sword"]
+    groups = taxonomy.grouped(shuffled)
+    assert groups == {
+        "pickaxe": ["pickaxe", "iron pickaxe", "gold pickaxe", "diamond pickaxe"],
+        "sword": ["iron sword"],
+    }
+
+
+def test_types_by_category_orders_types_by_equip_slot() -> None:
+    """Within a category, types follow equipment.SLOTS body order: weapons
+    read sword → shield, armour reads head-to-toe helmet → boots."""
+    names = ["iron boots", "iron helmet", "shield", "iron sword", "stone hut", "pickaxe"]
+    by_cat = taxonomy.types_by_category(names)
+    assert by_cat["Weapons"] == ["sword", "shield"]
+    assert by_cat["Armour"] == ["helmet", "boots"]
+    assert by_cat["Tools"] == ["pickaxe"]
+    assert by_cat["Structures"] == ["hut"]
+
+
+def test_ordered_categories_follows_display_order_not_input_order() -> None:
+    """Only the categories present appear, always in CATEGORY_ORDER —
+    feeding structures first cannot promote them above Weapons/Tools."""
+    assert taxonomy.ordered_categories(["stone hut", "pickaxe", "iron sword"]) == [
+        "Weapons",
+        "Tools",
+        "Structures",
+    ]
+    assert taxonomy.ordered_categories([]) == []
+
