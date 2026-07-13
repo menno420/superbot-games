@@ -176,7 +176,11 @@ def format_report(report: SimReport) -> str:
     lines.append("kind frequency (overall):")
     for kind in ("none", "hazard", "loot_cache", "rich_vein"):
         n = report.kind_counts.get(kind, 0)
-        lines.append(f"  {kind:<11} {n / report.actions:6.2%}  ({n:,})")
+        lines.append(
+            f"  {kind:<11} {n / report.actions:6.2%}  ({n:,})"
+            if report.actions
+            else f"  {kind:<11}   n/a"
+        )
     lines.append("")
     lines.append("hazard chance by depth (share of actions that are hazards):")
     for z, counts in report.depth_kind_counts.items():
