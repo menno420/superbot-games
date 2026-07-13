@@ -23,9 +23,10 @@ _FORBIDDEN_PREFIXES = ("services", "cogs", "views", "utils.", "disbot")
 def test_core_imports_no_discord_db_or_host_layers() -> None:
     before = set(sys.modules)
     modules = [m.name for m in pkgutil.iter_modules(core.__path__)]
-    # The fishing core is exactly four modules (catch / rng / species / spots);
-    # pin it so a new module cannot slip in an impure import untested.
-    assert len(modules) == 4
+    # The fishing core is exactly five modules (catch / economy / rng / species
+    # / spots — economy added by the V043 wiring, ORDER 007); pin it so a new
+    # module cannot slip in an impure import untested.
+    assert sorted(modules) == ["catch", "economy", "rng", "species", "spots"]
     for m in modules:
         importlib.import_module(f"games.fishing.core.{m}")
     loaded = set(sys.modules) - before

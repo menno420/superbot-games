@@ -24,21 +24,27 @@ Design provenance mirrors the just-landed mining seam
   ``resolve_cast`` returns its honest 😴 no-bite with ``energy_cost == 0``)
   records NOTHING.
 
-Fishing has ONE decide-fn (:func:`games.fishing.core.catch.resolve_cast`), so
-the seam has ONE state-changing action — :func:`cast`. There is no sell / buy /
-move leg because no fishing economy exists yet (the shared inventory ``Grant``
-carries an EMPTY ``ProgressionDelta`` for a catch); those future actions are
-gated on that economy gap and filed as SIM-REQUESTs in ``control/outbox.md``,
-not built here.
+Fishing has ONE decide-fn (:func:`games.fishing.core.catch.resolve_cast`) and,
+since sim-lab **VERDICT 043** (APPROVE-WITH-CONSTANTS, relayed as ORDER 007 in
+``control/inbox.md`` @ ``d6a9526``), ONE economy leg — so the seam has TWO
+state-changing actions: :func:`cast` and :func:`sell`. The sell curve
+(minnow 8 / bass 13 / pike 27 / legend_carp 80 coins) and the progression curve
+(``game_xp = size_rank`` per catch; ``xp_to_next(L) = 50·L``; milestones
+surface at L10/L25; levels STAT-NEUTRAL) are wired VERBATIM from
+:mod:`games.fishing.core.economy` — the closed fishing-economy-tuning
+SIM-REQUEST (``control/outbox.md``). **Sell-OR-cook, never both**: selling
+debits the fish from the haul, so one landed fish can only ever be consumed by
+one economy leg (a future cook leg must consume from the same haul).
 
-Balance discipline: every number/noun (bite chance, size, species, narration)
-comes VERBATIM from the pure core / its data tables (never re-derived here).
-Only *structural* audit fields — the mutation id, timestamps, ids, ``scope`` and
-``target`` strings — are constructed (they carry no balance meaning). Fishing has
-no economy reason tokens, so the ``mutation_type`` / ``target`` verbs are purely
-structural (``fishing:cast`` / ``haul:<species>`` / ``energy``). This module is
-stdlib-only apart from ``games.fishing.*`` (+ the shared ``games.mining.core``
-energy/stat types the fishing core itself reuses) so CI stays hermetic.
+Balance discipline: every number/noun (bite chance, size, species, narration,
+sell value, XP curve) comes VERBATIM from the pure core / its data tables
+(never re-derived here). Only *structural* audit fields — the mutation id,
+timestamps, ids, ``scope`` and ``target`` strings — are constructed (they carry
+no balance meaning); the ``mutation_type`` / ``target`` verbs are purely
+structural (``fishing:cast`` / ``fishing:sell`` / ``haul:<species>`` /
+``energy`` / ``coins``). This module is stdlib-only apart from
+``games.fishing.*`` (+ the shared ``games.mining.core`` energy/stat types the
+fishing core itself reuses) so CI stays hermetic.
 """
 
 from __future__ import annotations
@@ -52,18 +58,22 @@ from uuid import uuid4
 from services.audit import AuditRecord, InMemorySink, Sink
 
 from games.fishing.core import catch as catch_core
+from games.fishing.core import economy
 from games.fishing.core.catch import CastOutcome
 from games.fishing.inventory import adapter
 from games.mining.core import energy as energy_model
 from games.mining.core.equipment import EffectiveStats
 
 # --- structural mutation-type / target tokens ------------------------------
-# Fishing has NO economy reason tokens (no sell/buy/reward curve exists yet), so
-# the seam constructs stable STRUCTURAL tokens for its one action — a
-# ``fishing:cast`` verb (the ``fishing:*`` namespace, mirroring mining's
-# ``mining:*`` structural verbs) and a ``haul:<species>`` / ``energy`` target.
-# These carry no balance meaning.
+# The seam constructs stable STRUCTURAL tokens for its actions — the
+# ``fishing:*`` verb namespace (mirroring mining's ``mining:*`` structural
+# verbs) and ``haul:<species>`` / ``energy`` / ``coins`` targets. The verbs
+# carry no balance meaning; the AMOUNTS a sell moves are the V043 sim-pinned
+# constants in ``games/fishing/core/economy.py``, quoted verbatim.
 MUTATION_CAST = "fishing:cast"
+
+#: Structural verb for the V043 sell leg (one fish → coins, sell-OR-cook).
+MUTATION_SELL = "fishing:sell"
 
 #: Target string for the energy leg of an empty cast (a real cast that spent
 #: energy but landed nothing) — mirrors mining's bare ``depth`` / ``vault``.
@@ -105,6 +115,12 @@ class FishingState:
       resolver's deterministic-default RNG (``(seed, spot_id)`` → the same cast).
     * ``stats`` — the player's :class:`EffectiveStats` (``None`` = a bare
       baseline angler); only ``fishing_power`` / ``bite_luck`` are read.
+    * ``coins`` — the coin balance the V043 SELL leg credits (starts at 0; the
+      only faucet is selling a landed fish at the sim-pinned curve).
+    * ``game_xp`` — accumulated fishing XP (V043: ``size_rank`` per catch,
+      folded from the grant's ``ProgressionDelta`` VERBATIM). The level derived
+      from it (``economy.level_for_xp``) is STAT-NEUTRAL — it is never fed back
+      into ``stats`` or any resolver lever.
     """
 
     seed: int = 0
@@ -112,6 +128,8 @@ class FishingState:
     energy: int = field(default_factory=lambda: energy_model.MAX_ENERGY)
     haul: dict[str, int] = field(default_factory=dict)
     stats: EffectiveStats | None = None
+    coins: int = 0
+    game_xp: int = 0
 
 
 # ---------------------------------------------------------------------------
@@ -134,6 +152,34 @@ class FishingResult:
     species: str | None = None
     size: int | None = None
     energy_after: int = 0
+    record: AuditRecord | None = None
+    #: V043 progression surfacing: XP gained this cast (``size_rank`` on a
+    #: bite, else 0), the STAT-NEUTRAL level readout after the fold, and any
+    #: milestone level (L10/L25) this cast crossed — surfaced, never a stat.
+    xp_gained: int = 0
+    level_after: int = economy.BASE_LEVEL
+    milestones: tuple[int, ...] = ()
+
+
+# ---------------------------------------------------------------------------
+# Result dataclass — the seam's frozen return contract for a sell (V043)
+# ---------------------------------------------------------------------------
+@dataclass(frozen=True)
+class SellResult:
+    """Outcome of a :func:`sell` op (the V043 sell leg).
+
+    ``ok`` is ``True`` when the sale changed state (fish debited from the haul,
+    coins credited at the sim-pinned value) and one audit record was emitted;
+    ``False`` for the honest no-ops (unknown/unsellable species, non-positive
+    quantity, too few held) which change nothing and record NOTHING.
+    """
+
+    ok: bool
+    message: str
+    species: str | None = None
+    quantity: int = 0
+    coins_delta: int = 0
+    new_balance: int = 0
     record: AuditRecord | None = None
 
 
@@ -185,9 +231,13 @@ def _fold_catch(state: FishingState, outcome: CastOutcome) -> tuple[str, int, in
     (:func:`games.fishing.inventory.adapter.cast_to_grant`) and counts each
     resulting stack under its neutral ``species_id`` — so the haul is folded from
     the SAME ``Grant`` shape the shared contract uses, never a bespoke tally.
-    Returns ``None`` for a no-bite outcome (an EMPTY grant folds nothing).
+    The grant's ``ProgressionDelta`` is folded VERBATIM into ``state.game_xp``
+    (V043: ``game_xp = size_rank`` per catch — the amount is the adapter's, the
+    seam only sums). Returns ``None`` for a no-bite outcome (an EMPTY grant
+    folds nothing).
     """
     grant = adapter.cast_to_grant(outcome)
+    state.game_xp += grant.progression.game_xp
     folded: tuple[str, int, int] | None = None
     for stack in grant.items:
         species = adapter.species_id_for_item(stack.item)
@@ -261,7 +311,11 @@ def cast(
     state.energy = energy_before - outcome.energy_cost
 
     now_dt = _resolve_now(now)
+    xp_before = state.game_xp
     folded = _fold_catch(state, outcome)
+    # V043 progression surfacing: level is a STAT-NEUTRAL readout; a crossed
+    # milestone (L10/L25) SURFACES on the result and changes no mechanic.
+    milestones = economy.milestones_crossed(xp_before, state.game_xp)
 
     if folded is not None:
         # A bite: the primary mutation is the catch grant (mirrors mining's
@@ -305,6 +359,82 @@ def cast(
         size=catch.size if catch is not None else None,
         energy_after=state.energy,
         record=record,
+        xp_gained=state.game_xp - xp_before,
+        level_after=economy.level_for_xp(state.game_xp),
+        milestones=milestones,
+    )
+
+
+# ---------------------------------------------------------------------------
+# The V043 sell leg — sell (one fish yields sell-OR-cook, never both)
+# ---------------------------------------------------------------------------
+def sell(
+    state: FishingState,
+    species_id: str,
+    qty: int = 1,
+    *,
+    sink: Sink,
+    guild_id: int | None = None,
+    actor_id: int | None = None,
+    actor_type: str = ACTOR_PLAYER,
+    now: datetime | None = None,
+    mutation_id_factory: Callable[[], str] | None = None,
+) -> SellResult:
+    """Sell *qty* landed fish of *species_id* at the V043 sim-pinned sell value.
+
+    Wires :func:`games.fishing.core.economy.sell_value` (minnow 8 / bass 13 /
+    pike 27 / legend_carp 80 coins — VERDICT 043 VERBATIM, never re-derived):
+    debit the fish from ``state.haul`` and credit ``unit × qty`` coins, then
+    record exactly ONE :class:`AuditRecord` (verb ``fishing:sell``, target
+    ``coins``, prev/new balance — mirroring the mining seam's sell leg).
+
+    **Sell-OR-cook, never both** (V043): consuming the fish FROM the haul is
+    the exclusivity mechanism — a sold fish is gone, so no future cook (or
+    second sell) can consume it again. A future cook leg must debit the same
+    haul the same way.
+
+    Honest no-ops — an unknown/unsellable species, a non-positive quantity, or
+    more fish than held — change nothing, record NOTHING (D2), and return
+    ``ok=False``.
+    """
+    if not economy.is_sellable(species_id):
+        return SellResult(ok=False, message=f"{species_id} cannot be sold.", species=species_id)
+    if qty <= 0:
+        return SellResult(ok=False, message="Quantity must be positive.", species=species_id)
+    held = state.haul.get(species_id, 0)
+    if held < qty:
+        return SellResult(
+            ok=False,
+            message=f"You only have {held}× {species_id}.",
+            species=species_id,
+        )
+
+    unit = economy.sell_value(species_id)
+    total = unit * qty
+    prev_coins = state.coins
+    state.haul[species_id] = held - qty  # the fish is CONSUMED (sell-OR-cook)
+    state.coins = prev_coins + total
+
+    record = _make_record(
+        mutation_type=MUTATION_SELL,
+        target="coins",
+        prev_value=str(prev_coins),
+        new_value=str(state.coins),
+        now=_resolve_now(now),
+        mutation_id=_resolve_id(mutation_id_factory),
+        guild_id=guild_id,
+        actor_id=actor_id,
+        actor_type=actor_type,
+    )
+    sink.record(record)
+    return SellResult(
+        ok=True,
+        message=f"Sold {qty}× {species_id} for {total} coins.",
+        species=species_id,
+        quantity=qty,
+        coins_delta=total,
+        new_balance=state.coins,
+        record=record,
     )
 
 
@@ -314,8 +444,11 @@ __all__ = [
     "InMemorySink",
     "FishingState",
     "FishingResult",
+    "SellResult",
     "ACTOR_PLAYER",
     "MUTATION_CAST",
+    "MUTATION_SELL",
     "TARGET_ENERGY",
     "cast",
+    "sell",
 ]
