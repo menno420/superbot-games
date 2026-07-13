@@ -24,6 +24,7 @@ from games.fishing.cli import (
     status_lines,
     step,
 )
+from games.fishing.core import economy
 from games.fishing.core import spots as spot_table
 from games.mining.core import energy
 from services import fishing_workflow as fw
@@ -154,7 +155,7 @@ def test_spots_lists_every_valid_id() -> None:
 # ---------------------------------------------------------------------------
 def test_help_lists_every_command() -> None:
     text = "\n".join(help_lines())
-    for verb in ("cast", "spot", "spots", "status", "help", "quit"):
+    for verb in ("cast", "sell", "spot", "spots", "status", "help", "quit"):
         assert verb in text
 
 
@@ -194,3 +195,132 @@ def test_cast_emits_a_fishing_subsystem_audit_record() -> None:
     record = result.sink.records[0]
     assert record.subsystem == "fishing"
     assert record.mutation_type == fw.MUTATION_CAST
+
+
+# ---------------------------------------------------------------------------
+# The V043 sell command — routes through the seam's audited sell(), no CLI math
+# ---------------------------------------------------------------------------
+def test_sell_routes_through_seam_and_credits_coins() -> None:
+    sink = InMemorySink()
+    result = run_commands(
+        ["sell bass 1", "quit"],
+        sink=sink,
+        state=_fresh(haul={"bass": 2}),
+        now=FIXED_NOW,
+    )
+    # The credited amount is the seam's sim-pinned value — the CLI adds no math.
+    assert result.state.coins == economy.sell_value("bass")
+    assert result.state.haul["bass"] == 1  # the sold fish is CONSUMED (sell-OR-cook)
+    assert len(sink.records) == 1
+    record = sink.records[0]
+    assert record.subsystem == "fishing"
+    assert record.mutation_type == fw.MUTATION_SELL
+    assert record.target == "coins"
+
+
+def test_sell_default_qty_sells_all_held() -> None:
+    result = run_commands(
+        ["sell minnow", "quit"],
+        state=_fresh(haul={"minnow": 3}),
+        now=FIXED_NOW,
+    )
+    assert result.state.coins == 3 * economy.sell_value("minnow")
+    assert result.state.haul["minnow"] == 0
+    assert len(result.sink.records) == 1  # one committed sell → exactly one row
+
+
+def test_sell_unknown_species_is_honest_noop() -> None:
+    sink = InMemorySink()
+    result = run_commands(
+        ["sell kraken", "quit"],
+        sink=sink,
+        state=_fresh(haul={"bass": 1}),
+        now=FIXED_NOW,
+    )
+    assert result.state.coins == 0
+    assert result.state.haul == {"bass": 1}
+    assert len(sink.records) == 0  # a no-op sell records NOTHING (D2)
+    assert "cannot be sold" in result.text
+
+
+def test_sell_more_than_held_records_nothing() -> None:
+    sink = InMemorySink()
+    result = run_commands(
+        ["sell pike 5", "quit"],
+        sink=sink,
+        state=_fresh(haul={"pike": 1}),
+        now=FIXED_NOW,
+    )
+    assert result.state.coins == 0
+    assert result.state.haul == {"pike": 1}
+    assert len(sink.records) == 0
+    assert "only have" in result.text
+
+
+def test_sell_without_args_shows_usage() -> None:
+    sink = InMemorySink()
+    result = run_commands(["sell", "quit"], sink=sink, state=_fresh(), now=FIXED_NOW)
+    assert "Usage: sell" in result.text
+    assert len(sink.records) == 0
+
+
+def test_sell_with_non_numeric_qty_is_graceful() -> None:
+    sink = InMemorySink()
+    result = run_commands(
+        ["sell bass lots", "quit"],
+        sink=sink,
+        state=_fresh(haul={"bass": 2}),
+        now=FIXED_NOW,
+    )
+    assert "Quantity must be a number" in result.text
+    assert result.state.haul == {"bass": 2}
+    assert len(sink.records) == 0
+
+
+# ---------------------------------------------------------------------------
+# V043 display — coins / level in the status header + summary, milestones on cast
+# ---------------------------------------------------------------------------
+def test_status_shows_coins_and_level_readout() -> None:
+    # cumulative_xp_for(2) xp puts the STAT-NEUTRAL readout exactly at L2.
+    state = _fresh(coins=42, game_xp=economy.cumulative_xp_for(2))
+    text = "\n".join(status_lines(state))
+    assert "coins:  42" in text
+    assert "L2" in text
+    assert f"{economy.cumulative_xp_for(2)} xp" in text
+
+
+def test_summary_shows_coins_and_level() -> None:
+    result = run_commands(
+        ["sell bass", "quit"],
+        state=_fresh(haul={"bass": 1}),
+        now=FIXED_NOW,
+    )
+    assert f"coins:           {economy.sell_value('bass')}" in result.text
+    assert "fishing level:   L1" in result.text
+
+
+def test_milestone_announced_when_cast_crosses_it() -> None:
+    # One xp short of the L10 milestone: the next landed fish (size_rank >= 1)
+    # crosses it, and the CLI must announce the seam-surfaced milestone.
+    state = _fresh(game_xp=economy.cumulative_xp_for(10) - 1, energy=200)
+    result = run_commands(
+        ["spot deep_water"] + ["cast"] * 20 + ["quit"],
+        state=state,
+        now=FIXED_NOW,
+        rng=random.Random(1),
+    )
+    assert result.state.game_xp >= economy.cumulative_xp_for(10)  # a fish landed
+    assert "milestone — fishing level 10 reached!" in result.text
+
+
+def test_xp_line_surfaces_only_on_a_bite() -> None:
+    # A bite gains size_rank xp and the cast output shows the +xp readout.
+    state = _fresh(game_xp=0, energy=200)
+    result = run_commands(
+        ["spot deep_water"] + ["cast"] * 20 + ["quit"],
+        state=state,
+        now=FIXED_NOW,
+        rng=random.Random(1),
+    )
+    assert result.state.game_xp > 0
+    assert "xp:     +" in result.text
