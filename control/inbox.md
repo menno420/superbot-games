@@ -91,3 +91,11 @@ provenance: filed by the fleet manager — relocation of startup-prompt v3.1 W3 
 do: Truth-stamp control/status.md ONCE (archival correction, NOT resumption): the heartbeat still claims five open PRs parked for owner merge and a stale main HEAD; correct the stale claims with evidence cited, dated as an archival correction.
 why: verified 2026-07-12: status updated 2026-07-11T19:39:14Z lists #50/#52/#53/#54/#55 as open+parked and main HEAD 5d38593; live: #50 MERGED 2026-07-11T20:25:22Z (API-verified) and main = 5ddfbee.
 done-when: status + claims match live GitHub; the correction is dated and cites its evidence.
+
+## ORDER 006 · 2026-07-13T09:09:36Z · status: new
+priority: P2
+from: fleet manager — NIGHT REPORT REQUEST, owner ask 2026-07-13 (relayed via Fleet Manager)
+executor: superbot-games seat (next wake)
+do: post a THOROUGH night report, window 2026-07-12T22:30Z→now, to control/status.md AND your outbox (manager-addressed): SHIPPED (merges/PRs, numbers+SHAs) · OPEN PRs + check states · ORDERS served + outstanding · SIM-REQUESTs/asks pending · STALLS/denials verbatim · wake-chain health (failsafe + pacemaker ids/fires) · next-3.
+why: owner morning review.
+done-when: report in both files; Fleet Manager compiles the roll-up.
