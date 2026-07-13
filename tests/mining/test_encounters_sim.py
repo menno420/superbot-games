@@ -12,8 +12,6 @@ from __future__ import annotations
 
 from collections import Counter
 
-import pytest
-
 from games.mining.sim import encounters_sim as sim
 
 # A cheap, deterministic sweep — big enough to trigger every kind at least once
@@ -102,13 +100,16 @@ def test_format_report_zero_totals_render_as_zero_rates_not_errors() -> None:
     assert "  z=5   won  0.0%  fled  0.0%  lost  0.0%  dmg  0.0  (n=0)" in text
 
 
-def test_format_report_with_zero_actions_raises_zero_division() -> None:
-    # PINNED CURRENT BEHAVIOR (latent bug, not changed here): the kind-frequency
-    # lines divide by report.actions without the guard that SimReport.encounter_rate
-    # has, so formatting a truly empty report raises ZeroDivisionError instead of
-    # rendering an empty table. Callers must not format a zero-action report.
-    with pytest.raises(ZeroDivisionError):
-        sim.format_report(sim.SimReport())
+def test_format_report_with_zero_actions_renders_na_kind_rows() -> None:
+    # Guarded behavior (former latent bug): the kind-frequency lines used to
+    # divide by report.actions unguarded, so a zero-action report raised
+    # ZeroDivisionError. They now render `n/a` — the same zero-denominator
+    # convention as the per-depth branch — matching SimReport.encounter_rate's
+    # guarded 0.0.
+    text = sim.format_report(sim.SimReport())
+    assert "overall encounter rate: 0.0%" in text
+    for kind in ("none", "hazard", "loot_cache", "rich_vein"):
+        assert f"  {kind:<11}   n/a" in text
 
 
 # ---------------------------------------------------------------------------
