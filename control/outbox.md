@@ -421,3 +421,80 @@ mechanical advisory row turns this recurring hand-audit into a free signal.
 and the ledger's citations grep as `#[0-9]+`. Advisory-only keeps the control
 fast lane and docs-only PRs unblocked; the row just names the two numbers.
 
+---
+
+## SIM-REQUEST · fishing-full-roster-economy · 2026-07-13
+
+**Requested by:** games seat (owner-directed batch pinning — ORDER 008)
+**For:** Fleet Manager — please route to the sim-lab (lane→manager; this seat
+never addresses the sim-lab directly)
+**Filed:** 2026-07-13T22:06:03Z
+**Status:** `open`
+
+**Authority — the owner's bigger-batches directive, verbatim (ORDER 008,
+`control/inbox.md`, live owner turn 2026-07-13 ~21:59Z):**
+
+> yes make sure the sim works in bigger batches, the goal should be to get all the games to a producition grade level, tho it should not hinder the correct structure, speed is important but not more important than correctness
+
+Per that directive this request is ONE full content wave, not a slice: pin the
+economy constants for the ENTIRE remaining legacy fishing roster in a single
+verdict batch.
+
+**The roster (enumerated from the legacy fleet repo, read-only):** the
+original species table is `disbot/data/fishing/fish.json` @ `a724e9d`
+(menno420/superbot, HEAD `a724e9d3757a02971466183ba2cc9fc370cd9c90`) — 21
+size-ranked SHORE fish (size_rank 1–21) plus 11 boat-only DEEPWATER fish on
+their own 1–21 scale, 32 species total. superbot-games currently pins **4**
+(`games/fishing/core/species.py` + V043 sell curve in
+`games/fishing/core/economy.py` @ `72a94bb`: minnow 8, bass 13, pike 27,
+legend_carp 80). The **29 not-yet-pinned** legacy species, with their legacy
+size_rank:
+
+- SHORE (18): guppy 2 · sardine 3 · anchovy 4 · perch 5 · herring 6 ·
+  mackerel 7 · trout 8 · carp 10 · salmon 12 · snapper 13 · catfish 14 ·
+  cod 15 · barracuda 16 · tuna 17 · swordfish 18 · marlin 19 · shark 20 ·
+  giant squid 21.
+- DEEPWATER (11): lanternfish 2 · spookfish 4 · lancetfish 6 · wreckfish 8 ·
+  anglerfish 10 · gulper eel 12 · oarfish 14 · frilled shark 16 ·
+  giant isopod 17 · colossal squid 20 · deepwater leviathan 21.
+
+**Naming note (lab's call, flagged honestly):** `legend_carp` does NOT exist
+in the legacy table — legacy has `carp` (shore, size_rank 10). If the lab
+rules that `legend_carp` supersedes legacy `carp`, drop `carp` from the list
+above (28 remaining: 17 shore + 11 deepwater); if `carp` is distinct, all 29
+rows stand. The lab should state which reading its verdict uses.
+
+**Legacy reference data (quoted VERBATIM, not proposed numbers):** in the
+legacy repo a raw fish sells for `max(1, size_rank)` coins
+(`disbot/utils/mining/items.py` `_fish_value`, @ `a724e9d`) and every catch
+awards a flat **5 XP** (`disbot/services/game_xp_service.py` `_AWARDS["fish"]
+= 5`, @ `a724e9d`). superbot-games' V043 curve (8/13/27/80 + `game_xp =
+size_rank`) already departs from that scale, so the legacy values are
+CONTEXT for the sim, not candidate constants.
+
+**Ask — ONE verdict batch covering ALL remaining species:**
+
+- **(a) Sell values** — a per-species sell value (coins) for every
+  not-yet-pinned species above, on the same curve family V043 pinned for
+  minnow/bass/pike/legend_carp, including where the deepwater venue premium
+  (tougher to land per legacy `utils/fishing/venue.py`) should sit.
+- **(b) XP** — the per-species `game_xp` for every species above (V043
+  pinned `game_xp = size_rank` per catch; confirm or re-pin that mapping
+  across the full 1–21 rank range and the deepwater scale), plus any
+  `xp_to_next` / milestone consequence of a 21-rank table (V043's
+  `xp_to_next(L) = 50·L`, milestones L10/L25).
+
+**Cross-reference — fold in, do not duplicate:** the open
+`## SIM-REQUEST · fishing-cook-economy · 2026-07-13` (this file, filed
+2026-07-13T18:18:29Z, status `open`) already asks for the per-species COOKED
+values and energy-restore constants (with the VERDICT 042 FAUCET-BYPASS /
+PROPOSAL 035 guardrail). Since this batch covers the full roster, please
+serve that entry's asks in the SAME batch run — its cook-leg asks apply to
+every species this request enumerates; they are NOT re-specified here.
+
+**Meanwhile every fishing constant stays VERBATIM** — nothing is invented
+here; the legacy values are quoted with citations, and the seam will wire the
+verdict's constants VERBATIM on receipt, per the owner's precedence rule
+(ORDER 008 interpretation (c)): correctness and structural integrity outrank
+speed.
+
