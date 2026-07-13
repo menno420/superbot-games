@@ -134,13 +134,23 @@ def test_world_registry_module_imports_no_games_package() -> None:
 # ---------------------------------------------------------------------------
 def test_wire_games_registers_both_playable_games_in_order() -> None:
     wire_games(world_registry)
-    assert [e.game_id for e in world_registry.all_entries()] == ["mining", "fishing", "dnd"]
+    assert [e.game_id for e in world_registry.all_entries()] == [
+        "mining",
+        "fishing",
+        "dnd",
+        "exploration",
+    ]
 
 
 def test_wire_games_is_idempotent() -> None:
     wire_games(world_registry)
     wire_games(world_registry)
-    assert [e.game_id for e in world_registry.all_entries()] == ["mining", "fishing", "dnd"]
+    assert [e.game_id for e in world_registry.all_entries()] == [
+        "mining",
+        "fishing",
+        "dnd",
+        "exploration",
+    ]
 
 
 def test_wired_openers_are_callable() -> None:
