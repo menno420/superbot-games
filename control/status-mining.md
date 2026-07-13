@@ -2,7 +2,7 @@
 
 > **⟵ GEN-1 HISTORY.** The two-lane split is archived; the single world-games seat owns `games/**` and the unified `control/inbox.md` + `control/status.md`. Read this as an archive, do not resurrect the split.
 
-updated: 2026-07-11T (archive-prep VERIFY + TOP-UP; verified against main HEAD 5d38593)
+updated: 2026-07-11T19:36Z (archive-prep VERIFY + TOP-UP; verified against main HEAD 5d38593) (re-stamped per fm ORDER 037; original stamp malformed — time recovered from commit 5a9d4d2)
 phase: gen-1 mining complete — ARCHIVE-READY. Pure domain + grid-encounters first slice shipped to main. Gen-1 lane is closed and archived; gen-2 boots only from what is committed on main. Archive note: docs/retro/archive-ready-2026-07-10-mining.md (verified true state, ⚑ owner-actions, resume read-order, gen-2 next 1–3 with block status, cross-project D-0043 wait).
 health: green — main is strict-GREEN. 73 mining tests pass; `bootstrap.py check --strict` exit 0. All mining PRs are MERGED; nothing parked, nothing broken.
 kit: substrate-kit v1.7.1 — adopted on main by exploration's PR #3 (merged); mining CONSUMES it ("adopt once" per docs/lanes.md). Mining's own adoption PR #4 was CLOSED as redundant (kit-adoption race — exploration filed first).
