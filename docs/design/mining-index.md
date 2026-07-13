@@ -14,6 +14,11 @@
 - [`mining-workflow-seam.md`](mining-workflow-seam.md) — rung-2 scoping doc for the
   WORKFLOW audited seam (`services/mining_workflow.py`); captures the oracle's two
   audit mechanisms and raises the ⚑ audit-schema owner/lab decision (D1 / D2).
+- [`mining-host-adapter.md`](mining-host-adapter.md) — rung-3 scoping doc for the
+  HOST adapter (superbot-next `SubsystemManifest` binding); captures the binding
+  plugin contract's minimum export shape (superbot-next `docs/game-plugin-contract.md`,
+  status binding), renders the buildability verdict,
+  and raises the ⚑ packaging/hermeticity owner/lab decision.
 - [`theme-readiness.md`](theme-readiness.md) — Q-0267 delta supplement to the merged
   theme-slot audit (#28): three additional player-visible mining surfaces
   (`capacity.py` warnings, `world.py` descent hints / biome tables, `skills.py` branch
