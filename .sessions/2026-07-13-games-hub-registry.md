@@ -1,6 +1,6 @@
 # 2026-07-13 · games hub registry + launcher (world spine · build)
 
-> **Status:** 🚧 `in-progress`
+> **Status:** ✅ `complete`
 >
 > 📊 Model: Opus 4.8 · 2026-07-13T01:33:55Z · games hub registry + launcher
 
