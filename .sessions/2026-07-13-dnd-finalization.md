@@ -1,6 +1,6 @@
 # 2026-07-13 · D&D finalization (walking skeleton → playable · build)
 
-> **Status:** 🚧 `in-progress`
+> **Status:** ✅ `complete`
 >
 > 📊 Model: Opus 4.8 · 2026-07-13T02:17:46Z · dnd finalization
 
