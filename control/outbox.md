@@ -77,3 +77,46 @@ self-initiated contract):
 
 **Ask:** ratify (or reverse) D2. D1 is a clean verbatim adoption; D2 is the
 contract-reach decision the scoping doc raised as the crux.
+
+---
+
+## SIM-REQUEST · fishing-economy-tuning · 2026-07-13
+
+**Requested by:** games seat (rung-2 fishing workflow-seam build)
+**For:** owner / lab balance sim
+**Status:** `open`
+
+The rung-2 fishing seam build (`services/fishing_workflow.py`) wired the audited
+`cast` write boundary over the pure fishing core and ran a play-review while
+doing so. Two economy gaps surfaced that the seam **cannot** close without
+inventing balance numbers (which it does not do) — they need an owner/lab sim.
+Note fishing's balance is **IN-REPO sim-pinned** (its constants are justified by
+`games/fishing/sim/catch_sim.py`, whose bounds live in
+`docs/design/fishing-catch-skeleton.md` §5) — it is **not** oracle-preserved. So
+tuning here is a **SIM-REQUEST** (re-run the pinned sim under new targets), never
+a hand-edited weight, and never a number invented at the seam:
+
+- **(a) Empty economy — a catch grants no XP/currency.** A landed fish maps
+  through the shared inventory adapter to a `Grant` whose `ProgressionDelta` is
+  **empty** (`games/fishing/inventory/adapter.py` `catch_to_grant`: "Progression
+  is left EMPTY: fishing's resolver defines no XP/currency for a catch today").
+  The frozen `Catch` carries only `species_id` + `size`
+  (`games/fishing/core/catch.py`) — there is no sell price or per-species reward.
+  The seam therefore has **no sell/buy leg** to audit (unlike mining's coin
+  legs): the one audited action is `cast`. **Ask:** run a balance sim to pin a
+  per-species sell/reward curve (keyed on the existing `species.py`
+  `size_rank` / `rarity_weight` data), so a future economy leg has sim-backed
+  numbers to quote — the seam will wire it VERBATIM when it exists.
+- **(b) No in-domain progression — no fishing skill/level.** Fishing has no
+  progression axis of its own: there is no fishing skill branch, no level, no
+  catch-count milestone (mining, by contrast, has `skills.py` branches the seam
+  audits via `allocate_skill`). The gear levers `fishing_power` / `bite_luck`
+  come solely from earned gear stats (`games.mining.core.equipment`), with no
+  fishing-owned way to grow them. **Ask:** run a balance sim to pin a fishing
+  progression curve (what a session earns toward those levers, and any per-catch
+  milestone), so a later progression action has sim-backed numbers.
+
+**Ask (summary):** run a balance sim to pin (a) a per-species sell/reward curve
+and (b) a fishing progression curve. **Meanwhile every fishing constant stays
+VERBATIM** — no numbers were invented tonight; the seam quotes the core
+constants unchanged and audits only the one action the core actually defines.
