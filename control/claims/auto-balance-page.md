@@ -1,1 +1,0 @@
-- `auto-balance-page` · **close-out record (PR #55)** — auto-gen docs/balance.md + CI freshness; green+clean, parked ⚑ owner-merge; next: merge then economy follow-up · tools/gen_balance.py, docs/balance.md · 2026-07-11
