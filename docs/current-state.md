@@ -20,10 +20,10 @@
 
 ## In flight
 
-(Truth-stamped 2026-07-13 at HEAD ab442e7, substrate-kit v1.15.0 — the prior
+(Truth-stamped 2026-07-13 at HEAD 06e5b5f, substrate-kit v1.15.0 — the prior
 2026-07-09 wind-down snapshot below is superseded.)
 
-PRs through **#89** are on main (each merge API-verified; zero open PRs at
+PRs through **#94** are on main (each merge API-verified; zero open PRs at
 scan time beyond this groom itself). The 2026-07-13 night wave
 (#66–#80, enumerated under "Recently shipped") made all four games playable:
 `python3 -m games` is a hub over a game-neutral world registry (#72) listing
@@ -51,11 +51,23 @@ player/owner-visible (#87 `67de572`): a generated "Fishing economy (V043)"
 section on `docs/balance.md` plus fishing CLI `sell`/level/milestone
 readouts through the audited seam.
 
+Standing directive: **ORDER 008** (`control/inbox.md`, coordinator-relayed
+live owner turn 2026-07-13 ~21:59Z, landed via #92 `21937f3`) is received
+and acknowledged — bigger sim batches, a production-grade standing target
+for all games, with correctness > speed precedence. Its first instance, the
+**fishing-full-roster-economy SIM-REQUEST** (`control/outbox.md`, filed via
+#92, status `open`), asks the sim-lab to pin the ENTIRE remaining legacy
+fishing roster (29 not-yet-pinned species, enumerated read-only from the
+legacy fleet repo) in ONE verdict batch; implementation is externally gated
+on that verdict and no numbers are invented meanwhile. The batch-sim work
+claim was released via #93 (`e2f6699`).
+
 Fishing's second economy leg is sim-gated: the cook leg (sell-OR-cook
 exclusivity already wired in #83) has NO pinned constants — a
 **fishing-cook-economy SIM-REQUEST** is open in `control/outbox.md`
-(#89 `ab442e7`, status `open`, awaiting a sim-lab verdict), alongside an
-advisory-only lane→manager KIT-ASK for a mechanical ledger-drift check on
+(#89 `ab442e7`, status `open`, awaiting a sim-lab verdict; the #92
+full-roster batch asks the lab to serve its asks in the SAME run), alongside
+an advisory-only lane→manager KIT-ASK for a mechanical ledger-drift check on
 this file.
 
 Rung 3 (the **host-adapter** against superbot-next's binding plugin contract,
@@ -79,11 +91,29 @@ _Superseded 2026-07-09 wind-down snapshot (kept for provenance):_
 
 ## Recently shipped (newest first)
 
-_(Note 2026-07-13: the 2026-07-12/13 wave #61–#89 is enumerated below (each
+_(Note 2026-07-13: the 2026-07-12/13 wave #61–#94 is enumerated below (each
 entry cites its squash-merge SHA on main; every merge API-verified). #13–#60
 remain unenumerated — the authoritative history for that span is in git.
 #83/#84 are listed in merge order: #84 merged 17:47:46Z, #83 17:50:38Z.)_
 
+- **#94** (2026-07-13, `06e5b5f`) — control: night-headline outbox entry —
+  NO NIGHT ORDER at HEAD (`control/inbox.md` carries ORDERs 001–008 only,
+  none citing the fm final-night worklist doc; that doc lists this seat only
+  under DARK dispositions, already stale vs the #92/#93 wave) + ORDER 008
+  acknowledgment note.
+- **#93** (2026-07-13, `e2f6699`) — control: released the
+  `owner-order-batch-sim` claim (work landed via #92; session-close claim
+  delete; fast lane).
+- **#92** (2026-07-13, `21937f3`) — control: owner ORDER 008 landed in
+  `control/inbox.md` (bigger sim batches; production-grade standing target;
+  correctness > speed) + full-roster `fishing-full-roster-economy`
+  SIM-REQUEST in `control/outbox.md` (29 not-yet-pinned legacy species
+  enumerated read-only from the legacy fleet repo @ `a724e9d`; folds in the
+  open cook-leg asks; no numbers invented).
+- **#91** (2026-07-13, `ce70d9e`) — control: released the
+  `truth-stamp-current-state` claim (session-close claim delete; fast lane).
+- **#90** (2026-07-13, `52eb8b2`) — docs: truth-stamp of this ledger —
+  recorded the merged #87/#88/#89 wave, re-stamped "In flight" at `ab442e7`.
 - **#89** (2026-07-13, `ab442e7`) — control: outbox appends — SIM-REQUEST
   `fishing-cook-economy` (asks the sim to pin per-species cooked-value +
   energy-restore constants; cross-refs VERDICT 042's faucet-bypass flag and
