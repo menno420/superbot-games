@@ -113,3 +113,16 @@ why: Q-0264 fan-in served all four of this repo's queued SIM-REQUESTs in one bat
 citations: sim-lab `afe18f3` control/outbox.md (VERDICT 042 / 043 / 044 / 045 entries) · fleet-manager control/outbox.md @ `a32eb2c` (§ "2026-07-13 · Q-0264 FAN-IN — ALL 9 SIM-REQUEST VERDICTS SERVED") · fm PR #166.
 done-when: the four SIM-REQUESTs in control/outbox.md are marked closed/answered with the verdict dispositions recorded, and status reports `orders: acked=007` (done=007 once the V043 wiring + V044 guard land or are explicitly scheduled).
 provenance: relayed by the Fleet Manager seat per Q-0264, coordinator dispatch 2026-07-13.
+
+## ORDER 008 · 2026-07-13T22:06:03Z · status: new
+
+Owner text, verbatim (quote block, do not paraphrase or fix typos):
+
+> yes make sure the sim works in bigger batches, the goal should be to get all the games to a producition grade level, tho it should not hinder the correct structure, speed is important but not more important than correctness
+
+Provenance: live owner turn in the SuperBot World coordinator session, 2026-07-13 ~21:59Z, relayed by the coordinator dispatch. Context: owner asked why superbot-games fishing has 4 species vs the original's ~21; coordinator offered to batch-pin the remaining roster; owner said yes and generalized. NOTE: inbox.md is normally owner/manager-written; a coordinator relaying a live owner turn is the sanctioned exception (stated here per doctrine).
+
+INTERPRETATION:
+(a) sim verdict pipeline moves to bigger batches — full content waves per SIM-REQUEST instead of few-item slices;
+(b) standing mission target: bring all three games to production-grade;
+(c) precedence: correctness and structural integrity outrank speed — no gate/verdict/golden-parity floor is relaxed.
