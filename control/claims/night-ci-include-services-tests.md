@@ -1,0 +1,3 @@
+# Claim · CI gap — tests.yml pytest run omits services/tests/
+
+- `claude/night-ci-include-services-tests` · **night-ci-include-services-tests** — close the verified CI execution gap in `.github/workflows/tests.yml`: the pytest step runs `python3 -m pytest tests/ games/exploration/tests/ -q`, omitting `services/tests/` (164 tests; registered in `tests/EXPECTED_SUITES.txt` with floor 164, so the floors guard collection-checks it but CI never EXECUTES it — 442 collected on the CI invocation vs 606 on the full suite); minimal one-line workflow fix adding `services/tests/` to the pytest invocation, matching existing style; no test or gameplay changes · expected files: .github/workflows/tests.yml, .sessions/, telemetry/model-usage.jsonl, control/claims/ · 2026-07-14
