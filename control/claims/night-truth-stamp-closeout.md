@@ -1,1 +1,0 @@
-- `claude/night-truth-stamp-closeout` · **docs: truth-stamp closeout groom** — record #120–#134 (the night improvement wave) in docs/current-state.md, move the anchor from fdea103 to the groomed HEAD · docs/current-state.md · 2026-07-14
