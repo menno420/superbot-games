@@ -143,15 +143,23 @@ class _FakeProc:
         self.stderr = stderr
 
 
-def _record_gate_runs(monkeypatch, mod, *, strict_exit: int = 0):
-    """Stub the module's subprocess.run: record commands, run nothing."""
+def _record_gate_runs(monkeypatch, mod, *, strict_exit: int = 0, added_cards=()):
+    """Stub the module's subprocess.run: record commands, run nothing.
+
+    ``added_cards`` is what the fake `git diff --diff-filter=A` derivation
+    reports — the knob that selects between --flip's three card paths
+    (zero / one / many).
+    """
     calls: list[list[str]] = []
 
     def fake_run(command, **kwargs):
-        calls.append([str(part) for part in command])
+        cmd = [str(part) for part in command]
+        calls.append(cmd)
+        if cmd[0] == "git":
+            return _FakeProc(0, "".join(f"{card}\n" for card in added_cards), "")
         if kwargs.get("capture_output"):
             return _FakeProc(0, "tests\n", "")  # --print-suites derivation
-        if str(BOOTSTRAP) in calls[-1]:
+        if str(BOOTSTRAP) in cmd:
             return _FakeProc(strict_exit)
         return _FakeProc(0)
 
@@ -165,9 +173,10 @@ def test_default_mode_runs_exactly_three_gates_and_never_bootstrap(monkeypatch, 
     calls = _record_gate_runs(monkeypatch, mod)
     assert mod.main([]) == 0
     # floor guard, --print-suites derivation, pytest, balance check — and
-    # never bootstrap.
+    # never bootstrap, never the git card derivation.
     assert len(calls) == 4
     assert not any(str(BOOTSTRAP) in call for call in calls)
+    assert not any(call[0] == "git" for call in calls)
     out = capsys.readouterr().out
     for banner in ("preflight 1/3:", "preflight 2/3:", "preflight 3/3:"):
         assert banner in out
@@ -181,16 +190,66 @@ def test_default_mode_runs_exactly_three_gates_and_never_bootstrap(monkeypatch, 
     assert "flip-readiness" not in out
 
 
-def test_flip_mode_appends_bootstrap_check_strict_as_step_four(monkeypatch, capsys):
+def test_flip_mode_zero_added_cards_falls_back_to_bare_strict(monkeypatch, capsys):
+    """Path 1/3 (control-fast-lane tree): no card in the branch diff → the
+    pre-parity bare strict, behind an explicit banner naming the fallback."""
     mod = _load_preflight_module()
-    calls = _record_gate_runs(monkeypatch, mod)
+    calls = _record_gate_runs(monkeypatch, mod, added_cards=())
     assert mod.main(["--flip"]) == 0
+    # The derivation runs FIRST (fail-fast, before any gate), then the gates.
+    assert calls[0][0] == "git"
+    assert calls[0][1:4] == ["diff", "--name-only", "--diff-filter=A"]
+    assert "origin/main...HEAD" in calls[0]
     assert calls[-1] == [sys.executable, str(BOOTSTRAP), "check", "--strict"]
     out = capsys.readouterr().out
     for banner in ("preflight 1/4:", "preflight 2/4:", "preflight 3/4:", "preflight 4/4:"):
         assert banner in out
+    assert "flip card: none ADDED on this branch" in out
+    assert "newest-by-mtime card fallback" in out
     assert "flip-readiness (bootstrap check --strict)" in out
     assert "flip-ready" in out
+
+
+def test_flip_mode_one_added_card_is_passed_via_session_log(monkeypatch, capsys):
+    """Path 2/3 (the parity fix): the branch's OWN added card is what step 4
+    grades — via `--session-log`, never strict's newest-by-mtime guess."""
+    mod = _load_preflight_module()
+    card = ".sessions/2026-07-14-parity-probe.md"
+    calls = _record_gate_runs(monkeypatch, mod, added_cards=(card,))
+    assert mod.main(["--flip"]) == 0
+    assert calls[-1] == [
+        sys.executable,
+        str(BOOTSTRAP),
+        "check",
+        "--strict",
+        "--session-log",
+        card,
+    ]
+    out = capsys.readouterr().out
+    assert f"flip card derived from the branch diff (origin/main...HEAD): {card}" in out
+    assert "flip-ready" in out
+
+
+def test_flip_mode_multiple_added_cards_error_loud_before_any_gate(monkeypatch, capsys):
+    """Path 3/3: two added cards is ambiguous — loud error listing both,
+    non-zero exit, and NO gate (not even the floor guard) has run."""
+    mod = _load_preflight_module()
+    cards = (
+        ".sessions/2026-07-14-card-one.md",
+        ".sessions/2026-07-14-card-two.md",
+    )
+    calls = _record_gate_runs(monkeypatch, mod, added_cards=cards)
+    with pytest.raises(SystemExit) as excinfo:
+        mod.main(["--flip"])
+    assert excinfo.value.code == 1
+    # Only the git derivation ran — fail-fast means no suite pass is wasted.
+    assert len(calls) == 1
+    assert calls[0][0] == "git"
+    out = capsys.readouterr().out
+    assert "2 session cards ADDED on this branch" in out
+    assert "a flip grades ONE card" in out
+    for card in cards:
+        assert f"  {card}" in out
 
 
 def test_flip_mode_propagates_a_red_strict_exit_code(monkeypatch, capsys):
@@ -201,6 +260,49 @@ def test_flip_mode_propagates_a_red_strict_exit_code(monkeypatch, capsys):
     assert excinfo.value.code == 7
     out = capsys.readouterr().out
     assert "preflight FAILED at 4/4 (flip-readiness (bootstrap check --strict)) — exit 7" in out
+
+
+def _git(repo: Path, *args: str) -> None:
+    subprocess.run(
+        ["git", *args], cwd=repo, check=True, capture_output=True, text=True
+    )
+
+
+def test_added_session_cards_derives_from_diff_not_mtime(tmp_path, monkeypatch):
+    """Real-git pin of the card idea's scenario: the branch ADDS an
+    older-named card while a bystander card (already on main) carries the
+    freshest mtime — the mtime fallback's wrong pick. The diff derivation
+    must return exactly the branch's card, exclude the not-added bystander
+    (--diff-filter=A) and the README (pathspec), regardless of mtimes."""
+    repo = tmp_path / "repo"
+    (repo / ".sessions").mkdir(parents=True)
+    bystander = repo / ".sessions" / "2026-07-13-bystander.md"
+    bystander.write_text("# bystander card already on main\n", encoding="utf-8")
+    _git(repo, "init", "-q")
+    _git(repo, "config", "user.email", "probe@example.invalid")
+    _git(repo, "config", "user.name", "probe")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "base")
+    # Synthetic remote-tracking ref: the derivation's diff base.
+    _git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    branch_card = repo / ".sessions" / "2026-07-01-branch-card.md"
+    branch_card.write_text("# the branch's own card\n", encoding="utf-8")
+    readme = repo / ".sessions" / "README.md"
+    readme.write_text("# added README must be excluded\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "born-red card + README")
+    # Make the BYSTANDER the newest file by mtime — latest_session_log's pick.
+    fresh = bystander.stat().st_mtime + 3600
+    os.utime(bystander, (fresh, fresh))
+    mod = _load_preflight_module()
+    monkeypatch.setattr(mod, "REPO_ROOT", repo)
+    assert mod._added_session_cards() == [".sessions/2026-07-01-branch-card.md"]
+
+
+def test_pick_flip_card_zero_and_one(capsys):
+    mod = _load_preflight_module()
+    assert mod._pick_flip_card([]) is None
+    assert mod._pick_flip_card([".sessions/x.md"]) == ".sessions/x.md"
 
 
 def test_strict_gate_holds_red_on_an_in_progress_card(tmp_path):

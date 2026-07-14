@@ -24,6 +24,7 @@ gate's strict session-card grading, which the three tests-workflow gates
 never run):
 
   4/4  flip-readiness         ``bootstrap.py check --strict``
+                              ``[--session-log <card from the branch diff>]``
 
 so "am I ready to flip?" is one command: green means the tree passes every
 tests-workflow gate AND strict. Mid-slice it stays red BY DESIGN — the
@@ -31,6 +32,21 @@ born-red card's in-progress Status is the strict gate's designed HOLD —
 and goes green once the card flips complete. The default three-step mode
 is byte-identical to the pre-flag behavior; CI (``tests.yml``) keeps
 calling the bare command and never runs step 4.
+
+Card-selection parity (the #131 card's idea): bare ``check --strict``
+picks the graded card by NEWEST MTIME (``latest_session_log``), which is
+the wrong card exactly when it matters — touch any bystander card (a
+groom, a merge-conflict resolution, a fresh checkout equalizing mtimes)
+and flip-readiness silently grades the bystander while the branch's own
+card goes unexamined. ``--flip`` therefore derives the card from the
+branch's OWN diff — session cards ADDED relative to
+``origin/main...HEAD`` (merge-base semantics, so a moved main never
+pollutes the derivation), the same card the substrate gate's added-card
+lane will grade — and passes it via strict's existing ``--session-log``
+flag. Exactly one added card: graded explicitly. Multiple added cards:
+loud error before any gate runs (a flip grades ONE card). Zero added
+cards (a control-fast-lane tree): today's bare strict behind an explicit
+banner naming the mtime fallback.
 
 Exit status: 0 when every step passes; the FIRST failing step's exit code
 otherwise (later steps do not run — fix, rerun, repeat).
@@ -52,6 +68,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 FLOOR_GUARD = REPO_ROOT / "tests" / "check_suite_floors.py"
 GEN_BALANCE = REPO_ROOT / "tools" / "gen_balance.py"
 BOOTSTRAP = REPO_ROOT / "bootstrap.py"
+
+#: Where session cards live and what the flip derivation diffs against.
+SESSIONS_DIR = ".sessions"
+FLIP_BASE_REF = "origin/main"
 
 
 def _banner(step: str, label: str, command: list[str]) -> None:
@@ -88,6 +108,59 @@ def _derived_roots() -> list[str]:
     return [line.strip() for line in proc.stdout.splitlines() if line.strip()]
 
 
+def _added_session_cards() -> list[str]:
+    """Session cards ADDED on this branch relative to ``FLIP_BASE_REF``.
+
+    The same derivation the substrate gate's added-card lane runs in CI:
+    ``--diff-filter=A`` over ``origin/main...HEAD`` (three-dot = against the
+    merge base) scoped to ``.sessions/*.md`` minus the README. Returned in
+    git's (path-sorted) order.
+    """
+    command = [
+        "git",
+        "diff",
+        "--name-only",
+        "--diff-filter=A",
+        f"{FLIP_BASE_REF}...HEAD",
+        "--",
+        f"{SESSIONS_DIR}/*.md",
+        f":!{SESSIONS_DIR}/README.md",
+    ]
+    proc = subprocess.run(command, capture_output=True, text=True, cwd=REPO_ROOT)
+    if proc.returncode != 0:
+        sys.stderr.write(proc.stderr)
+        print(
+            f"preflight FAILED deriving the flip card (git diff against {FLIP_BASE_REF})",
+            flush=True,
+        )
+        raise SystemExit(proc.returncode or 1)
+    return [line.strip() for line in proc.stdout.splitlines() if line.strip()]
+
+
+def _pick_flip_card(added: list[str]) -> str | None:
+    """The ONE card ``--flip`` grades, or ``None`` for the bare fallback.
+
+    Multiple added cards are a loud error, not a guess: a flip grades one
+    card, and picking silently is exactly the false-green class this
+    derivation exists to close.
+    """
+    if not added:
+        return None
+    if len(added) > 1:
+        print("=" * 72, flush=True)
+        print(
+            f"preflight FAILED deriving the flip card: {len(added)} session "
+            f"cards ADDED on this branch ({FLIP_BASE_REF}...HEAD) — a flip "
+            "grades ONE card:",
+            flush=True,
+        )
+        for card in added:
+            print(f"  {card}", flush=True)
+        print("=" * 72, flush=True)
+        raise SystemExit(1)
+    return added[0]
+
+
 def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Gate-parity preflight: floor guard, pytest, balance freshness.",
@@ -96,9 +169,12 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         "--flip",
         action="store_true",
         help=(
-            "append step 4 — `bootstrap.py check --strict` — so flip-readiness "
-            "is one command (red on a still-in-progress card is the designed "
-            "born-red HOLD, not a defect)"
+            "append step 4 — `bootstrap.py check --strict` on the session "
+            "card this branch ADDS vs origin/main (multiple added cards "
+            "error loud; none falls back to bare strict with a banner) — so "
+            "flip-readiness is one command grading the RIGHT card (red on a "
+            "still-in-progress card is the designed born-red HOLD, not a "
+            "defect)"
         ),
     )
     return parser.parse_args(argv)
@@ -107,6 +183,25 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     total = 4 if args.flip else 3
+
+    flip_card: str | None = None
+    if args.flip:
+        # Derive BEFORE any gate runs: a multi-card branch should fail in
+        # milliseconds, not after a full suite pass.
+        flip_card = _pick_flip_card(_added_session_cards())
+        if flip_card is None:
+            print(
+                f"flip card: none ADDED on this branch ({FLIP_BASE_REF}...HEAD) "
+                "— control-fast-lane tree; step 4 runs bare strict "
+                "(newest-by-mtime card fallback)",
+                flush=True,
+            )
+        else:
+            print(
+                f"flip card derived from the branch diff "
+                f"({FLIP_BASE_REF}...HEAD): {flip_card}",
+                flush=True,
+            )
 
     _run(f"1/{total}", "suite-floor guard", [sys.executable, str(FLOOR_GUARD)])
 
@@ -120,11 +215,10 @@ def main(argv: list[str] | None = None) -> int:
     _run(f"3/{total}", "balance-page freshness", [sys.executable, str(GEN_BALANCE), "--check"])
 
     if args.flip:
-        _run(
-            f"4/{total}",
-            "flip-readiness (bootstrap check --strict)",
-            [sys.executable, str(BOOTSTRAP), "check", "--strict"],
-        )
+        strict_command = [sys.executable, str(BOOTSTRAP), "check", "--strict"]
+        if flip_card is not None:
+            strict_command += ["--session-log", flip_card]
+        _run(f"4/{total}", "flip-readiness (bootstrap check --strict)", strict_command)
         print("=" * 72, flush=True)
         print(
             "preflight GREEN — all four gates passed (floor guard, pytest, "
