@@ -1,3 +1,0 @@
-# Claim · UX fix — fishing banner double article ("At the The Old Dock")
-
-- `claude/night-fix-fishing-dock-grammar` · **night-fix-fishing-dock-grammar** — de-duplicate the article in the fishing cast banners: `games/fishing/core/catch.py:216` renders `f"At the {spot.name}"` and the dock spot's DATA name is "The Old Dock" (`games/fishing/core/spots.py:102`), so `printf 'cast\nquit\n' | python3 -m games.fishing` prints "🪝 At the The Old Dock"; article-aware display-name handling only (no sell values, no balance constants), regression tests for the dock AND a non-"The" spot · expected files: games/fishing/core/catch.py, tests/fishing/, tests/fishing/EXPECTED_MIN_TESTS.txt, docs/balance.md, .sessions/, telemetry/model-usage.jsonl, control/claims/ · 2026-07-14
