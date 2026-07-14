@@ -40,7 +40,7 @@ jobs:
     if: >-
       github.event.pull_request.head.repo.full_name == github.repository &&
       github.event.pull_request.draft == false &&
-      (startsWith(github.head_ref, 'claude/')) &&
+      (startsWith(github.head_ref, 'probe/') || startsWith(github.head_ref, 'seed-') || startsWith(github.head_ref, 'slice/') || startsWith(github.head_ref, 'groom/') || startsWith(github.head_ref, 'harvest/') || startsWith(github.head_ref, 'build/') || startsWith(github.head_ref, 'upgrade/') || startsWith(github.head_ref, 'refine/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'batch/') || startsWith(github.head_ref, 'telemetry/') || startsWith(github.head_ref, 'heartbeat/') || startsWith(github.head_ref, 'docs/') || startsWith(github.head_ref, 'claude/') || startsWith(github.head_ref, 'mining/') || startsWith(github.head_ref, 'exploration/') || startsWith(github.head_ref, 'control/')) &&
       !contains(github.event.pull_request.labels.*.name, 'do-not-automerge')
     runs-on: ubuntu-latest
     steps:
