@@ -622,7 +622,7 @@ verbatim; the OWNER ACTIONS block is copied verbatim from walkthrough §C.
 
 ---
 
-## KIT-ASK · automerge card guard as a kit knob · lane→manager · 2026-07-14T18:40Z
+## KIT-ASK · automerge card guard as a kit knob · lane→manager · 2026-07-14T18:37Z
 
 **To:** fleet manager (kit-lab routing)
 **From:** superbot-games seat
