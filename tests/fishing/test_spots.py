@@ -184,3 +184,36 @@ def test_injected_rng_still_applies_the_spot_profile() -> None:
         return counts
 
     assert _rare_share(dist("tide_pool")) < _rare_share(dist("deep_water"))
+
+
+# --- banner grammar: the template's article never doubles the name's --------
+
+def _first_outcome(spot_id: str, *, bit: bool) -> catch.CastOutcome:
+    """The first deterministic default-stream cast at *spot_id* with the wanted bite."""
+    for seed in range(200):
+        o = catch.resolve_cast(seed, spot_id)
+        if o.bit is bit:
+            return o
+    raise AssertionError(f"no {'bite' if bit else 'no-bite'} cast in 200 seeds at {spot_id!r}")
+
+
+def test_bite_banner_dedupes_article_for_the_dock() -> None:
+    # The dock's DATA name carries its own article ("The Old Dock"); the "At the …"
+    # template must not double it (regression: "🪝 At the The Old Dock — …").
+    o = _first_outcome("dock", bit=True)
+    assert o.narration.startswith("🪝 At the Old Dock — ")
+    assert "At the The" not in o.narration
+
+
+def test_bite_banner_unchanged_for_a_non_the_spot() -> None:
+    # A name WITHOUT its own article renders through the same template untouched.
+    o = _first_outcome("tide_pool", bit=True)
+    assert o.narration.startswith("🪸 At the Tide Pool — ")
+
+
+def test_no_bite_line_dedupes_article_for_the_dock() -> None:
+    # The no-bite sibling template ("cast into the …") de-dupes the same way
+    # (regression: "You cast into the the old dock…").
+    o = _first_outcome("dock", bit=False)
+    assert o.narration == "🎣 You cast into the old dock… but nothing bites this time."
+    assert "the the" not in o.narration

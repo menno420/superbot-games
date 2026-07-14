@@ -169,6 +169,16 @@ def _roll_size(row: species_table.Species, rng: random.Random) -> int:
     return row.size_rank * SIZE_PER_RANK + rng.randint(0, SIZE_JITTER)
 
 
+def _article_free_name(name: str) -> str:
+    """*name* with a leading ``"The "`` stripped — for templates supplying their own article.
+
+    Spot names are DATA and may carry their own article ("The Old Dock"); the narration
+    templates below say "At the …" / "into the …", so a name-supplied article would double
+    up ("At the The Old Dock"). Display-only: mechanics never read the name.
+    """
+    return name[len("The ") :] if name.startswith("The ") else name
+
+
 def resolve_cast(
     seed: int,
     spot_id: str,
@@ -203,7 +213,10 @@ def resolve_cast(
         return CastOutcome(
             bit=False,
             catch=None,
-            narration=f"🎣 You cast into the {spot.name.lower()}… but nothing bites this time.",
+            narration=(
+                f"🎣 You cast into the {_article_free_name(spot.name).lower()}… "
+                "but nothing bites this time."
+            ),
             energy_cost=CAST_COST,
         )
 
@@ -213,7 +226,7 @@ def resolve_cast(
     # Narration assembled from DATA — the spot row's nouns (name/emoji) and the species
     # row's nouns (emoji/flavor/name), never a hard-coded per-spot or per-species string.
     narration = (
-        f"{spot.emoji} At the {spot.name} — {row.emoji} {row.flavor} — "
+        f"{spot.emoji} At the {_article_free_name(spot.name)} — {row.emoji} {row.flavor} — "
         f"you land a {row.name} ({size} cm)!"
     )
     return CastOutcome(
