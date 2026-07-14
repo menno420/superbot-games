@@ -42,6 +42,7 @@ from games.fishing.core import economy
 from games.fishing.core import spots as spot_table
 from games.fishing.core import species as species_table
 from games.mining.core import energy
+from games.shared.cli import repl
 
 #: The spot a fresh angler starts at — the in-table NEUTRAL ``dock`` row (an
 #: identity catch profile). Read off the spot table, never a new balance choice.
@@ -412,27 +413,22 @@ def main() -> int:
     state = new_state()
     casts_made = 0
 
-    print("🎣  Standalone Fishing — type 'help' for commands, 'quit' to leave.")
-    for line in status_lines(state):
-        print(line)
-
-    while True:
-        try:
-            line = input(PROMPT)
-        except (EOFError, KeyboardInterrupt):
-            print()  # clean newline after ^D / ^C
-            break
+    def step_fn(line: str) -> StepResult:
+        nonlocal casts_made
         res = step(state, sink, line, now=datetime.now(timezone.utc))
-        if res.quit:
-            break
-        for out in res.lines:
-            print(out)
         if res.is_cast:
             casts_made += 1
+        return res
 
-    for line in summary_lines(state, sink, casts_made=casts_made):
-        print(line)
-    return 0
+    return repl(
+        step_fn,
+        prompt=PROMPT,
+        banner_lines=[
+            "🎣  Standalone Fishing — type 'help' for commands, 'quit' to leave.",
+            *status_lines(state),
+        ],
+        closing_lines=lambda: summary_lines(state, sink, casts_made=casts_made),
+    )
 
 
 __all__ = [

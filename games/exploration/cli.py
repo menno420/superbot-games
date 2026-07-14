@@ -38,6 +38,7 @@ from services.audit import InMemorySink
 
 from games.exploration.quest import catalog
 from games.exploration.quest.models import RewardTier
+from games.shared.cli import repl
 
 PROMPT = "explore> "
 
@@ -355,28 +356,23 @@ def main() -> int:
     state = new_state()
     actions_taken = 0
 
-    print("🧭  Standalone Exploration — take a bounded quest, resolve encounters, survive.")
-    print("    Type 'help' for commands, 'quests' for the menu, 'quit' to leave.")
-    for line in quests_lines():
-        print(line)
-
-    while True:
-        try:
-            line = input(PROMPT)
-        except (EOFError, KeyboardInterrupt):
-            print()  # clean newline after ^D / ^C
-            break
+    def step_fn(line: str) -> StepResult:
+        nonlocal actions_taken
         res = step(state, sink, line, now=datetime.now(timezone.utc))
-        if res.quit:
-            break
-        for out in res.lines:
-            print(out)
         if res.acted:
             actions_taken += 1
+        return res
 
-    for line in summary_lines(state, sink, actions_taken=actions_taken):
-        print(line)
-    return 0
+    return repl(
+        step_fn,
+        prompt=PROMPT,
+        banner_lines=[
+            "🧭  Standalone Exploration — take a bounded quest, resolve encounters, survive.",
+            "    Type 'help' for commands, 'quests' for the menu, 'quit' to leave.",
+            *quests_lines(),
+        ],
+        closing_lines=lambda: summary_lines(state, sink, actions_taken=actions_taken),
+    )
 
 
 __all__ = [
