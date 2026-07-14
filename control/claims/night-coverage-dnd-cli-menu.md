@@ -1,0 +1,3 @@
+# Claim · coverage — games/dnd (cli.py + sim/menu_sim.py)
+
+- `claude/night-coverage-dnd-cli-menu` · **night-coverage-dnd-cli-menu** — cover `games/dnd/cli.py` (77%, 142 stmts, 33 missed: 87, 124, 196, 265, 303–336 — the capability reward suffixes, the help verb, `run_commands`' default state, and the whole interactive `main()` REPL) and `games/dnd/sim/menu_sim.py` (77%, 94 stmts, 22 missed: 138, 193, 206–208, 215–244 — the seed-stability raise, the over-cap no-pay-to-win flag flip, `_fmt_reward`, and `format_report`) with ≤16 focused tests pinning real behavior at EXISTING constants; tests only, zero gameplay changes · expected files: tests/dnd/, docs/balance.md, .sessions/, telemetry/model-usage.jsonl, control/claims/ · 2026-07-14
