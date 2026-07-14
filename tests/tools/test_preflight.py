@@ -172,7 +172,13 @@ def test_default_mode_runs_exactly_three_gates_and_never_bootstrap(monkeypatch, 
     for banner in ("preflight 1/3:", "preflight 2/3:", "preflight 3/3:"):
         assert banner in out
     assert "preflight GREEN — all three gates passed (floor guard, pytest, balance)" in out
-    assert "4/" not in out and "strict" not in out
+    # No step-4 banner and no flip-ready line — matched on the banner PREFIX,
+    # not a bare "4/" substring: the banners echo the interpreter path, and a
+    # CI toolcache python lives under e.g. .../Python/3.14.6/x64/... which
+    # contains "4/" (the exact false positive that reddened the first push).
+    assert "preflight 4/" not in out
+    assert "flip-ready" not in out
+    assert "flip-readiness" not in out
 
 
 def test_flip_mode_appends_bootstrap_check_strict_as_step_four(monkeypatch, capsys):
