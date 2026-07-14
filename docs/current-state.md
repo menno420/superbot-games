@@ -20,19 +20,33 @@
 
 ## In flight
 
-(Truth-stamped 2026-07-14 at HEAD 24f6e04, substrate-kit v1.15.0 — the prior
+(Truth-stamped 2026-07-14 at HEAD fdea103, substrate-kit v1.15.0 — the prior
 2026-07-09 wind-down snapshot below is superseded.)
+<!-- truth-stamped-at: fdea103255096962210b8243d5a437ccc724830d -->
 
-PRs through **#107** are on main (each merge verified against the git log;
+PRs through **#119** are on main (each merge verified against the git log;
 one open PR at scan time beyond this groom: **#102**, another session's
 fleet-cleanup audit doc — verdict NEEDS-CHANGES per the `control/outbox.md`
-review-verdict entry: its content verifies, but its head fails
-`bootstrap.py check --strict` on 3 findings). The 2026-07-13/14 night
-coverage/fix wave (#95–#107, enumerated under "Recently shipped") took four
-sub-80% modules to 100% (suite 556 → 606), fixed the one latent bug the
-wave's pinning tests exposed (#106), and repaired the tests workflow to
-actually EXECUTE `services/tests/` (#107) — the CI-executed test count rose
-442 → 606, so CI now runs the same suite the sessions run locally. The
+review-verdict entry recorded on main via #108: its content verifies, but its
+head fails `bootstrap.py check --strict` on 3 findings). The second
+2026-07-14 night wave (#108–#119, enumerated under "Recently shipped")
+pushed CLI/hub/sim coverage (#110–#114, suite 606 → 684 together with the
+fixes), fixed the three player-visible/hardening bugs those pins surfaced
+(#115 dnd resolver unhashable-`option_id` clamp, #116 fishing spot-banner
+article de-dup, #117 hub launch-banner order), refreshed the README to
+document all four playable games (#118), and installed the sim-harness
+smoke registry so every sim's render path executes in CI (#119, suite 695).
+Total coverage measured at this groom: **97%** across `games/` +
+`services/` (5476 stmts, 163 missed). The truth-stamp above now carries a
+machine-readable `<!-- truth-stamped-at: <sha> -->` anchor consumed by
+`tools/stamp_scaffold.py`, which emits this ledger's "Recently shipped"
+bullet skeletons straight from `git log <anchor>..HEAD` (authoring aid, not
+a CI gate). The earlier 2026-07-13/14 night coverage/fix wave (#95–#107,
+enumerated under "Recently shipped") took four sub-80% modules to 100%
+(suite 556 → 606), fixed the one latent bug the wave's pinning tests
+exposed (#106), and repaired the tests workflow to actually EXECUTE
+`services/tests/` (#107) — the CI-executed test count rose 442 → 606, so CI
+now runs the same suite the sessions run locally. The
 earlier 2026-07-13 night wave
 (#66–#80, enumerated under "Recently shipped") made all four games playable:
 `python3 -m games` is a hub over a game-neutral world registry (#72) listing
@@ -100,11 +114,54 @@ _Superseded 2026-07-09 wind-down snapshot (kept for provenance):_
 
 ## Recently shipped (newest first)
 
-_(Note 2026-07-14: the 2026-07-12/13 wave #61–#107 is enumerated below (each
+_(Note 2026-07-14: the 2026-07-12/14 wave #61–#119 is enumerated below (each
 entry cites its squash-merge SHA on main; #61–#94 API-verified at earlier
-grooms, #95–#107 verified against the git log at this one). #13–#60
+grooms, #95–#107 verified against the git log at the #109 groom, #108–#119
+verified against the git log at this one). #13–#60
 remain unenumerated — the authoritative history for that span is in git.
 #83/#84 are listed in merge order: #84 merged 17:47:46Z, #83 17:50:38Z.)_
+
+- **#119** (2026-07-14, `fdea103`) — test: sim-harness smoke registry
+  (`tests/shared/sim/test_sim_harnesses.py`) — every shipped sim's
+  `format_report(run(**tiny_kw))` render path executes in CI (mining
+  encounters, shared economy, fishing catch, dnd menu, exploration
+  survival), with a glob-derived completeness check so a new `*_sim.py`
+  cannot dodge it. `tests/shared/sim` floor 7 → 29. Suite 684 → 695.
+- **#118** (2026-07-14, `5fde718`) — docs: README "Playing the games"
+  refreshed from real headless runs — all FOUR games + the hub documented
+  (post-#117 transcript, fishing `sell`, dnd/exploration standalones and
+  their workflow seams); it had said "Two of the world games" since #74.
+- **#117** (2026-07-14, `d47e28b`) — fix: the hub prints "Launching <id>…"
+  BEFORE the game session (banner emission moved into the launch path;
+  `hub_step`'s dispatch contract kept). `services/tests` floor 178 → 182.
+- **#116** (2026-07-14, `673cb95`) — fix: de-duplicated the article in
+  fishing spot banners ("At the The Old Dock" → "At the Old Dock").
+- **#115** (2026-07-14, `d4654f8`) — fix: dnd resolver clamps an unhashable
+  DM `option_id` to the scene default instead of raising (the deferred #52
+  hardening, surfaced by #114's fuzz pins).
+- **#114** (2026-07-14, `bdc3445`) — test: covered `games/dnd` cli +
+  menu_sim — capability suffixes, the interactive `main()` REPL, the sim's
+  defensive guards, and the balance-report renderer.
+- **#113** (2026-07-14, `73111d0`) — test: covered `games/mining/cli` —
+  status gear-line fallbacks, harvest/ascend/build dispatch, usage paths,
+  and the interactive `main()` REPL.
+- **#112** (2026-07-14, `6de5666`) — test: covered
+  `games/mining/core/items` — tool/consumable predicates, `total_value`,
+  and the inventory display helpers.
+- **#111** (2026-07-14, `0efb7ac`) — test: covered the games hub loop —
+  the default launcher, shortcut/invalid-input dispatch, and the
+  interactive `main()` REPL.
+- **#110** (2026-07-14, `a51c5d5`) — test: covered
+  `games/fishing/sim/catch_sim` — species-share/rare-tail helpers and the
+  per-spot balance-report renderer. Suite 606 → 618 (the #111–#114 slices
+  ran in parallel off nearby baselines; their combined landing is the
+  606 → 684 recorded under "In flight").
+- **#109** (2026-07-14, `b4c306f`) — docs: truth-stamp of this ledger —
+  recorded the #96–#107 night coverage/fix wave, re-stamped "In flight" at
+  `24f6e04`.
+- **#108** (2026-07-14, `bcaed58`) — control: outbox review verdict on
+  #102 (needs-changes, cited — the entry the "In flight" #102 note points
+  at).
 
 - **#107** (2026-07-13, `24f6e04`) — ci: `services/tests/` added to the
   tests workflow's pytest invocation — the suite was registered (floor 164
