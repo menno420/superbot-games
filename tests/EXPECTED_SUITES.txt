@@ -22,3 +22,4 @@ games/exploration/tests
 tests/shared/sim
 services/tests
 tests/exploration
+tests/tools
