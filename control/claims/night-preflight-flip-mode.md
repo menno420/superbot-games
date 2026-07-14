@@ -1,0 +1,1 @@
+- `claude/night-preflight-flip-mode` · **ci: preflight --flip mode** — step 4 = bootstrap.py check --strict so flip-readiness is one command · tools/preflight.py, tests/tools/ · 2026-07-14
