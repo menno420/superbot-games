@@ -1,0 +1,3 @@
+# Claim · coverage — games/mining/cli.py
+
+- `claude/night-coverage-mining-cli` · **night-coverage-mining-cli** — cover `games/mining/cli.py` (75%, 179 stmts, 44 missed: 82–85, 88–90, 189, 193, 199, 207, 212, 215–220, 224, 226, 276, 321, 355–380 — the status gear-line fallback branches + light suffix, the harvest/ascend/build dispatch legs, the malformed-command usage paths, `run_commands`' default state, and the whole interactive `main()` REPL) with ≤14 focused tests pinning real behavior at EXISTING seam/core constants; tests only, zero gameplay changes · expected files: tests/mining/, docs/balance.md, .sessions/, telemetry/model-usage.jsonl, control/claims/ · 2026-07-14
