@@ -52,6 +52,14 @@ def listing_lines(entries: tuple[WorldEntry, ...]) -> list[str]:
     return lines
 
 
+def launching_line(game_id: str) -> str:
+    """The pre-launch banner. Emitted by the CALLER'S launch wrapper BEFORE the
+    opener runs — the opener is a synchronous sub-session, so a line returned
+    from :func:`hub_step` after dispatch would print only once the game ended.
+    """
+    return f"Launching {game_id}…"
+
+
 def help_lines() -> list[str]:
     """The command reference printed by ``help`` (and on an unknown command)."""
     return [
@@ -142,8 +150,11 @@ def hub_step(
             ]
         )
 
+    # The "Launching …" banner is NOT returned here: the opener runs synchronously
+    # inside launch(), so a returned line would render only after the game session
+    # ended. Callers announce via launching_line() BEFORE invoking their launcher.
     launch(entry)
-    return HubStep(lines=[f"Launching {entry.game_id}…"], launched=entry.game_id)
+    return HubStep(launched=entry.game_id)
 
 
 # ---------------------------------------------------------------------------
@@ -188,8 +199,14 @@ def run_hub(
     lines: list[str] = list(listing_lines(entries))
     launched: list[str] = []
 
+    def announcing_launch(entry: WorldEntry) -> int | None:
+        # Record the banner BEFORE the opener runs, so the transcript shows the
+        # launch preceding the game session (the launcher itself is unchanged).
+        lines.append(launching_line(entry.game_id))
+        return launch(entry)
+
     for command in commands:
-        step = hub_step(command, entries, launch=launch)
+        step = hub_step(command, entries, launch=announcing_launch)
         if step.quit:
             break
         lines.extend(step.lines)
@@ -212,13 +229,19 @@ def main() -> int:
     for line in listing_lines(entries):
         print(line)
 
+    def interactive_launch(entry: WorldEntry) -> int:
+        # Print the banner BEFORE the opener runs its synchronous sub-session,
+        # so "Launching X…" precedes the game instead of trailing its summary.
+        print(launching_line(entry.game_id))
+        return _default_launch(entry)
+
     while True:
         try:
             line = input(PROMPT)
         except (EOFError, KeyboardInterrupt):
             print()  # clean newline after ^D / ^C
             break
-        step = hub_step(line, entries, launch=_default_launch)
+        step = hub_step(line, entries, launch=interactive_launch)
         if step.quit:
             break
         for out in step.lines:
@@ -235,6 +258,7 @@ if __name__ == "__main__":
 __all__ = [
     "PROMPT",
     "listing_lines",
+    "launching_line",
     "help_lines",
     "HubStep",
     "hub_step",

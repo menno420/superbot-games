@@ -14,7 +14,10 @@ launcher. This module pins everything that suite left dark:
 * the interactive ``main()`` REPL — banner + menu on entry, step output
   printing, quit and EOF closing cleanly with the sign-off, exit code 0 —
   driven TTY-free via monkeypatched ``builtins.input`` + capsys;
-* the ``python -m games`` module guard, via ``runpy``.
+* the ``python -m games`` module guard, via ``runpy``;
+* the launch-banner ORDER — "Launching X…" is emitted BEFORE the opener's
+  synchronous game session runs (``main()`` prints it, ``run_hub`` records it
+  in the transcript, ``hub_step`` no longer returns it as a post-launch line).
 
 Tests only; every asserted string is an EXISTING constant of the module.
 """
@@ -180,6 +183,58 @@ def test_main_eof_closes_cleanly_with_the_sign_off(monkeypatch, capsys) -> None:
     out = capsys.readouterr().out
     assert code == 0
     assert "Thanks for playing — see you at the hub!" in out
+
+
+# ---------------------------------------------------------------------------
+# Launch-banner order — "Launching X…" precedes the game session (the fix's pin)
+# ---------------------------------------------------------------------------
+def test_main_prints_the_launch_banner_before_the_game_session(monkeypatch, capsys) -> None:
+    # END-TO-END order: the opener prints its own session output; main()'s banner
+    # must land on stdout BEFORE it (regression: the banner used to trail the
+    # whole game because hub_step returned it as a post-launch line).
+    monkeypatch.setattr(
+        hub,
+        "wire_games",
+        lambda registry: registry.register(
+            _entry("solo", opener=lambda: print("SOLO SESSION OUTPUT"))
+        ),
+    )
+    _feed_input(monkeypatch, ["play solo", "quit"])
+    code = hub.main()
+    out = capsys.readouterr().out
+    assert code == 0
+    assert out.index(hub.launching_line("solo")) < out.index("SOLO SESSION OUTPUT")
+
+
+def test_hub_step_no_longer_returns_the_banner_as_a_post_launch_line() -> None:
+    # hub_step's contract: it dispatches (launched set) but the banner is the
+    # CALLER's pre-launch announcement, not a line rendered after the session.
+    world_registry.register(_entry("solo"))
+    step = hub.hub_step("play solo", (world_registry.get("solo"),), launch=lambda e: None)
+    assert step.launched == "solo"
+    assert step.lines == []
+
+
+def test_run_hub_transcript_records_the_banner_on_the_fallback_launch_path() -> None:
+    # The scripted driver still shows "Launching solo…" in its transcript (now
+    # appended by run_hub itself before the opener runs), on both launch paths.
+    opened: list[str] = []
+    world_registry.register(_entry("solo", opener=lambda: opened.append("solo")))
+    result = hub.run_hub(["play solo", "quit"], registry=world_registry)
+    assert opened == ["solo"]
+    assert hub.launching_line("solo") in result.lines
+
+
+def test_run_hub_transcript_records_the_banner_with_an_injected_launcher() -> None:
+    launched: list[str] = []
+    world_registry.register(_entry("solo"))
+    result = hub.run_hub(
+        ["play solo", "quit"],
+        registry=world_registry,
+        launch=lambda e: launched.append(e.game_id),
+    )
+    assert launched == ["solo"]
+    assert hub.launching_line("solo") in result.lines
 
 
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")  # runpy re-executes an already-imported module
