@@ -26,8 +26,8 @@ Q-0267).
 
 ## Playing the games
 
-Two of the world games are playable right now as pure-domain text sessions. Run
-them from the repo root:
+All four of the world games are playable right now as pure-domain text sessions.
+Run them from the repo root:
 
 **The hub — `python3 -m games`** (`games/__main__.py`) lists every registered
 game and launches the one you pick. It is the composition root for the neutral
@@ -41,19 +41,37 @@ $ printf 'list\nhelp\nquit\n' | python3 -m games
 Available games (type 'play <id>' or a number):
   1. mining     ⛏️  Mining — Dig, descend, and sell your haul over the audited mining seam.
   2. fishing    🎣  Fishing — Cast a line across biomes and land a haul over the audited cast seam.
+  3. dnd        🐉  D&D — Guide an escort through a bounded-menu story over the audited resolver seam.
+  4. exploration 🧭  Exploration — Take a bounded quest, resolve encounters, and survive the wild over the audited quest seam.
 ```
 
 **Mining standalone — `python3 -m games.mining`** (`games/mining/cli.py`) is a
 dig / descend / sell loop over the audited mining seam. Commands: `mine`,
-`harvest`, `sell`, `buy`, `repair`, `descend`, `ascend`, `build`, `vault`,
-`skill`, `status` (alias `inv`), `help`, `quit`.
+`harvest`, `sell <item> [qty]`, `buy <item>`, `repair <item>`, `descend`,
+`ascend`, `build <structure> [level]`, `vault`, `skill <branch> [pts]`,
+`status` (alias `inv`), `help`, `quit`.
 
 **Fishing standalone — `python3 -m games.fishing`** (`games/fishing/cli.py`)
 casts a line across biomes over the audited cast seam. Commands: `cast`,
+`sell <species> [qty]` (sell landed fish at the sim-pinned value),
 `spot <id>`, `spots`, `status` (alias `haul`), `help`, `quit`.
 
+**D&D standalone — `python3 -m games.dnd`** (`games/dnd/cli.py`) seats you as
+the Dungeon Master of a bounded-menu escort story over the audited resolver
+seam: each scene offers a numbered menu, and anything off-menu safely clamps to
+the scene's default. Commands: `<number>` or `<option name>` (pick a menu
+option), `look`, `status`, `help`, `quit`.
+
+**Exploration standalone — `python3 -m games.exploration`**
+(`games/exploration/cli.py`) offers a fixed quest catalog over the audited
+quest seam: take a bounded quest, resolve deterministic encounters, and bank
+the reward — no AI DM, nothing generative. Commands: `quests`,
+`offer <id> [tier]` (tiers I/II/III), `accept`, `act <action>`, `status`,
+`help`, `quit`.
+
 Each standalone is a pure-domain session driving the rung-2 audited workflow
-seams (`services/mining_workflow.py` / `services/fishing_workflow.py`) through an
+seams (`services/mining_workflow.py` / `services/fishing_workflow.py` /
+`services/dnd_workflow.py` / `services/exploration_workflow.py`) through an
 in-memory audit sink (`services/audit.py`) — every price, cost, weight and gate
 is read verbatim from the seam/core, so these loops invent no economy number.
 The remaining balance-tuning, save/load persistence and host-hub items are
