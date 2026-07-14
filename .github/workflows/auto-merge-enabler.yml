@@ -1,34 +1,14 @@
-# auto-merge enabler — HOST-INSTALLED (NOT kit-planted in this repo).
-#
-# PROVENANCE: installed per the fleet owner's live directive
-# (fleet-manager coordinator chat, 2026-07-12T23:00Z — uniform landing
-# fleet-wide; recorded as fleet-manager inbox ORDER 029). Adapted from
-# idea-engine `.github/workflows/auto-merge-enabler.yml` (git blob
-# 819a8d5), which is the substrate-kit enabler plus idea-engine's
-# host customizations (in-progress-card skip, squash head-ref
-# provenance).
-#
-# DOCTRINE CHANGE: this repo previously held a DELIBERATE manual-merge
-# doctrine ("auto-merge deliberately not armed — doctrine since the
-# #40 premature-merge incident", PR #62/#63/#64 bodies). The #40
-# incident class was arm-at-open out-racing the session-card
-# close-out flip. The card-skip step below is the fix for exactly
-# that class: a PR whose diff carries a still-in-progress (or
-# drafted) `.sessions/` card is NOT armed; the close-out push that
-# flips the card re-runs this workflow via `synchronize` and arms
-# then. Per the owner's uniform-landing directive this workflow
-# supersedes the manual doctrine; the `do-not-automerge` label is
-# the per-PR opt-out.
-#
-# RE-APPLY DUTY: if a later `bootstrap.py adopt/upgrade --wire-
-# enforcement` pass plants a kit-owned enabler over this file,
-# re-apply the host customizations (card-skip statuses, allowlist
-# additions, this provenance header) — same duty as idea-engine's
-# "PR #18 re-apply" note.
+# substrate-kit auto-merge enabler (LIVE — installed by
+# `bootstrap.py adopt --wire-enforcement`).
+# KIT-OWNED: adopt/upgrade regenerates this file in place, so
+# upstream enabler fixes land here on every `bootstrap.py upgrade` —
+# hand edits are OVERWRITTEN. Put host-specific customizations in a
+# SEPARATE workflow file, never in this one.
 #
 # Arms GitHub-native auto-merge on agent PRs at open, so a born-red
 # session PR merges itself the moment the required check goes green.
-# INERT until two one-time repo settings exist (owner UI):
+# INERT until two one-time repo settings exist (owner UI — see the
+# adopt report's repo-settings checklist):
 #   1. Settings → General → Pull Requests → "Allow auto-merge" = ON.
 #   2. A ruleset on the default branch REQUIRING the 'substrate-gate'
 #      status check.
@@ -79,7 +59,7 @@ jobs:
           echo "required contexts ($count): $contexts"
           echo "required=$count" >> "$GITHUB_OUTPUT"
           if [ "$count" = "0" ]; then
-            echo "::warning::the base branch requires no status-check CONTEXTS — arming would merge instantly. Refusing to arm; make 'substrate-gate' a required check first (Settings → Branches/Rulesets on main)."
+            echo "::warning::the base branch requires no status-check CONTEXTS — arming would merge instantly. Refusing to arm; make 'substrate-gate' a required check first (see the adopt repo-settings checklist)."
           fi
       - name: Re-check the do-not-automerge label FRESH (stale-payload race guard)
         id: label
@@ -103,111 +83,16 @@ jobs:
             *)
               echo "skip=0" >> "$GITHUB_OUTPUT" ;;
           esac
-      - name: Skip arming while the PR's own in-diff session card is in-progress
-        id: card
-        if: steps.rules.outputs.required != '0' && steps.label.outputs.skip == '0'
-        env:
-          # HOST CUSTOMIZATION (superbot-games — arm-at-open race guard;
-          # origin: this repo's #40 premature-merge incident, the reason
-          # the manual-merge doctrine existed; adapted from idea-engine's
-          # #80/#81 close-out-race fix): arming at `opened` squash-merges
-          # a green PR in ~25s, out-racing every multi-commit plan — the
-          # session close-out (card flip + claim clear) then arrives on a
-          # merged PR and needs a follow-up PR. The repo's card convention
-          # makes intent machine-readable: a `.sessions/*.md` card ADDED
-          # born-red (`> **Status:** \`in-progress\``, .sessions/README.md)
-          # means "more commits are coming". So: if this PR's diff
-          # adds/modifies a `.sessions/*.md` card whose Status badge still
-          # says `in-progress` (or `drafted` — the kit auto-draft state,
-          # also not-final per .sessions/README.md), SKIP arming (exit
-          # green, no arm) — the workflow re-runs on `synchronize`, so the
-          # close-out push that flips the card to `complete` arms it then.
-          # Card-less PRs (claims, control heartbeats) arm at open.
-          # Status-badge parsing tolerates this repo's observed variants
-          # (`complete`, `✅ complete`, ✅ `complete`) by skipping
-          # non-letter prefix chars. SECURITY: card paths and contents are
-          # PR-controlled — they are read via the API and parsed in Python
-          # only, passed as argv/env, NEVER interpolated into this script
-          # body.
-          GH_TOKEN: ${{ secrets.ROUTINE_PAT || secrets.GITHUB_TOKEN }}
-          PR: ${{ github.event.pull_request.number }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          python3 - <<'PY'
-          import json, os, re, subprocess, sys, urllib.parse
-
-          repo = os.environ["GITHUB_REPOSITORY"]
-          pr = os.environ["PR"]
-          head = os.environ["HEAD_SHA"]
-
-          def gh_api(*args):
-              # argv-only (never a shell string): PR-controlled values can
-              # ride as arguments but can never splice into a command.
-              r = subprocess.run(["gh", "api", *args],
-                                 capture_output=True, text=True)
-              if r.returncode != 0:
-                  print(r.stderr, file=sys.stderr)
-                  sys.exit(1)  # fail LOUD: an unreadable diff must not arm
-              return r.stdout
-
-          def parse_line(line):
-              v = json.loads(line)
-              return json.loads(v) if isinstance(v, str) else v
-
-          entries = [parse_line(line) for line in gh_api(
-              f"repos/{repo}/pulls/{pr}/files?per_page=100",
-              "--paginate", "--jq", ".[] | @json").splitlines() if line]
-          cards = [e["filename"] for e in entries
-                   if e["filename"].startswith(".sessions/")
-                   and e["filename"].endswith(".md")
-                   and e["filename"] != ".sessions/README.md"
-                   and e.get("status") != "removed"]
-
-          in_progress = []
-          for path in cards:
-              raw = gh_api("-H", "Accept: application/vnd.github.raw+json",
-                           f"repos/{repo}/contents/"
-                           f"{urllib.parse.quote(path)}?ref={head}")
-              # Tolerate emoji / backtick prefixes before the status
-              # token ("✅ `complete`", "`in-progress`", "in-progress").
-              m = re.search(r"\*\*Status:\*\*[^A-Za-z\n]*([A-Za-z-]+)", raw)
-              status = m.group(1) if m else "<no Status badge>"
-              print(f"card {path} @ {head[:12]}: status={status}")
-              if status in ("in-progress", "drafted"):
-                  in_progress.append(path)
-
-          skip = 1 if in_progress else 0
-          if skip:
-              print("in-progress/drafted session card(s) in this PR's diff — "
-                    "refusing to arm; the close-out push that flips the card "
-                    "to `complete` re-runs this workflow via `synchronize` "
-                    "and arms then: " + ", ".join(in_progress))
-          elif cards:
-              print("all in-diff session cards are past in-progress — "
-                    "arming may proceed.")
-          else:
-              print("no session card in this PR's diff — "
-                    "arming may proceed (the card-less fast-lane class).")
-          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-              f.write(f"skip={skip}\n")
-          PY
       - name: Enable native auto-merge (squash)
-        if: steps.rules.outputs.required != '0' && steps.label.outputs.skip == '0' && steps.card.outputs.skip == '0'
+        if: steps.rules.outputs.required != '0' && steps.label.outputs.skip == '0'
         env:
           # Prefer a PAT so the eventual merge attributes to a real
           # user; GITHUB_TOKEN is the fallback.
           GH_TOKEN: ${{ secrets.ROUTINE_PAT || secrets.GITHUB_TOKEN }}
           PR: ${{ github.event.pull_request.number }}
-          # Squash head-ref provenance (idea-engine host customization,
-          # kept): the default squash subject `<title> (#N)` carries NO
-          # branch name, so squash-only history starves history-derived
-          # branch surveys. `--body` stamps the source branch into the
-          # squash commit body as a `Head-ref:` line. Passed via env,
-          # never interpolated into the script (injection-safe).
-          HEAD_REF: ${{ github.head_ref }}
         run: |
-          if gh pr merge --auto --squash "$PR" --repo "$GITHUB_REPOSITORY" --body "Head-ref: $HEAD_REF"; then
+          if gh pr merge --auto --squash "$PR" --repo "$GITHUB_REPOSITORY"; then
             echo "Auto-merge enabled for PR #$PR — it merges when 'substrate-gate' is green."
           else
-            echo "::warning::Could not enable auto-merge for PR #$PR. Confirm: (1) 'Allow auto-merge' is ON, (2) the base branch requires the 'substrate-gate' check, (3) the token has Pull requests + Contents write. On a repo shape where GitHub structurally refuses the arm (born-red required checks with no pending window, or PR-required-but-no-CI), REST merge-on-green is the landing path instead."
+            echo "::warning::Could not enable auto-merge for PR #$PR. Confirm: (1) 'Allow auto-merge' is ON, (2) the base branch requires the 'substrate-gate' check, (3) the token has Pull requests + Contents write. On a repo shape where GitHub structurally refuses the arm (born-red required checks with no pending window, or PR-required-but-no-CI), REST merge-on-green is the landing path instead — see docs/operations/auto-merge-guards.md."
           fi

@@ -1,7 +1,23 @@
 {
   "automerge": {
     "branch_patterns": [
-      "claude/*"
+      "probe/*",
+      "seed-*",
+      "slice/*",
+      "groom/*",
+      "harvest/*",
+      "build/*",
+      "upgrade/*",
+      "refine/*",
+      "fix/*",
+      "batch/*",
+      "telemetry/*",
+      "heartbeat/*",
+      "docs/*",
+      "claude/*",
+      "mining/*",
+      "exploration/*",
+      "control/*"
     ],
     "required_context": "substrate-gate"
   },

@@ -619,3 +619,25 @@ verbatim; the OWNER ACTIONS block is copied verbatim from walkthrough §C.
 >       both auto-land on green via the #67 enabler. If one parks green
 >       un-merged, the click is Squash & merge at
 >       github.com/menno420/superbot-games/pulls. RISK ✅. VERIFY: 0 open.
+
+---
+
+## KIT-ASK · automerge card guard as a kit knob · lane→manager · 2026-07-14T18:37Z
+
+**To:** fleet manager (kit-lab routing)
+**From:** superbot-games seat
+**Status:** `posted`
+
+Two hosts now hand-carry the SAME host-owned auto-merge card guard
+(`.github/workflows/automerge-card-guard.yml` — disarm while an in-diff
+`.sessions/*.md` card is `in-progress`/`drafted`, plus `Head-ref:`
+squash-body provenance): superbot-idle PR #137 (squash `8ff9f59`) and
+superbot-games PR #142 (this landing) — byte-identical reconcilers apart
+from the per-host branch allowlist line each must keep in sync with
+`substrate.config.json` `automerge.branch_patterns` by hand. Recommend
+promoting the guard into the kit as an `automerge.card_guard` knob
+(default off; when on, adopt/upgrade plants + regenerates the guard the
+same way it owns the enabler, rendering the allowlist from config) so
+hosts stop hand-carrying it and the guard-vs-config allowlist drift
+class disappears. The two live implementations above are the reference
+inputs.
