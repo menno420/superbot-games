@@ -1,0 +1,198 @@
+# superbot-games auto-merge card-guard — HOST-OWNED (never kit-regenerated).
+#
+# WHY THIS FILE EXISTS: .github/workflows/auto-merge-enabler.yml is
+# KIT-OWNED — `bootstrap.py adopt/upgrade` regenerates it in place and
+# its own header says "Put host-specific customizations in a SEPARATE
+# workflow file, never in this one". This repo's host customizations
+# used to live INSIDE the enabler (installed 2026-07-12 per fm ORDER
+# 029, adapted from idea-engine; card-skip step added for this repo's
+# #40 premature-merge incident class) and were banked + at risk of
+# clobbering by every kit regen (the v1.16.0 upgrade #141 banked
+# .substrate/backup/auto-merge-enabler.pre-regen-71045852.yml and the
+# session restored the file by hand — the "RE-APPLY DUTY" the old
+# header carried). This file is the kit-sanctioned relocation,
+# mirroring superbot-idle's post-#137 guard (idle squash 8ff9f59). The
+# third host customization — the 17-prefix branch allowlist — moved to
+# substrate.config.json `automerge.branch_patterns`, where regeneration
+# preserves it.
+#
+# WHAT IT DOES (a RECONCILER, run after the enabler's verdict on the
+# same pull_request events — it never arms a PR from scratch; arming
+# decisions stay the enabler's):
+#
+# 1. CARD GUARD (arm-at-open race — this repo's #40 premature-merge
+#    incident class, the reason its manual-merge doctrine existed;
+#    adapted from idea-engine's PR #80/#81 close-out race): a session
+#    card ADDED born-red (`**Status:** in-progress`, .sessions/README.md)
+#    means "more commits are coming" — arming such a PR out-races the
+#    close-out (card flip + claim delete), which then lands on a merged
+#    PR. The kit enabler arms card-blind, so if this PR's diff
+#    adds/modifies a `.sessions/*.md` card whose Status is `in-progress`
+#    or `drafted` (the kit auto-draft state, also not-final), this
+#    workflow DISARMS auto-merge. Merge-safety in the window between the
+#    enabler's arm and this disarm: the required substrate-gate holds
+#    born-red PRs red, so an armed-but-red PR cannot merge. The
+#    close-out push that flips the card re-runs both workflows via
+#    `synchronize`: the enabler re-arms, and this guard — seeing every
+#    in-diff card past in-progress — leaves the arm standing. Card-less
+#    PRs (claims, heartbeats) are untouched and arm at open.
+# 2. HEAD-REF PROVENANCE (kept from idea-engine): the default squash
+#    subject `<title> (#N)` carries NO branch name, so squash-only
+#    history starves every history-derived branch survey. When the PR
+#    is armed, its cards are final, and the pending squash body lacks a
+#    `Head-ref:` line, re-issue the enabler's own arm with
+#    `--body "Head-ref: <branch>"`. Failure here degrades to a
+#    ::warning:: (provenance is a survey aid, not a gate) and retries
+#    the plain re-arm so the PR is never left disarmed.
+#
+# SECURITY: card paths/contents and the head ref are PR-controlled —
+# read via the API, parsed in Python only, passed as argv/env, NEVER
+# interpolated into script bodies.
+# CARVE-OUT PARITY: the `do-not-automerge` label means "never armed" —
+# this guard never (re)arms while it is present. It also never disarms
+# because of the label alone (the live enabler never did either).
+name: automerge-card-guard
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, synchronize]
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: automerge-card-guard-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  reconcile:
+    # Same scope as the enabler (same-repo, non-draft, the
+    # config-declared agent-branch allowlist — keep the two lists in
+    # sync with substrate.config.json `automerge.branch_patterns`):
+    # this guard reconciles exactly the PRs the enabler manages, so a
+    # manually-armed PR outside the allowlist is never touched.
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.draft == false &&
+      (startsWith(github.head_ref, 'probe/') || startsWith(github.head_ref, 'seed-') || startsWith(github.head_ref, 'slice/') || startsWith(github.head_ref, 'groom/') || startsWith(github.head_ref, 'harvest/') || startsWith(github.head_ref, 'build/') || startsWith(github.head_ref, 'upgrade/') || startsWith(github.head_ref, 'refine/') || startsWith(github.head_ref, 'fix/') || startsWith(github.head_ref, 'batch/') || startsWith(github.head_ref, 'telemetry/') || startsWith(github.head_ref, 'heartbeat/') || startsWith(github.head_ref, 'docs/') || startsWith(github.head_ref, 'claude/') || startsWith(github.head_ref, 'mining/') || startsWith(github.head_ref, 'exploration/') || startsWith(github.head_ref, 'control/'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for the enabler's verdict on this head (bounded)
+        env:
+          GH_TOKEN: ${{ secrets.ROUTINE_PAT || secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # The enabler and this guard fire on the same event; the
+          # reconcile below must observe the POST-enabler arming state
+          # to be deterministic. Poll (bounded, ~180 s) until every
+          # auto-merge-enabler run for this head SHA has completed —
+          # the enabler itself sleeps 15 s (label race guard), so give
+          # it room. Timeout or no run found → proceed anyway: the
+          # reconcile is correct against whatever state exists, and a
+          # later `synchronize` re-runs both workflows.
+          for i in $(seq 1 36); do
+            statuses="$(gh api \
+              "repos/$GITHUB_REPOSITORY/actions/runs?event=pull_request&head_sha=$HEAD_SHA" \
+              --jq '[.workflow_runs[] | select(.name == "auto-merge-enabler") | .status] | join(",")')"
+            if [ -n "$statuses" ] && ! printf '%s' "$statuses" | grep -qv -E '^(completed,?)+$'; then
+              echo "enabler run(s) completed: $statuses"
+              exit 0
+            fi
+            echo "waiting for enabler ($i/36): ${statuses:-<no run yet>}"
+            sleep 5
+          done
+          echo "::notice::enabler run not observed completed within the bound — reconciling against current state."
+      - name: Reconcile arming with the in-diff session-card state
+        env:
+          GH_TOKEN: ${{ secrets.ROUTINE_PAT || secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, subprocess, sys, urllib.parse
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          pr = os.environ["PR"]
+          head = os.environ["HEAD_SHA"]
+          head_ref = os.environ["HEAD_REF"]
+
+          def gh(*args, fatal=True):
+              # argv-only (never a shell string): PR-controlled values
+              # ride as arguments but can never splice into a command.
+              r = subprocess.run(["gh", *args], capture_output=True, text=True)
+              if r.returncode != 0 and fatal:
+                  print(r.stderr, file=sys.stderr)
+                  # fail LOUD: an unreadable diff/PR must not leave an
+                  # in-progress-card PR silently armed.
+                  sys.exit(1)
+              return r
+
+          def parse_line(line):
+              v = json.loads(line)
+              return json.loads(v) if isinstance(v, str) else v
+
+          entries = [parse_line(line) for line in gh(
+              "api", f"repos/{repo}/pulls/{pr}/files?per_page=100",
+              "--paginate", "--jq", ".[] | @json").stdout.splitlines() if line]
+          cards = [e["filename"] for e in entries
+                   if e["filename"].startswith(".sessions/")
+                   and e["filename"].endswith(".md")
+                   and e["filename"] != ".sessions/README.md"
+                   and e.get("status") != "removed"]
+
+          in_progress = []
+          for path in cards:
+              raw = gh("api", "-H", "Accept: application/vnd.github.raw+json",
+                       f"repos/{repo}/contents/"
+                       f"{urllib.parse.quote(path)}?ref={head}").stdout
+              # Tolerate emoji / backtick prefixes before the status
+              # token ("✅ `complete`", "`in-progress`", "in-progress").
+              m = re.search(r"\*\*Status:\*\*[^A-Za-z\n]*([A-Za-z-]+)", raw)
+              status = m.group(1) if m else "<no Status badge>"
+              print(f"card {path} @ {head[:12]}: status={status}")
+              if status in ("in-progress", "drafted"):
+                  in_progress.append(path)
+
+          view = json.loads(gh("api", f"repos/{repo}/pulls/{pr}").stdout)
+          if view.get("merged") or view.get("draft"):
+              print("PR already merged or draft — nothing to reconcile.")
+              sys.exit(0)
+          auto = view.get("auto_merge")
+          labels = {l.get("name", "") for l in view.get("labels", [])}
+          armed = auto is not None
+          print(f"armed={armed} hold_cards={in_progress or 'none'}")
+
+          if in_progress and armed:
+              print("in-progress/drafted session card(s) in this PR's diff "
+                    "— DISARMING auto-merge; the close-out push that flips "
+                    "the card to `complete` re-runs the enabler via "
+                    "`synchronize` and it re-arms then: "
+                    + ", ".join(in_progress))
+              gh("pr", "merge", "--disable-auto", pr, "--repo", repo)
+              sys.exit(0)
+
+          if not in_progress and armed and "do-not-automerge" not in labels:
+              body = (auto or {}).get("commit_message") or ""
+              if "Head-ref:" in body:
+                  print("squash body already carries Head-ref — nothing to do.")
+                  sys.exit(0)
+              print(f"stamping squash-body provenance: Head-ref: {head_ref}")
+              gh("pr", "merge", "--disable-auto", pr, "--repo", repo)
+              r = gh("pr", "merge", "--auto", "--squash", pr, "--repo", repo,
+                     "--body", f"Head-ref: {head_ref}", fatal=False)
+              if r.returncode != 0:
+                  print(r.stderr, file=sys.stderr)
+                  print("::warning::Head-ref stamp re-arm failed — retrying "
+                        "the plain re-arm so the PR is not left disarmed.")
+                  r2 = gh("pr", "merge", "--auto", "--squash", pr,
+                          "--repo", repo, fatal=False)
+                  if r2.returncode != 0:
+                      print(r2.stderr, file=sys.stderr)
+                      print("::warning::plain re-arm also failed — if the PR "
+                            "sits green+unarmed, re-arm rides the next "
+                            "`synchronize` (enabler) or the manual landing "
+                            "path (docs/operations conventions).")
+              sys.exit(0)
+
+          print("nothing to reconcile — "
+                + ("hold present but PR unarmed" if in_progress
+                   else "no hold; arming state stands as the enabler left it."))
+          PY
