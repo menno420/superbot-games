@@ -1,1 +1,0 @@
-- `claude/preflight-path-fix` · **fix the substrate.config.json preflight_scripts path mismatch (scripts/preflight.py referenced, tools/preflight.py exists) so bootstrap.py check --strict stops skipping the preflight ritual** · substrate.config.json or scripts/, .sessions/, telemetry/model-usage.jsonl, control/claims/ · 2026-07-14
