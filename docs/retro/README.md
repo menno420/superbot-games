@@ -23,6 +23,10 @@
 - [env-vars-mining-2026-07-09.md](env-vars-mining-2026-07-09.md) — mining environment variable names (gen-2 handoff).
 - [archive-ready-2026-07-10-mining.md](archive-ready-2026-07-10-mining.md) — mining gen-1 ARCHIVE-READY note: verified true state at main `5d38593`, every open ⚑ owner-action, resume read-order, gen-2 next 1–3 with block status, and the cross-project D-0043 wait.
 
+## EAP close-out (2026-07-14)
+
+- [../eap-closeout-walkthrough-2026-07-14.md](../eap-closeout-walkthrough-2026-07-14.md) — the ORDER 009 EAP closeout walkthrough: what shipped (PR-cited), current state + run/verify commands, the OWNER ACTIONS checklist, a 5-minute verify-it-yourself tour, and handoff batons.
+
 ## World-games seat — close-out + archive (2026-07-11)
 
 - [close-out-world-games-2026-07-11.md](close-out-world-games-2026-07-11.md) — world-games gen-2 seat close-out self-review: what shipped, went-wrong (each cited), durable lessons/dev-conventions, chat-only knowledge capture (a–e), and the parked roadmap/follow-ups.
