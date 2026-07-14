@@ -12,8 +12,6 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-import pytest
-
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_REPO_ROOT / "tools"))
 
@@ -126,15 +124,16 @@ def test_check_missing_file_is_stale(capsys) -> None:
     assert "is stale" in capsys.readouterr().out
 
 
-def test_check_stale_path_outside_repo_raises(tmp_path: Path) -> None:
-    """Pin today's quirk: an out-of-repo stale path crashes in the error
-    message's ``relative_to(_REPO_ROOT)`` instead of returning 1. CI only
-    ever passes DOC_PATH so this is latent; if it is ever fixed to return 1,
-    update this pin."""
+def test_check_stale_path_outside_repo_returns_1(tmp_path: Path, capsys) -> None:
+    """#121 pinned this as a ValueError crash in the error message's
+    ``relative_to(_REPO_ROOT)``; fixed: an out-of-repo stale path now
+    returns 1 and the message shows the absolute path."""
     outside = tmp_path / "balance.md"
     outside.write_text("stale\n", encoding="utf-8")
-    with pytest.raises(ValueError):
-        gen_balance.check(outside)
+    assert gen_balance.check(outside) == 1
+    out = capsys.readouterr().out
+    assert "is stale" in out
+    assert str(outside) in out
 
 
 def test_main_dispatch_check_and_usage(capsys) -> None:

@@ -489,8 +489,12 @@ def check(path: Path = DOC_PATH) -> int:
         tofile=f"{path} (regenerated)",
     )
     sys.stdout.writelines(diff)
+    try:
+        display = path.relative_to(_REPO_ROOT)
+    except ValueError:  # path lives outside the repo — show it absolute
+        display = path
     sys.stdout.write(
-        f"\nERROR: {path.relative_to(_REPO_ROOT)} is stale — "
+        f"\nERROR: {display} is stale — "
         f"regenerate with `python3 tools/gen_balance.py`.\n"
     )
     return 1
