@@ -361,7 +361,11 @@ Full detail: `control/status.md` § NIGHT REPORT 2026-07-13T09:22Z.
 **For:** Fleet Manager — please route to the sim-lab (lane→manager; this seat
 never addresses the sim-lab directly)
 **Filed:** 2026-07-13T18:18:29Z
-**Status:** `open`
+**Status:** `routed` — 2026-07-14: folded into the `fishing-full-roster-economy`
+batch (below, per its cross-reference clause) and ROUTED to the sim-lab via
+sim-lab's own ORDER 008, per at-HEAD ORDER 009 (`control/inbox.md` @
+`ed2fabb`; fm PR #193 carries the dispatch log). Awaiting the verdict; the
+seat wires its constants VERBATIM on receipt.
 
 The V043 wiring left the fishing economy with exactly ONE live leg. VERDICT 043
 pinned the sell curve — minnow 8, bass 13, pike 27, legend_carp 80 coins,
@@ -429,7 +433,13 @@ fast lane and docs-only PRs unblocked; the row just names the two numbers.
 **For:** Fleet Manager — please route to the sim-lab (lane→manager; this seat
 never addresses the sim-lab directly)
 **Filed:** 2026-07-13T22:06:03Z
-**Status:** `open`
+**Status:** `routed` — 2026-07-14: ROUTED to the sim-lab via sim-lab's own
+ORDER 008, per at-HEAD ORDER 009 (`control/inbox.md` @ `ed2fabb`; fm PR #193
+carries the dispatch log). Cross-repo verification of sim-lab's inbox was
+attempted once and denied on this seat (verbatim in `control/status.md`
+§ SIM-REQUEST routing) — the routing citation is the at-HEAD order. Awaiting
+ONE verdict batch; constants wired VERBATIM on receipt (ORDER 008 (c):
+correctness > speed).
 
 **Authority — the owner's bigger-batches directive, verbatim (ORDER 008,
 `control/inbox.md`, live owner turn 2026-07-13 ~21:59Z):**
@@ -555,3 +565,57 @@ head `3cf372a`, another session's PR — this seat did NOT touch it):
 - **Path to green:** three small single-file edits would likely clear all 3
   findings. Recommend the author session (or manager) apply them; this seat
   deliberately left the PR untouched (not its claim).
+
+---
+
+## EAP CLOSE-OUT · lane→owner/manager · 2026-07-14T11:32Z (ORDER 009)
+
+**To:** owner (via the Fleet Manager roll-up)
+**From:** superbot-games seat
+**Status:** `posted`
+**Full walkthrough:** `docs/eap-closeout-walkthrough-2026-07-14.md` (sections
+A–E; landing via `claude/eap-closeout-walkthrough`)
+
+The ≤40-line close-out summary below is the ORDER 009 (b) deliverable — relay
+verbatim; the OWNER ACTIONS block is copied verbatim from walkthrough §C.
+
+> EAP CLOSE-OUT — superbot-games seat · 2026-07-14 (ORDER 009)
+>
+> 1. SHIPPED: four playable, audited, sim-pinned games behind one hub
+>    (`python3 -m games`) — mining, fishing, dnd, exploration; suite grown to
+>    **810 passed** (verified at main HEAD `ed2fabb`), ~97% coverage of
+>    games/+services; 77 squash-merges (#59…#136) since the prior heartbeat
+>    stamp, wave-cited in `control/status.md` § Truth-stamp evidence.
+> 2. TERMINAL this wake: heartbeat truth-stamped; orders line now
+>    `acked=001-009 done=001-007`; fishing full-roster + cook-leg
+>    SIM-REQUESTs marked ROUTED to sim-lab (per ORDER 009 @ `ed2fabb`).
+> 3. PARKED with citations: exploration numeric band import (upstream
+>    Q-0087/D-0008 P0 artifact); rung-3 packaging (owner —
+>    `docs/design/mining-host-adapter.md` §⚑); persistence/transfer/D2
+>    (owner — checklist below).
+> 4. GATED: all remaining fishing constants await the routed sim-lab verdict
+>    batch — wired VERBATIM on receipt; no numbers invented meanwhile.
+> OWNER ACTIONS (each: what · where · **recommendation** · verify):
+> - [ ] 1. Ratify D2 (audit item-grants). WHERE: control/outbox.md
+>       § DECISION-NOTE · D1/D2. RECOMMENDATION: **ratify D2 as built** —
+>       full audit coverage; reversal stays a one-line toggle. RISK ↩️.
+>       VERIFY: reply "D2 ratified"; the seat records it on the note.
+> - [ ] 2. Rung-3 packaging + hermeticity (sbg becomes an installable
+>       distribution importing sb.spec from superbot-next). WHERE:
+>       docs/design/mining-host-adapter.md § ⚑ DECISION. RECOMMENDATION:
+>       **approve packaging, sequenced after D2** — the rung-2 op the doc
+>       waited on now exists (#68), so the adapter wraps a real op. RISK ↩️.
+>       VERIFY: reply approve/defer; build starts only after this + D2.
+> - [ ] 3. Persistence format-governance (contract-impl vs flat-local ·
+>       namespace mapping · load-vs-audit). WHERE: control/outbox.md
+>       § OWNER-QUEUE. RECOMMENDATION: **contract-impl per PR #53 (no rival
+>       format) · per-game domain namespaces · load emits NO audit rows**.
+>       RISK ↩️. VERIFY: reply the 3 picks; save/load is then mechanical.
+> - [ ] 4. Transfer-policy source model. WHERE:
+>       docs/design/persistence-design.md §5 (OWNER-DECIDES item 4).
+>       RECOMMENDATION: **TRUE source-debit** — seeded-credit violates the
+>       doc's own conservation invariant. RISK ↩️. VERIFY: reply the choice.
+> - [ ] 5. No merge clicks owed: zero open PRs beyond this closeout pair;
+>       both auto-land on green via the #67 enabler. If one parks green
+>       un-merged, the click is Squash & merge at
+>       github.com/menno420/superbot-games/pulls. RISK ✅. VERIFY: 0 open.
