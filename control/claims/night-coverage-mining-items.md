@@ -1,0 +1,3 @@
+# Claim · coverage — games/mining/core/items.py
+
+- `claude/night-coverage-mining-items` · **night-coverage-mining-items** — cover `games/mining/core/items.py` (76%, 79 stmts, 19 missed: 340, 344, 355–356, 367, 381, 391–406, 419–427 — the `is_tool`/`is_consumable`/`tool_tier` predicates, `total_value`, the off-ladder `next_tool_upgrade` tail, and the `sort_inventory`/`summarize_inventory` display helpers) with ≤14 focused tests pinning real behavior at EXISTING catalog constants; tests only, zero gameplay changes · expected files: tests/mining/, .sessions/, telemetry/model-usage.jsonl, control/claims/ · 2026-07-14
