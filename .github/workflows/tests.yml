@@ -38,22 +38,15 @@ jobs:
         if: steps.lane.outputs.control_only != 'true'
         with:
           python-version: "3.x"
-      - name: test suite (pure-domain pytest — all suites; per-suite floor guarded)
+      - name: gate-parity preflight (floor guard → pytest → balance freshness)
         if: steps.lane.outputs.control_only != 'true'
         run: |
           python3 -m pip install --quiet pytest
-          # ORDER 001 count floor is now PER-SUITE and self-maintaining: each real
-          # suite dir owns an EXPECTED_MIN_TESTS.txt, so a test-adding PR edits only
-          # its own suite's file (no shared hardcoded int for open PRs to collide on).
-          # The guard fails LOUDLY, naming the suite, if any suite drops out of
-          # collection or shrinks below its floor. Guard first, then run the suite.
-          python3 tests/check_suite_floors.py
-          python3 -m pytest tests/ games/exploration/tests/ services/tests/ -q
-      - name: Balance page freshness (docs/balance.md regenerates byte-identical)
-        if: steps.lane.outputs.control_only != 'true'
-        run: |
-          # The economy balance page is auto-generated from the shipped catalogs
-          # / sim tunables / caps / suite floors. --check regenerates it in memory
-          # and fails LOUDLY if the committed docs/balance.md has drifted from
-          # source (same freshness-guard shape as the suite-floor gate above).
-          python3 tools/gen_balance.py --check
+          # ONE shared gate sequence, run by CI and by hands alike so the two
+          # cannot drift: tools/preflight.py runs the per-suite floor guard
+          # (ORDER 001), then pytest over the paths DERIVED from
+          # tests/EXPECTED_SUITES.txt via --print-suites (never a hardcoded
+          # list — the drift class behind the #107 collected-but-never-run
+          # gap), then the docs/balance.md freshness check, failing on the
+          # first red step.
+          python3 tools/preflight.py
