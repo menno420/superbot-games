@@ -27,6 +27,7 @@ from services import world_registry
 from services.world_registry import WorldEntry
 
 from games.registry_wiring import wire_games
+from games.shared.cli import repl
 
 PROMPT = "games> "
 
@@ -225,30 +226,21 @@ def main() -> int:
     wire_games(world_registry)
     entries = tuple(world_registry.all_entries())
 
-    print("🎮  Superbot Games — the hub. Type 'help' for commands, 'quit' to leave.")
-    for line in listing_lines(entries):
-        print(line)
-
     def interactive_launch(entry: WorldEntry) -> int:
         # Print the banner BEFORE the opener runs its synchronous sub-session,
         # so "Launching X…" precedes the game instead of trailing its summary.
         print(launching_line(entry.game_id))
         return _default_launch(entry)
 
-    while True:
-        try:
-            line = input(PROMPT)
-        except (EOFError, KeyboardInterrupt):
-            print()  # clean newline after ^D / ^C
-            break
-        step = hub_step(line, entries, launch=interactive_launch)
-        if step.quit:
-            break
-        for out in step.lines:
-            print(out)
-
-    print("Thanks for playing — see you at the hub!")
-    return 0
+    return repl(
+        lambda line: hub_step(line, entries, launch=interactive_launch),
+        prompt=PROMPT,
+        banner_lines=[
+            "🎮  Superbot Games — the hub. Type 'help' for commands, 'quit' to leave.",
+            *listing_lines(entries),
+        ],
+        closing_lines=lambda: ["Thanks for playing — see you at the hub!"],
+    )
 
 
 if __name__ == "__main__":

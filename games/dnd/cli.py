@@ -35,6 +35,7 @@ from services import dnd_workflow as dw
 from services.audit import InMemorySink
 
 from games.dnd.data.scenes import get_scene, text_for
+from games.shared.cli import repl
 
 PROMPT = "dnd> "
 
@@ -306,34 +307,29 @@ def main() -> int:
     choices_made = 0
     story_over = False
 
-    print("🐉  Standalone D&D — you are the Dungeon Master's seat.")
-    print("    Type 'help' for commands, 'quit' to leave.")
-    for line in scene_lines(state):
-        print(line)
-
-    while True:
-        try:
-            line = input(PROMPT)
-        except (EOFError, KeyboardInterrupt):
-            print()  # clean newline after ^D / ^C
-            break
+    def step_fn(line: str) -> StepResult:
+        nonlocal choices_made, story_over
         res = step(state, sink, line, story_over=story_over, now=datetime.now(timezone.utc))
-        if res.quit:
-            break
-        for out in res.lines:
-            print(out)
         if res.is_choice:
             choices_made += 1
             if state.scene_id not in scenes_visited:
                 scenes_visited.append(state.scene_id)
             if res.ended:
                 story_over = True
+        return res
 
-    for line in summary_lines(
-        state, sink, scenes_visited=scenes_visited, choices_made=choices_made
-    ):
-        print(line)
-    return 0
+    return repl(
+        step_fn,
+        prompt=PROMPT,
+        banner_lines=[
+            "🐉  Standalone D&D — you are the Dungeon Master's seat.",
+            "    Type 'help' for commands, 'quit' to leave.",
+            *scene_lines(state),
+        ],
+        closing_lines=lambda: summary_lines(
+            state, sink, scenes_visited=scenes_visited, choices_made=choices_made
+        ),
+    )
 
 
 __all__ = [

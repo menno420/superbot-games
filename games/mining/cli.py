@@ -31,6 +31,7 @@ from services import mining_workflow as mw
 from services.audit import InMemorySink
 
 from games.mining.core import energy, equipment, world
+from games.shared.cli import repl
 
 #: The base tool a fresh player starts equipped with — the core's entry-tier
 #: pickaxe (``games/mining/core/equipment.py``). Its durability is read from the
@@ -398,27 +399,24 @@ def main() -> int:
     start_coins = state.coins
     ok_actions = 0
 
-    print("⛏️  Standalone Mining — type 'help' for commands, 'quit' to leave.")
-    for line in status_lines(state, now=datetime.now(timezone.utc)):
-        print(line)
-
-    while True:
-        try:
-            line = input(PROMPT)
-        except (EOFError, KeyboardInterrupt):
-            print()  # clean newline after ^D / ^C
-            break
+    def step_fn(line: str) -> StepResult:
+        nonlocal ok_actions
         res = step(state, sink, line, now=datetime.now(timezone.utc))
-        if res.quit:
-            break
-        for out in res.lines:
-            print(out)
         if res.is_action and res.ok:
             ok_actions += 1
+        return res
 
-    for line in summary_lines(state, sink, start_coins=start_coins, ok_actions=ok_actions):
-        print(line)
-    return 0
+    return repl(
+        step_fn,
+        prompt=PROMPT,
+        banner_lines=[
+            "⛏️  Standalone Mining — type 'help' for commands, 'quit' to leave.",
+            *status_lines(state, now=datetime.now(timezone.utc)),
+        ],
+        closing_lines=lambda: summary_lines(
+            state, sink, start_coins=start_coins, ok_actions=ok_actions
+        ),
+    )
 
 
 __all__ = [
