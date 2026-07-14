@@ -42,7 +42,7 @@ from games.fishing.core import economy
 from games.fishing.core import spots as spot_table
 from games.fishing.core import species as species_table
 from games.mining.core import energy
-from games.shared.cli import repl
+from games.shared.cli import repl, run_scripted
 
 #: The spot a fresh angler starts at — the in-table NEUTRAL ``dock`` row (an
 #: identity catch profile). Read off the spot table, never a new balance choice.
@@ -380,21 +380,24 @@ def run_commands(
     if sink is None:
         sink = InMemorySink()
 
-    lines: list[str] = list(status_lines(state))
     casts_made = 0
     ok_casts = 0
 
-    for command in commands:
-        res = step(state, sink, command, now=now, rng=rng)
-        if res.quit:
-            break
-        lines.extend(res.lines)
+    def step_fn(line: str) -> StepResult:
+        nonlocal casts_made, ok_casts
+        res = step(state, sink, line, now=now, rng=rng)
         if res.is_cast:
             casts_made += 1
             if res.ok:
                 ok_casts += 1
+        return res
 
-    lines.extend(summary_lines(state, sink, casts_made=casts_made))
+    lines = run_scripted(
+        step_fn,
+        commands,
+        banner_lines=status_lines(state),
+        closing_lines=lambda: summary_lines(state, sink, casts_made=casts_made),
+    )
     return SessionResult(
         lines=lines,
         state=state,

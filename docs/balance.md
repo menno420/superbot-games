@@ -186,7 +186,7 @@ The per-suite pytest count floors the CI coverage ratchet enforces (ORDER-001).
 | suite | min tests |
 | --- | --- |
 | `games/exploration/tests` | 55 |
-| `services/tests` | 193 |
+| `services/tests` | 204 |
 | `tests/dnd` | 75 |
 | `tests/exploration` | 17 |
 | `tests/fishing` | 121 |

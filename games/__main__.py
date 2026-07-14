@@ -27,7 +27,7 @@ from services import world_registry
 from services.world_registry import WorldEntry
 
 from games.registry_wiring import wire_games
-from games.shared.cli import repl
+from games.shared.cli import repl, run_scripted
 
 PROMPT = "games> "
 
@@ -197,24 +197,30 @@ def run_hub(
         launch = _default_launch
 
     entries = tuple(registry.all_entries())
-    lines: list[str] = list(listing_lines(entries))
     launched: list[str] = []
 
-    def announcing_launch(entry: WorldEntry) -> int | None:
-        # Record the banner BEFORE the opener runs, so the transcript shows the
-        # launch preceding the game session (the launcher itself is unchanged).
-        lines.append(launching_line(entry.game_id))
-        return launch(entry)
+    def step_fn(line: str) -> HubStep:
+        # Record the "Launching …" banner BEFORE the opener runs, so the
+        # transcript shows the launch preceding the game session (the launcher
+        # itself is unchanged) — buffered per step, then emitted ahead of the
+        # step's own lines.
+        pre: list[str] = []
 
-    for command in commands:
-        step = hub_step(command, entries, launch=announcing_launch)
-        if step.quit:
-            break
-        lines.extend(step.lines)
+        def announcing_launch(entry: WorldEntry) -> int | None:
+            pre.append(launching_line(entry.game_id))
+            return launch(entry)
+
+        step = hub_step(line, entries, launch=announcing_launch)
         if step.launched is not None:
             launched.append(step.launched)
+        return HubStep(lines=[*pre, *step.lines], quit=step.quit, launched=step.launched)
 
-    lines.append("Thanks for playing — see you at the hub!")
+    lines = run_scripted(
+        step_fn,
+        commands,
+        banner_lines=listing_lines(entries),
+        closing_lines=lambda: ["Thanks for playing — see you at the hub!"],
+    )
     return HubResult(lines=lines, launched=launched)
 
 

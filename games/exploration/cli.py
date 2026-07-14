@@ -38,7 +38,7 @@ from services.audit import InMemorySink
 
 from games.exploration.quest import catalog
 from games.exploration.quest.models import RewardTier
-from games.shared.cli import repl
+from games.shared.cli import repl, run_scripted
 
 PROMPT = "explore> "
 
@@ -323,21 +323,24 @@ def run_commands(
     if sink is None:
         sink = InMemorySink()
 
-    lines: list[str] = list(quests_lines())
     actions_taken = 0
     quests_completed = 0
 
-    for command in commands:
-        res = step(state, sink, command, now=now)
-        if res.quit:
-            break
-        lines.extend(res.lines)
+    def step_fn(line: str) -> StepResult:
+        nonlocal actions_taken, quests_completed
+        res = step(state, sink, line, now=now)
         if res.acted:
             actions_taken += 1
         if res.completed:
             quests_completed += 1
+        return res
 
-    lines.extend(summary_lines(state, sink, actions_taken=actions_taken))
+    lines = run_scripted(
+        step_fn,
+        commands,
+        banner_lines=quests_lines(),
+        closing_lines=lambda: summary_lines(state, sink, actions_taken=actions_taken),
+    )
     return SessionResult(
         lines=lines,
         state=state,
