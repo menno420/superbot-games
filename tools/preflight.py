@@ -19,6 +19,19 @@ cannot drift by construction:
                               the suite registry (never a hardcoded list)
   3/3  balance freshness      ``tools/gen_balance.py --check``
 
+``--flip`` appends the FOURTH gate a session flip needs (the substrate
+gate's strict session-card grading, which the three tests-workflow gates
+never run):
+
+  4/4  flip-readiness         ``bootstrap.py check --strict``
+
+so "am I ready to flip?" is one command: green means the tree passes every
+tests-workflow gate AND strict. Mid-slice it stays red BY DESIGN — the
+born-red card's in-progress Status is the strict gate's designed HOLD —
+and goes green once the card flips complete. The default three-step mode
+is byte-identical to the pre-flag behavior; CI (``tests.yml``) keeps
+calling the bare command and never runs step 4.
+
 Exit status: 0 when every step passes; the FIRST failing step's exit code
 otherwise (later steps do not run — fix, rerun, repeat).
 
@@ -29,6 +42,7 @@ itself inside a preflight-launched suite instead of recursing.
 
 from __future__ import annotations
 
+import argparse
 import os
 import subprocess
 import sys
@@ -37,6 +51,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 FLOOR_GUARD = REPO_ROOT / "tests" / "check_suite_floors.py"
 GEN_BALANCE = REPO_ROOT / "tools" / "gen_balance.py"
+BOOTSTRAP = REPO_ROOT / "bootstrap.py"
 
 
 def _banner(step: str, label: str, command: list[str]) -> None:
@@ -73,13 +88,51 @@ def _derived_roots() -> list[str]:
     return [line.strip() for line in proc.stdout.splitlines() if line.strip()]
 
 
-def main() -> int:
-    _run("1/3", "suite-floor guard", [sys.executable, str(FLOOR_GUARD)])
+def _parse_args(argv: list[str] | None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Gate-parity preflight: floor guard, pytest, balance freshness.",
+    )
+    parser.add_argument(
+        "--flip",
+        action="store_true",
+        help=(
+            "append step 4 — `bootstrap.py check --strict` — so flip-readiness "
+            "is one command (red on a still-in-progress card is the designed "
+            "born-red HOLD, not a defect)"
+        ),
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parse_args(argv)
+    total = 4 if args.flip else 3
+
+    _run(f"1/{total}", "suite-floor guard", [sys.executable, str(FLOOR_GUARD)])
 
     roots = _derived_roots()
-    _run("2/3", "pytest (registry-derived paths)", [sys.executable, "-m", "pytest", *roots, "-q"])
+    _run(
+        f"2/{total}",
+        "pytest (registry-derived paths)",
+        [sys.executable, "-m", "pytest", *roots, "-q"],
+    )
 
-    _run("3/3", "balance-page freshness", [sys.executable, str(GEN_BALANCE), "--check"])
+    _run(f"3/{total}", "balance-page freshness", [sys.executable, str(GEN_BALANCE), "--check"])
+
+    if args.flip:
+        _run(
+            f"4/{total}",
+            "flip-readiness (bootstrap check --strict)",
+            [sys.executable, str(BOOTSTRAP), "check", "--strict"],
+        )
+        print("=" * 72, flush=True)
+        print(
+            "preflight GREEN — all four gates passed (floor guard, pytest, "
+            "balance, strict) — flip-ready",
+            flush=True,
+        )
+        print("=" * 72, flush=True)
+        return 0
 
     print("=" * 72, flush=True)
     print("preflight GREEN — all three gates passed (floor guard, pytest, balance)", flush=True)

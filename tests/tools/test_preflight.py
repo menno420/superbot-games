@@ -113,3 +113,111 @@ def test_preflight_green_repo_exits_zero_with_all_three_banners():
     assert "preflight 2/3: pytest (registry-derived paths)" in proc.stdout
     assert "preflight 3/3: balance-page freshness" in proc.stdout
     assert "preflight GREEN" in proc.stdout
+
+
+# ---------------------------------------------------------------------------
+# --flip mode — step 4 = `bootstrap.py check --strict` (flip-readiness).
+#
+# The in-process tests load the script as a module and stub subprocess.run
+# with a recorder: a full --flip subprocess run would nest the entire suite
+# plus strict (~the whole preflight again), and mid-slice the repo's newest
+# session card is in-progress BY DESIGN, so bare strict is red on exactly
+# the trees these tests run on. The strict-red semantics step 4 relies on
+# (the born-red HOLD) are pinned for real below via `--session-log` against
+# a synthetic in-progress card — cheap, hermetic, no tree copy.
+# ---------------------------------------------------------------------------
+BOOTSTRAP = REPO_ROOT / "bootstrap.py"
+
+
+def _load_preflight_module():
+    spec = importlib.util.spec_from_file_location("preflight_under_test", PREFLIGHT)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+class _FakeProc:
+    def __init__(self, returncode: int = 0, stdout: str = "", stderr: str = ""):
+        self.returncode = returncode
+        self.stdout = stdout
+        self.stderr = stderr
+
+
+def _record_gate_runs(monkeypatch, mod, *, strict_exit: int = 0):
+    """Stub the module's subprocess.run: record commands, run nothing."""
+    calls: list[list[str]] = []
+
+    def fake_run(command, **kwargs):
+        calls.append([str(part) for part in command])
+        if kwargs.get("capture_output"):
+            return _FakeProc(0, "tests\n", "")  # --print-suites derivation
+        if str(BOOTSTRAP) in calls[-1]:
+            return _FakeProc(strict_exit)
+        return _FakeProc(0)
+
+    monkeypatch.setattr(mod.subprocess, "run", fake_run)
+    return calls
+
+
+def test_default_mode_runs_exactly_three_gates_and_never_bootstrap(monkeypatch, capsys):
+    """Byte-compat pin: no --flip → the pre-flag banners, no strict step."""
+    mod = _load_preflight_module()
+    calls = _record_gate_runs(monkeypatch, mod)
+    assert mod.main([]) == 0
+    # floor guard, --print-suites derivation, pytest, balance check — and
+    # never bootstrap.
+    assert len(calls) == 4
+    assert not any(str(BOOTSTRAP) in call for call in calls)
+    out = capsys.readouterr().out
+    for banner in ("preflight 1/3:", "preflight 2/3:", "preflight 3/3:"):
+        assert banner in out
+    assert "preflight GREEN — all three gates passed (floor guard, pytest, balance)" in out
+    assert "4/" not in out and "strict" not in out
+
+
+def test_flip_mode_appends_bootstrap_check_strict_as_step_four(monkeypatch, capsys):
+    mod = _load_preflight_module()
+    calls = _record_gate_runs(monkeypatch, mod)
+    assert mod.main(["--flip"]) == 0
+    assert calls[-1] == [sys.executable, str(BOOTSTRAP), "check", "--strict"]
+    out = capsys.readouterr().out
+    for banner in ("preflight 1/4:", "preflight 2/4:", "preflight 3/4:", "preflight 4/4:"):
+        assert banner in out
+    assert "flip-readiness (bootstrap check --strict)" in out
+    assert "flip-ready" in out
+
+
+def test_flip_mode_propagates_a_red_strict_exit_code(monkeypatch, capsys):
+    mod = _load_preflight_module()
+    _record_gate_runs(monkeypatch, mod, strict_exit=7)
+    with pytest.raises(SystemExit) as excinfo:
+        mod.main(["--flip"])
+    assert excinfo.value.code == 7
+    out = capsys.readouterr().out
+    assert "preflight FAILED at 4/4 (flip-readiness (bootstrap check --strict)) — exit 7" in out
+
+
+def test_strict_gate_holds_red_on_an_in_progress_card(tmp_path):
+    """The semantics step 4 leans on: strict reds an in-progress card.
+
+    Pinned via `--session-log` (explicit-card selection keeps the locked
+    door) against a synthetic born-red card — the real strict runner, the
+    real HOLD, no repo-tree simulation needed.
+    """
+    card = tmp_path / "2026-07-14-synthetic-hold.md"
+    card.write_text(
+        "# 2026-07-14 · synthetic — born-red hold probe\n\n"
+        "> **Status:** in-progress\n>\n"
+        "> 📊 Model: Fable · 2026-07-14T00:00:00Z · synthetic\n",
+        encoding="utf-8",
+    )
+    proc = subprocess.run(
+        [sys.executable, str(BOOTSTRAP), "check", "--strict", "--session-log", str(card)],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        timeout=120,
+    )
+    assert proc.returncode != 0
+    assert "badge still says in-progress" in proc.stdout
+    assert "designed hold" in proc.stdout
