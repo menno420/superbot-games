@@ -20,11 +20,20 @@
 
 ## In flight
 
-(Truth-stamped 2026-07-13 at HEAD 06e5b5f, substrate-kit v1.15.0 — the prior
+(Truth-stamped 2026-07-14 at HEAD 24f6e04, substrate-kit v1.15.0 — the prior
 2026-07-09 wind-down snapshot below is superseded.)
 
-PRs through **#94** are on main (each merge API-verified; zero open PRs at
-scan time beyond this groom itself). The 2026-07-13 night wave
+PRs through **#107** are on main (each merge verified against the git log;
+one open PR at scan time beyond this groom: **#102**, another session's
+fleet-cleanup audit doc — verdict NEEDS-CHANGES per the `control/outbox.md`
+review-verdict entry: its content verifies, but its head fails
+`bootstrap.py check --strict` on 3 findings). The 2026-07-13/14 night
+coverage/fix wave (#95–#107, enumerated under "Recently shipped") took four
+sub-80% modules to 100% (suite 556 → 606), fixed the one latent bug the
+wave's pinning tests exposed (#106), and repaired the tests workflow to
+actually EXECUTE `services/tests/` (#107) — the CI-executed test count rose
+442 → 606, so CI now runs the same suite the sessions run locally. The
+earlier 2026-07-13 night wave
 (#66–#80, enumerated under "Recently shipped") made all four games playable:
 `python3 -m games` is a hub over a game-neutral world registry (#72) listing
 mining (#70), fishing (#71), dnd (#75), and exploration (#77), each driven
@@ -91,11 +100,50 @@ _Superseded 2026-07-09 wind-down snapshot (kept for provenance):_
 
 ## Recently shipped (newest first)
 
-_(Note 2026-07-13: the 2026-07-12/13 wave #61–#94 is enumerated below (each
-entry cites its squash-merge SHA on main; every merge API-verified). #13–#60
+_(Note 2026-07-14: the 2026-07-12/13 wave #61–#107 is enumerated below (each
+entry cites its squash-merge SHA on main; #61–#94 API-verified at earlier
+grooms, #95–#107 verified against the git log at this one). #13–#60
 remain unenumerated — the authoritative history for that span is in git.
 #83/#84 are listed in merge order: #84 merged 17:47:46Z, #83 17:50:38Z.)_
 
+- **#107** (2026-07-13, `24f6e04`) — ci: `services/tests/` added to the
+  tests workflow's pytest invocation — the suite was registered (floor 164
+  in `services/tests/EXPECTED_MIN_TESTS.txt`) and collection-checked, but
+  never EXECUTED in CI. CI-executed count 442 → 606, matching the local
+  suite.
+- **#106** (2026-07-13, `43a0cf3`) — fix: `format_report` in
+  `games/mining/sim/encounters_sim.py` guarded against zero-action reports
+  (kind-frequency lines divided by `report.actions` unguarded →
+  ZeroDivisionError; the per-depth branch already had the guard). Found by
+  #104's pinning test; suite held at 606.
+- **#105** (2026-07-13, `32e98fd`) — control: released the
+  `night-coverage-encounters-sim` claim (work landed via #104; fast lane).
+- **#104** (2026-07-13, `a704e96`) — test: covered
+  `games/mining/sim/encounters_sim.py` 68% → 100% (percentile helper +
+  balance-report renderer pinned; the zero-actions ZeroDivisionError
+  pinned as a latent bug, fixed separately in #106). Suite 592 → 606.
+- **#103** (2026-07-13, `a7524cb`) — control: released the
+  `night-coverage-mining-core-naming` claim (work landed via #101; fast
+  lane).
+- **#101** (2026-07-13, `e864a78`) — test: covered `games/mining/core`
+  naming — `names.py` 37% → 100% (fuzzy resolver) and `taxonomy.py`
+  63% → 100% (3-layer menu ordering). Suite 578 → 592.
+- **#100** (2026-07-13, `c27b25a`) — control: released the
+  `night-coverage-economy-sim` claim (work landed via #99; fast lane).
+- **#99** (2026-07-13, `6b2dbe7`) — test: covered
+  `games/shared/sim/economy_sim.py` 75% → 100% (ledger seam's untested
+  paths pinned). Suite 567 → 578.
+- **#98** (2026-07-13, `07be6ed`) — control: released the
+  `night-coverage-mining-loadout` claim (work landed via #97; fast lane).
+- **#97** (2026-07-13, `8b0b476`) — test: covered
+  `games/mining/core/loadout.py` 28% → 100% (set-aware Equip Best picker
+  pinned — previously the repo's worst-covered core module, zero direct
+  tests). Suite 556 → 567.
+- **#96** (2026-07-13, `511fa91`) — control: released the
+  `night-truth-stamp-order-008` claim (work landed via #95; fast lane).
+- **#95** (2026-07-13, `8106177`) — docs: truth-stamp of this ledger —
+  recorded the ORDER 008 landing wave (#92/#93) plus #90/#91/#94,
+  re-stamped "In flight" at `06e5b5f`.
 - **#94** (2026-07-13, `06e5b5f`) — control: night-headline outbox entry —
   NO NIGHT ORDER at HEAD (`control/inbox.md` carries ORDERs 001–008 only,
   none citing the fm final-night worklist doc; that doc lists this seat only
