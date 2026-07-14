@@ -1,3 +1,0 @@
-# Claim · truth-stamp docs/current-state.md (#95–#107 wave)
-
-- `claude/night-truth-stamp-night-wave` · **night-truth-stamp-night-wave** — groom `docs/current-state.md`: record the night coverage/fix wave — coverage slices #97/#99/#101/#104 (suite 556→606), bug fix #106, CI repair #107 (services/tests now executed in CI), claim releases #96/#98/#100/#103/#105, plus the #95 truth-stamp itself — each with its API-verified squash SHA; re-stamp "In flight" at the current main HEAD; note open PR #102 (another session); docs-only, zero code · expected files: docs/current-state.md, .sessions/, telemetry/model-usage.jsonl, control/claims/ · 2026-07-14
