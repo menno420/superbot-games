@@ -35,7 +35,7 @@ The planted doc set (this router reaches every live doc — keep it that way):
 `docs/repo-navigation-map.md` · `docs/ai-project-workflow.md` ·
 `docs/owner-profile.md` · `docs/current-state.md` · `docs/decisions.md` ·
 `docs/question-router.md` · `docs/CAPABILITIES.md` · `docs/SKILLS.md` ·
-`docs/ROUTINES.md` · `docs/ideas/README.md` ·
+`docs/ROUTINES.md` · `docs/reading-path.md` · `docs/ideas/README.md` ·
 `docs/audit/2026-07-13-fleet-cleanup-audit.md` (external fleet-wide
 cleanup/audit pass, EAP final night) — plus the root
 `CONSTITUTION.md` (the working agreement) and `.session-journal.md`.
@@ -43,6 +43,11 @@ cleanup/audit pass, EAP final night) — plus the root
 Recurring action? **`docs/SKILLS.md`** — the skill index — names every
 kit-shipped skill and when to reach for it; check it before improvising a
 procedure.
+
+Reading or acting across sibling repos in a fleet? **`docs/reading-path.md`**
+— the standing read authorization, the one-command fleet orient, the
+sibling/truth-file map, tiered depth, truth rules — read it before burning
+turns re-discovering what you may read.
 
 ## Verifying any change
 

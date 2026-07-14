@@ -7,7 +7,7 @@
     "soft_target_sessions": 50
   },
   "graduation_proposed": false,
-  "kit_version": "1.14.0",
+  "kit_version": "1.15.0",
   "last_compaction_session": 0,
   "mode": "guided",
   "mode_history": [
@@ -20,13 +20,14 @@
   "open_questions": [],
   "planted_doc_hashes": {
     ".session-journal.md": "8fbe1fc3b52a8c3005ce4d7e81ac758616628d80a6c386d08a0763e7081cbe5d",
-    "CONSTITUTION.md": "a2e7767d66d0b5ff682531d1c30e6d10dd5fc2125c870321457aebe9c3c7e10f",
+    "CONSTITUTION.md": "5d80d40990b707c9c6d93dcc43f6213d27cda77d7221da54ad6a7fc375a69e8e",
     "control/claims/README.md": "8ef495683709b8c135bab26808a5d1b3cac3938f6b193981666d073258bb8693",
     "control/inbox.md": "ec3374c42d06dc2192b7fd94db357bfab16a932f10d1c718b2b0bd6f2199aacb",
     "control/status.md": "789f674180cad9a8bc71eb68616edf8f71b343d5e8e161f52fefe31938a53493",
     "docs/AGENT_ORIENTATION.md": "04d8b4e3da16ed6d366cc77e6941b6d682993aa2cf190ac7e2bfbc80a9a59e97",
     "docs/CAPABILITIES.md": "cce079f1d5318dc0c5f8e8a0be4c7f7cc8b5d7e4f1e9393278950699a060c9f3",
-    "docs/SKILLS.md": "633fc1e888d3d0503b766fdd7e7a3c457349e8ed051b465aba723e2b1740fbbf",
+    "docs/ROUTINES.md": "2c48f2fe4fe389eba922f3a2f7f69f087a5f883ac7fb1817715bc0f528fabc98",
+    "docs/SKILLS.md": "cefdaf61f83f9ad258dd6c65d0725a6a64398a7a4646d1a1b13bf1b755141dc6",
     "docs/ai-project-workflow.md": "83b5231411732dde0a00ce4e8e66ec256197e4a64b5773fddba18a49981d027c",
     "docs/architecture.md": "c7ba99f0171b7772ba74473200a82d3b8b033bee2646d6e57255017ad3b2787e",
     "docs/collaboration-model.md": "586f215fbe01affb72e1dca402e79c02d063991125e4729049f2acf5d9b68196",
@@ -39,6 +40,7 @@
     "docs/question-router.md": "990d0313716eb2da48e2b73622d6400136448e7ff36e8beb2d0ae9a53a9af1fa",
     "docs/repo-navigation-map.md": "68fab181453f1f6098dd7e31340762a5cb81017481cbc06dae38a8b025af62eb",
     "docs/runtime_contracts.md": "29f06431d95240f102f5396f8096fd96396c51d2190a8c6f56858e00e4914c1f",
+    "docs/seat-digest.md": "d3bb074ae8cd9aff88dd4f68b8a4c32c015871fd8686cea49b8a154573466d4a",
     "scripts/env-setup.sh": "cd2145129fcba288ff9399ad44146a09017d85813e282c16bcba22340b613a2c"
   },
   "project_id": "6b843e2240e9",
