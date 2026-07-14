@@ -1,0 +1,1 @@
+- `claude/night-quest-completability` · **test: exploration quest completability sweep** — every catalog quest × tier walked to COMPLETED via services/exploration_workflow within its own objective budget · tests/exploration/, docs/balance.md · 2026-07-14
