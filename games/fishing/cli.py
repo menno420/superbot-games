@@ -51,8 +51,9 @@ PROMPT = "fishing> "
 
 #: The verbs that route to a state-changing seam action (as opposed to the
 #: read-only ``spot`` / ``spots`` / ``status`` / ``haul`` / ``help`` and the
-#: ``quit`` control verbs) — ``cast`` and the V043 ``sell`` leg.
-_ACTION_VERBS = frozenset({"cast", "sell"})
+#: ``quit`` control verbs) — ``cast`` and the V043 ``sell`` leg. Derived from
+#: the single dispatch table ``_ACTIONS`` in the dispatch section below,
+#: never hand-synced.
 
 
 # ---------------------------------------------------------------------------
@@ -274,34 +275,64 @@ def step(
     if verb not in _ACTION_VERBS:
         return StepResult(lines=[f"Unknown command: {verb!r}.", *help_lines()])
 
-    if verb == "sell":
-        # The V043 sell leg — routed through the seam's audited ``sell()``, the
-        # SINGLE mutation path (sell-OR-cook exclusivity lives there, not here).
-        if not args:
-            return StepResult(lines=["Usage: sell <species> [qty]  (see 'haul' for what you hold)"])
-        species = args[0].lower()
-        qty: int | None = None
-        if len(args) > 1:
-            try:
-                qty = int(args[1])
-            except ValueError:
-                return StepResult(lines=[f"Quantity must be a number, got {args[1]!r}."])
-        if qty is None:
-            # Mirror the mining CLI's default: sell everything you hold (or ask
-            # the seam for 1, whose honest "You only have 0×" no-op answers).
-            held = state.haul.get(species, 0)
-            qty = held if held > 0 else 1
-        sell_result = fw.sell(state, species, qty, sink=sink, now=now)
-        out = [sell_result.message]
-        if sell_result.ok:
-            out += _sell_extra(state)
-        return StepResult(lines=out, is_sell=True, ok=sell_result.ok)
+    return _ACTIONS[verb](state, sink, args, now=now, rng=rng)
 
-    # The other state-changing action — cast at the current spot.
+
+def _do_sell(
+    state: fw.FishingState,
+    sink: InMemorySink,
+    args: list[str],
+    *,
+    now: datetime | None,
+    rng: random.Random | None,
+) -> StepResult:
+    """The V043 sell leg — routed through the seam's audited ``sell()``, the
+    SINGLE mutation path (sell-OR-cook exclusivity lives there, not here)."""
+    if not args:
+        return StepResult(lines=["Usage: sell <species> [qty]  (see 'haul' for what you hold)"])
+    species = args[0].lower()
+    qty: int | None = None
+    if len(args) > 1:
+        try:
+            qty = int(args[1])
+        except ValueError:
+            return StepResult(lines=[f"Quantity must be a number, got {args[1]!r}."])
+    if qty is None:
+        # Mirror the mining CLI's default: sell everything you hold (or ask
+        # the seam for 1, whose honest "You only have 0×" no-op answers).
+        held = state.haul.get(species, 0)
+        qty = held if held > 0 else 1
+    sell_result = fw.sell(state, species, qty, sink=sink, now=now)
+    out = [sell_result.message]
+    if sell_result.ok:
+        out += _sell_extra(state)
+    return StepResult(lines=out, is_sell=True, ok=sell_result.ok)
+
+
+def _do_cast(
+    state: fw.FishingState,
+    sink: InMemorySink,
+    args: list[str],
+    *,
+    now: datetime | None,
+    rng: random.Random | None,
+) -> StepResult:
+    """The other state-changing action — cast at the current spot."""
     result = fw.cast(state, sink=sink, rng=rng, now=now)
     out = [result.message]
     out += _cast_extra(state, result)
     return StepResult(lines=out, is_cast=True, ok=result.ok)
+
+
+#: THE single source for the action-verb surface: verb → handler. The step()
+#: gate (``_ACTION_VERBS``) is derived from this table, so the gate and the
+#: routing cannot drift; the help-parity test pins ``help_lines()`` to it.
+_ACTIONS = {
+    "cast": _do_cast,
+    "sell": _do_sell,
+}
+
+_ACTION_VERBS = frozenset(_ACTIONS)
 
 
 # ---------------------------------------------------------------------------

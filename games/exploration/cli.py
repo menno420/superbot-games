@@ -219,30 +219,67 @@ def step(
     if verb in _HELP_VERBS:
         return StepResult(lines=help_lines())
 
-    if verb == "offer":
-        return StepResult(lines=_offer_and_echo(state, sink, args, now=now))
-
-    if verb == "accept":
-        res = ew.accept(state, sink=sink, now=now)
-        return StepResult(lines=[f"» {res.message}" if res.ok else res.message])
-
-    if verb == "act":
-        if not args:
-            valid = ", ".join(ew.pending_actions(state.quest)) or "(none — accept a quest first)"
-            return StepResult(lines=[f"Usage: act <action>. Valid now: {valid}."])
-        res = ew.apply_action(state, args[0], sink=sink, now=now)
-        if not res.ok:
-            return StepResult(lines=[res.message])
-        out = [f"» {res.message}"]
-        completed = res.completed
-        if completed:
-            grant = ew.grant_rewards(state, sink=sink, now=now)
-            if grant.ok:
-                out.append(f"  🏁 {grant.message}")
-        return StepResult(lines=out, acted=True, completed=completed)
+    handler = _ACTIONS.get(verb)
+    if handler is not None:
+        return handler(state, sink, args, now=now)
 
     # Anything else is unknown input — surface the help, change nothing.
     return StepResult(lines=[f"Unknown command: {verb!r}.", *help_lines()])
+
+
+def _do_offer(
+    state: ew.ExplorationState,
+    sink: InMemorySink,
+    args: list[str],
+    *,
+    now: datetime | None,
+) -> StepResult:
+    return StepResult(lines=_offer_and_echo(state, sink, args, now=now))
+
+
+def _do_accept(
+    state: ew.ExplorationState,
+    sink: InMemorySink,
+    args: list[str],
+    *,
+    now: datetime | None,
+) -> StepResult:
+    res = ew.accept(state, sink=sink, now=now)
+    return StepResult(lines=[f"» {res.message}" if res.ok else res.message])
+
+
+def _do_act(
+    state: ew.ExplorationState,
+    sink: InMemorySink,
+    args: list[str],
+    *,
+    now: datetime | None,
+) -> StepResult:
+    if not args:
+        valid = ", ".join(ew.pending_actions(state.quest)) or "(none — accept a quest first)"
+        return StepResult(lines=[f"Usage: act <action>. Valid now: {valid}."])
+    res = ew.apply_action(state, args[0], sink=sink, now=now)
+    if not res.ok:
+        return StepResult(lines=[res.message])
+    out = [f"» {res.message}"]
+    completed = res.completed
+    if completed:
+        grant = ew.grant_rewards(state, sink=sink, now=now)
+        if grant.ok:
+            out.append(f"  🏁 {grant.message}")
+    return StepResult(lines=out, acted=True, completed=completed)
+
+
+#: THE single source for the seam-action verb surface: verb → handler. The
+#: step() route is this table's ``.get`` (so the gate and the routing cannot
+#: drift), and the help-parity test pins ``help_lines()`` to it.
+_ACTIONS = {
+    "offer": _do_offer,
+    "accept": _do_accept,
+    "act": _do_act,
+}
+
+_ACTION_VERBS = frozenset(_ACTIONS)
 
 
 # ---------------------------------------------------------------------------
