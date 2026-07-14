@@ -31,7 +31,7 @@ from services import mining_workflow as mw
 from services.audit import InMemorySink
 
 from games.mining.core import energy, equipment, world
-from games.shared.cli import repl
+from games.shared.cli import repl, run_scripted
 
 #: The base tool a fresh player starts equipped with — the core's entry-tier
 #: pickaxe (``games/mining/core/equipment.py``). Its durability is read from the
@@ -365,21 +365,23 @@ def run_commands(
         sink = InMemorySink()
 
     start_coins = state.coins
-    lines: list[str] = list(status_lines(state, now=now))
     ok_actions = 0
-    quit_seen = False
 
-    for command in commands:
-        res = step(state, sink, command, now=now, rng=rng)
-        if res.quit:
-            quit_seen = True
-            break
-        lines.extend(res.lines)
+    def step_fn(line: str) -> StepResult:
+        nonlocal ok_actions
+        res = step(state, sink, line, now=now, rng=rng)
         if res.is_action and res.ok:
             ok_actions += 1
+        return res
 
-    lines.extend(summary_lines(state, sink, start_coins=start_coins, ok_actions=ok_actions))
-    _ = quit_seen  # closing on quit vs end-of-list is intentionally the same path
+    lines = run_scripted(
+        step_fn,
+        commands,
+        banner_lines=status_lines(state, now=now),
+        closing_lines=lambda: summary_lines(
+            state, sink, start_coins=start_coins, ok_actions=ok_actions
+        ),
+    )
     return SessionResult(
         lines=lines,
         state=state,

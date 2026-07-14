@@ -35,7 +35,7 @@ from services import dnd_workflow as dw
 from services.audit import InMemorySink
 
 from games.dnd.data.scenes import get_scene, text_for
-from games.shared.cli import repl
+from games.shared.cli import repl, run_scripted
 
 PROMPT = "dnd> "
 
@@ -268,24 +268,27 @@ def run_commands(
         sink = InMemorySink()
 
     scenes_visited: list[str] = [state.scene_id]
-    lines: list[str] = list(scene_lines(state))
     choices_made = 0
     story_over = False
 
-    for command in commands:
-        res = step(state, sink, command, story_over=story_over, now=now)
-        if res.quit:
-            break
-        lines.extend(res.lines)
+    def step_fn(line: str) -> StepResult:
+        nonlocal choices_made, story_over
+        res = step(state, sink, line, story_over=story_over, now=now)
         if res.is_choice:
             choices_made += 1
             if state.scene_id not in scenes_visited:
                 scenes_visited.append(state.scene_id)
             if res.ended:
                 story_over = True
+        return res
 
-    lines.extend(
-        summary_lines(state, sink, scenes_visited=scenes_visited, choices_made=choices_made)
+    lines = run_scripted(
+        step_fn,
+        commands,
+        banner_lines=scene_lines(state),
+        closing_lines=lambda: summary_lines(
+            state, sink, scenes_visited=scenes_visited, choices_made=choices_made
+        ),
     )
     return SessionResult(
         lines=lines,

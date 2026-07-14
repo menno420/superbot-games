@@ -30,13 +30,24 @@ KeyboardInterrupt from ``source`` emit one empty line (the clean newline after
 ^D / ^C) and end the loop; a step with ``quit=True`` ends the loop emitting
 nothing; every other step has its ``lines`` emitted in order; the closing
 lines always print; the return value is always exit code ``0``.
+
+:func:`run_scripted` is the loop's SCRIPTED TWIN — the same feed mechanics
+the five ``run_commands`` / ``run_hub`` drivers each hand-rolled for their
+TTY-free sessions: banner lines first, feed each command string through
+``step_fn``, stop on a ``quit`` step (emitting nothing) or at end-of-list,
+collect every other step's ``lines`` in order, then append the closing lines.
+Where :func:`repl` reads from a *source* and emits to a *sink*, the twin
+takes a finite command list and RETURNS the transcript — everything
+game-specific (state, sink, counters, result assembly) stays in the game's
+``step_fn`` closure and its ``SessionResult``, exactly as in the interactive
+adoption. Bounded by construction: one iteration per command, never a wait.
 """
 
 from __future__ import annotations
 
 from typing import Callable, Iterable, Protocol, Sequence
 
-__all__ = ["StepLike", "repl"]
+__all__ = ["StepLike", "repl", "run_scripted"]
 
 
 class StepLike(Protocol):
@@ -90,3 +101,33 @@ def repl(
         for out in closing_lines():
             emit(out)
     return 0
+
+
+def run_scripted(
+    step_fn: Callable[[str], StepLike],
+    commands: Iterable[str],
+    *,
+    banner_lines: Sequence[str] = (),
+    closing_lines: Callable[[], Iterable[str]] | None = None,
+) -> list[str]:
+    """Run the scripted feed loop; return the session transcript lines.
+
+    The TTY-free twin of :func:`repl`: *banner_lines* open the transcript,
+    each string in *commands* is fed through *step_fn* in order, a step with
+    ``quit=True`` ends the feed emitting nothing (later commands are never
+    dispatched), every other step contributes its ``lines``, and
+    *closing_lines* — a CALLABLE, invoked AFTER the loop so a summary reflects
+    final state — always closes the transcript (quit and end-of-list alike).
+    Bounded by its input: one iteration per command.
+    """
+    lines: list[str] = list(banner_lines)
+
+    for command in commands:
+        step = step_fn(command)
+        if step.quit:
+            break
+        lines.extend(step.lines)
+
+    if closing_lines is not None:
+        lines.extend(closing_lines())
+    return lines
