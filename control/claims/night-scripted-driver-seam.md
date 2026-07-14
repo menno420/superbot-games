@@ -1,0 +1,1 @@
+- `claude/night-scripted-driver-seam` · **refactor: scripted-driver twin seam** — one feed loop for run_commands (×4) and run_hub via games/shared/cli/repl.py · games/{mining,fishing,dnd,exploration}/cli.py, games/__main__.py, games/shared/cli/, services/tests/ · 2026-07-14
