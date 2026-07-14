@@ -1,6 +1,6 @@
 # superbot-games — fleet cleanup / audit pass, 2026-07-13 (EAP last night)
 
-> **Status:** one-off audit artifact, not a living doc. Written by an auditing
+> **Status:** `audit` (one-off artifact, not a living doc). Written by an auditing
 > subagent as a complementary cleanup pass alongside a separate fleet-manager
 > dispatch ("ORDER 045"). Does not edit `control/**` — see scope note below.
 
@@ -24,8 +24,8 @@ systems they draw on (inventory, tools, locations, resources, encounters —
 (the historical two-Project mining/exploration split is retired, see
 `docs/lanes.md`). Games are built as pure-domain packages meant to ship as
 plugins into the rebuilt bot (`menno420/superbot-next`), against a binding
-plugin contract (`menno420/superbot-next docs/game-plugin-contract.md@d3dba9b`,
-ledger D-0056). All four games are currently playable stand-alone via
+plugin contract (`menno420/superbot-next docs/game-plugin-contract.md@d3dba9b`).
+All four games are currently playable stand-alone via
 `python3 -m games` / `python3 -m games.mining` / `python3 -m games.fishing`
 etc., each driving an "audited workflow seam" (`services/*_workflow.py`)
 over an in-memory audit sink (`services/audit.py`).
