@@ -1,0 +1,1 @@
+- `claude/night-stepfn-factory-parity` · **refactor: per-game step_fn factory + driver parity** — one shared bookkeeping-closure construction per game for main() and run_commands, byte-identity transcripts, driver-parity tests · games/{mining,fishing,dnd,exploration}/cli.py, games/__main__.py, tests/ · 2026-07-14
