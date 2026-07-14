@@ -20,24 +20,42 @@
 
 ## In flight
 
-(Truth-stamped 2026-07-14 at HEAD fdea103, substrate-kit v1.15.0 — the prior
+(Truth-stamped 2026-07-14 at HEAD 4330559, substrate-kit v1.15.0 — the prior
 2026-07-09 wind-down snapshot below is superseded.)
-<!-- truth-stamped-at: fdea103255096962210b8243d5a437ccc724830d -->
+<!-- truth-stamped-at: 4330559589197a5638e30f25adcdf00367910f3c -->
 
-PRs through **#119** are on main (each merge verified against the git log;
+PRs through **#134** are on main (each merge verified against the git log;
 one open PR at scan time beyond this groom: **#102**, another session's
 fleet-cleanup audit doc — verdict NEEDS-CHANGES per the `control/outbox.md`
 review-verdict entry recorded on main via #108: its content verifies, but its
-head fails `bootstrap.py check --strict` on 3 findings). The second
-2026-07-14 night wave (#108–#119, enumerated under "Recently shipped")
-pushed CLI/hub/sim coverage (#110–#114, suite 606 → 684 together with the
-fixes), fixed the three player-visible/hardening bugs those pins surfaced
-(#115 dnd resolver unhashable-`option_id` clamp, #116 fishing spot-banner
-article de-dup, #117 hub launch-banner order), refreshed the README to
-document all four playable games (#118), and installed the sim-harness
-smoke registry so every sim's render path executes in CI (#119, suite 695).
-Total coverage measured at this groom: **97%** across `games/` +
-`services/` (5476 stmts, 163 missed). The truth-stamp above now carries a
+head fails `bootstrap.py check --strict` on 3 findings). The third
+2026-07-14 night wave (#120–#134, enumerated under "Recently shipped") was
+an IMPROVEMENT wave over the playable four-game surface — suite
+695 → **810 passed** across it (verified at this groom's HEAD by
+`python3 tools/preflight.py`): **tripwire registries** that turn one-off
+audits into per-row red tests (detector-trip #122, display-table
+completeness #123, dnd scene reachability #126 and effects liveness #129,
+exploration quest completability #132 — joining #119's sim-harness smoke
+registry), **tooling seams** that single-source what was hand-synced (CLI
+verb tables #125, the shared interactive REPL loop #127 and its scripted
+twin #130 capped by the per-game step-closure factory #134, the
+gate-parity preflight #128 grown into one-command flip-readiness #131 with
+branch-diff card selection #133), **generator pins + a tooling fix**
+(gen_balance tests #121; #124's out-of-repo `--check` stale-message fix),
+and the **stamp toolchain** itself (#120 — whose `stamp_scaffold.py`
+scaffolded this very groom's bullets). Together with the prior wave's
+player-visible fixes (#115/#116/#117) and README refresh (#118), the arc
+since #108 reads: cover, fix what the pins surface, then harden the seams
+so the next drift reds by construction. The second 2026-07-14 night wave
+(#108–#119, also enumerated below) pushed CLI/hub/sim coverage (#110–#114,
+suite 606 → 684 together with the fixes), fixed the three
+player-visible/hardening bugs those pins surfaced (#115 dnd resolver
+unhashable-`option_id` clamp, #116 fishing spot-banner article de-dup,
+#117 hub launch-banner order), refreshed the README to document all four
+playable games (#118), and installed the sim-harness smoke registry so
+every sim's render path executes in CI (#119, suite 695). Total coverage
+measured at the #120 groom: **97%** across `games/` + `services/`
+(5476 stmts, 163 missed). The truth-stamp above carries a
 machine-readable `<!-- truth-stamped-at: <sha> -->` anchor consumed by
 `tools/stamp_scaffold.py`, which emits this ledger's "Recently shipped"
 bullet skeletons straight from `git log <anchor>..HEAD` (authoring aid, not
@@ -114,13 +132,81 @@ _Superseded 2026-07-09 wind-down snapshot (kept for provenance):_
 
 ## Recently shipped (newest first)
 
-_(Note 2026-07-14: the 2026-07-12/14 wave #61–#119 is enumerated below (each
+_(Note 2026-07-14: the 2026-07-12/14 wave #61–#134 is enumerated below (each
 entry cites its squash-merge SHA on main; #61–#94 API-verified at earlier
 grooms, #95–#107 verified against the git log at the #109 groom, #108–#119
-verified against the git log at this one). #13–#60
+at the #120 groom, and #120–#134 against the git log at this one — those
+fifteen bullets scaffolded via `tools/stamp_scaffold.py` from the #119
+anchor, the tool's first production groom). #13–#60
 remain unenumerated — the authoritative history for that span is in git.
 #83/#84 are listed in merge order: #84 merged 17:47:46Z, #83 17:50:38Z.)_
 
+- **#134** (2026-07-14, `4330559`) — refactor: one step-closure per game —
+  `make_step_fn` factories shared by `main()` and `run_commands`/`run_hub`
+  across all five entrypoint pairs (the #130 follow-up: the loops were
+  unified, the bookkeeping closures were still written twice); 10
+  fixed-seed before/after transcripts SHA-256-identical; 12 driver-parity
+  tests pin main-stdout == greeting + the scripted transcript, byte for
+  byte (`services/tests` floor 204 → 216). Suite 798 → 810.
+- **#133** (2026-07-14, `bc85689`) — ci: `preflight --flip` derives the
+  graded session card from the branch's own diff (cards ADDED vs
+  `origin/main...HEAD`) and passes it via `--session-log` — closing the
+  newest-by-mtime false-green (#131's card idea); multiple added cards
+  error loud before any gate, zero fall back to bare strict behind a
+  banner (`tests/tools` floor 31 → 35). Suite 794 → 798.
+- **#132** (2026-07-14, `b7b1062`) — test: exploration quest-catalog
+  completability sweep — every catalog quest × tier walks offer → accept →
+  act-loop → COMPLETED within its own declared budget via the real seam;
+  budget tightness, tier-cap banking, energy-bar fit, and determinism
+  pinned (`tests/exploration` floor 17 → 23). Suite 788 → 794.
+- **#131** (2026-07-14, `8703481`) — ci: `preflight --flip` — appends
+  step 4, `bootstrap.py check --strict`, so flip-readiness is one command
+  (default 3-step mode byte-compatible; `tests/tools` floor 27 → 31).
+  Suite 784 → 788.
+- **#130** (2026-07-14, `2b55e43`) — refactor: scripted-driver twin seam —
+  `run_scripted` in `games/shared/cli/` adopted by all five scripted
+  drivers (`run_commands` ×4 + `run_hub`), the #127 `repl` seam's TTY-free
+  twin; 10 fixed-seed transcripts SHA-256-identical before/after.
+  Suite 773 → 784.
+- **#129** (2026-07-14, `e2cc40f`) — test: dnd effects liveness — every
+  `EFFECTS` registry id is referenced by an option on a scene reachable
+  from the start scene AND executed once via the seam with its reward
+  bundle landing in the ledger. Suite 766 → 773.
+- **#128** (2026-07-14, `1d38230`) — ci: gate-parity preflight —
+  `tools/preflight.py` runs exactly the tests-workflow gates (floor guard
+  → pytest over registry-derived roots → balance freshness) and
+  `tests.yml` invokes the same script, so the local check and CI cannot
+  drift by construction. Suite 760 → 766.
+- **#127** (2026-07-14, `94a396c`) — refactor: shared REPL seam —
+  `games/shared/cli/repl.py` is the ONE interactive loop behind all five
+  `main()`s (banner/EOF/^C/quit/sign-off mechanics written once;
+  `services/tests` floor 182 → 193). Suite 749 → 760.
+- **#126** (2026-07-14, `9f48f7c`) — test: dnd scene-graph reachability —
+  a bounded sweep from the start scene proves every catalog scene is
+  reachable and every option target exists. Suite 744 → 749.
+- **#125** (2026-07-14, `e196b85`) — refactor: single-source CLI verb
+  tables — each game CLI's `_ACTIONS` dispatch table now derives the verb
+  gate by construction, plus one shared help-parity test walking every
+  game CLI. Suite 736 → 744.
+- **#124** (2026-07-14, `91ee62f`) — fix: `gen_balance --check`'s stale
+  message no longer breaks on out-of-repo target paths (the relpath
+  crash class). Suite held at 736.
+- **#123** (2026-07-14, `b5cf597`) — test: display-table completeness
+  registry — (vocabulary, table, relation) triples pin that every enum
+  member / stat field / category ships its player-facing glyph or label
+  (`tests/mining` floor 177 → 186). Suite 727 → 736.
+- **#122** (2026-07-14, `f3fd346`) — test: detector-trip registry — every
+  exported sim invariant predicate has a registered tripping construction
+  proven to return False, so a detector cannot rot into an always-True
+  stub (`tests/shared/sim` floor 29 → 40). Suite 716 → 727.
+- **#121** (2026-07-14, `fefe16c`) — test: gen_balance generator pins —
+  section builders asserted against the live economy/floor sources and
+  `--check` pinned as a pure no-write comparison (`tests/tools` floor
+  8 → 21). Suite 703 → 716.
+- **#120** (2026-07-14, `51590c6`) — docs: machine-readable truth-stamp
+  anchor (`<!-- truth-stamped-at: <sha> -->`) + `tools/stamp_scaffold.py`
+  emitting this ledger's "Recently shipped" bullet skeletons from
+  `git log <anchor>..HEAD`, + the #108–#117 groom. Suite 695 → 703.
 - **#119** (2026-07-14, `fdea103`) — test: sim-harness smoke registry
   (`tests/shared/sim/test_sim_harnesses.py`) — every shipped sim's
   `format_report(run(**tiny_kw))` render path executes in CI (mining
