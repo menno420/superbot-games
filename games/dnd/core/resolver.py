@@ -97,7 +97,11 @@ def resolve(
     allowed_ids = {o.id for o in allowed}
 
     # VALIDATE before resolving. Any invalid input -> clamp to the safe default no-op.
-    if isinstance(dm_choice, DMChoice) and dm_choice.option_id in allowed_ids:
+    try:
+        on_menu = isinstance(dm_choice, DMChoice) and dm_choice.option_id in allowed_ids
+    except TypeError:  # unhashable option_id (list/dict/...) — off-menu by definition
+        on_menu = False
+    if on_menu:
         chosen = scene.option(dm_choice.option_id)
         clamped = False
     else:
