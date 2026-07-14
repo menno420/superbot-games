@@ -20,9 +20,11 @@ local or CI — generates byte-identical cases, so a failure is always reproduci
 Threat model note: the DM's real adversarial surface is arbitrary JSON that the host
 deserializes into a choice — a ``str`` / ``None`` / number ``option_id`` inside a
 ``DMChoice`` (all hashable), or a raw non-``DMChoice`` payload (``dict`` / ``list`` /
-``None`` / ...). Both are exercised here and both clamp. (A ``DMChoice`` hand-built
-with an *unhashable* ``option_id`` — a ``list`` / ``dict`` — is a host-side
-construction bug, not a DM-controlled input, and is out of this suite's scope.)
+``None`` / ...). Both are exercised here and both clamp. A ``DMChoice`` hand-built
+with an *unhashable* ``option_id`` — a ``list`` / ``dict`` / ``set`` — is a host-side
+construction bug rather than a DM-controlled input, but since the deferred-#52
+hardening (see ``docs/retro/close-out-world-games-2026-07-11.md``) the resolver
+clamps that family too, and :func:`test_unhashable_option_id_clamps` pins it.
 """
 
 from __future__ import annotations
@@ -171,8 +173,8 @@ def _assert_clamped_noop(res: Resolution, scene) -> None:
 
 
 # --------------------------------------------------------------------------- #
-# The seeded fuzz functions. Each loops CASES iterations per scene from a fixed
-# seed; the collected-test count rises by the number of these functions (4).
+# The seeded fuzz functions (plus one parametrized unhashable-id sweep below).
+# Each fuzz function loops CASES iterations per scene from a fixed seed.
 # --------------------------------------------------------------------------- #
 
 
@@ -222,6 +224,32 @@ def test_fuzz_wrong_typed_choices() -> None:
             _assert_clamped_noop(res, scene)
             count += 1
     assert count >= CASES
+
+
+@pytest.mark.parametrize(
+    "option_id",
+    [
+        pytest.param(["a", "list"], id="list"),
+        pytest.param({"option_id": "advance_escort"}, id="dict"),
+        pytest.param({"a", "set"}, id="set"),
+        pytest.param(("nested", ["unhashable"]), id="tuple-with-unhashable"),
+        pytest.param(None, id="none"),
+        pytest.param(12345, id="int"),
+    ],
+)
+def test_unhashable_option_id_clamps(option_id: object) -> None:
+    """A hand-built ``DMChoice`` with an unhashable / wrong-typed ``option_id`` clamps.
+
+    Pre-fix, the unhashable members of this sweep escaped the clamp law as a
+    ``TypeError: unhashable type`` from the ``option_id in allowed_ids`` set check
+    (``games/dnd/core/resolver.py``) — the deferred-#52 hardening item. The hashable
+    wrong-typed members (``None`` / ``int``) always clamped and pin that no
+    regression sneaks in alongside the fix.
+    """
+    for scene in _scenes():
+        choice = DMChoice(option_id=option_id, flavor="flavour")  # type: ignore[arg-type]
+        res = _safe_resolve(scene, choice, xp=0, seed=1)
+        _assert_clamped_noop(res, scene)
 
 
 def test_fuzz_all_scenes_never_raise() -> None:
