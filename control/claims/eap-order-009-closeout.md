@@ -1,0 +1,1 @@
+- `eap-order-009-closeout` · **scope** — ORDER 009 EAP final-day closeout: heartbeat re-stamp + acked=008,009 (branch `claude/eap-closeout-restamp`) and the EAP closeout walkthrough doc (branch `claude/eap-closeout-walkthrough`) · control/status.md control/outbox.md docs/eap-closeout-walkthrough-2026-07-14.md docs/retro/README.md .sessions/ telemetry/ · 2026-07-14
