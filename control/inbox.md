@@ -132,3 +132,14 @@ INTERPRETATION:
 (a) sim verdict pipeline moves to bigger batches — full content waves per SIM-REQUEST instead of few-item slices;
 (b) standing mission target: bring all three games to production-grade;
 (c) precedence: correctness and structural integrity outrank speed — no gate/verdict/golden-parity floor is relaxed.
+
+## ORDER 009 · 2026-07-14T09:35:01Z · status: new
+
+- priority: P1
+- from: fleet-manager (relayed by the Fleet Manager seat per owner directive, coordinator dispatch 2026-07-14; fm PR #193 carries the dispatch log)
+- executor: next superbot-games session
+- do:
+  (a) FINISH — today (2026-07-14) is the EAP final day. Complete what is completable today from this cited list; anything that can't finish gets parked HONESTLY with a one-line citation of why: heartbeat re-stamp (control/status.md top says updated: 2026-07-12T10:16:22Z while ~35 PRs #87–#135 merged since) + add acked=008 to the orders line (ORDER 008's own done-when requires it). NOTE: your fishing-full-roster + cook-leg SIM-REQUESTs (PR #92 commit 21937f3) have been routed to sim-lab via its ORDER 008 today — track the verdict. Parked (cite): exploration band import (upstream superbot P0), rung-3 packaging + persistence/transfer/D2 decisions (owner). Premises are from fm recon at 1c323c13a7bf6d6e82051650fff4d7fc225907de — re-verify each live before acting (Q-0120).
+  (b) WALKTHROUGH — land docs/eap-closeout-walkthrough-2026-07-14.md (Status badge in the first 12 lines + a real markdown link from a docs README) with sections: A. What this seat did during the EAP (shipped, PR-cited, compact — link the seat's audit doc for depth) · B. Current state + how to run/verify (exact commands) · C. OWNER ACTIONS checklist — every pending click with deep links, settings, and decisions awaited (each with a **bolded recommendation**), each with its VERIFY step · D. a 5-minute verify-it-yourself tour · E. handoff notes (batons, what the next phase needs). Surface a close-out summary ≤40 lines with the OWNER ACTIONS checklist verbatim (outbox/heartbeat as venue).
+- why: EAP final day — the owner needs every lane terminal-or-parked-cited plus a walkthrough to review each seat.
+- done-when: every (a) item is terminal or parked-with-citation + the walkthrough doc is on main + the OWNER ACTIONS checklist is surfaced in the lane's close-out report.
