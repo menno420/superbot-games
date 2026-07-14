@@ -32,6 +32,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from typing import Callable
 
 from services import exploration_workflow as ew
 from services.audit import InMemorySink
@@ -284,6 +285,53 @@ _ACTION_VERBS = frozenset(_ACTIONS)
 
 
 # ---------------------------------------------------------------------------
+# Shared per-step bookkeeping — ONE closure construction for BOTH drivers
+# ---------------------------------------------------------------------------
+@dataclass
+class StepTally:
+    """What the session's step closure accumulates across lines.
+
+    Shared by the scripted and interactive drivers via :func:`make_step_fn`,
+    so the two twins cannot count differently by construction.
+    """
+
+    actions_taken: int = 0  # bounded ``act`` picks routed to the seam
+    quests_completed: int = 0  # quests completed + banked this session
+
+
+def make_step_fn(
+    state: ew.ExplorationState,
+    sink: InMemorySink,
+    *,
+    now: datetime | None = None,
+) -> tuple[Callable[[str], StepResult], StepTally]:
+    """Build THE per-step bookkeeping closure both drivers dispatch through.
+
+    Before this factory, ``main()`` and :func:`run_commands` each hand-rolled
+    a near-identical ``step_fn`` — a drift between the twins (interactive
+    counting differently than scripted) would have been invisible to both
+    suites, because each driver was only ever tested against itself.
+
+    ``now=None`` (the interactive default) stamps each line with the live
+    wall clock, exactly as ``main()`` always did; a fixed *now* makes a
+    scripted run deterministic. Returns ``(step_fn, tally)`` — the caller
+    reads the shared counters from *tally* after (or during) the session.
+    """
+    tally = StepTally()
+
+    def step_fn(line: str) -> StepResult:
+        at = now if now is not None else datetime.now(timezone.utc)
+        res = step(state, sink, line, now=at)
+        if res.acted:
+            tally.actions_taken += 1
+        if res.completed:
+            tally.quests_completed += 1
+        return res
+
+    return step_fn, tally
+
+
+# ---------------------------------------------------------------------------
 # Scripted (non-interactive) driver — the testable entry point
 # ---------------------------------------------------------------------------
 @dataclass
@@ -323,30 +371,22 @@ def run_commands(
     if sink is None:
         sink = InMemorySink()
 
-    actions_taken = 0
-    quests_completed = 0
-
-    def step_fn(line: str) -> StepResult:
-        nonlocal actions_taken, quests_completed
-        res = step(state, sink, line, now=now)
-        if res.acted:
-            actions_taken += 1
-        if res.completed:
-            quests_completed += 1
-        return res
+    step_fn, tally = make_step_fn(state, sink, now=now)
 
     lines = run_scripted(
         step_fn,
         commands,
         banner_lines=quests_lines(),
-        closing_lines=lambda: summary_lines(state, sink, actions_taken=actions_taken),
+        closing_lines=lambda: summary_lines(
+            state, sink, actions_taken=tally.actions_taken
+        ),
     )
     return SessionResult(
         lines=lines,
         state=state,
         sink=sink,
-        actions_taken=actions_taken,
-        quests_completed=quests_completed,
+        actions_taken=tally.actions_taken,
+        quests_completed=tally.quests_completed,
     )
 
 
@@ -357,14 +397,7 @@ def main() -> int:
     """Run the interactive REPL. Returns a process exit code."""
     sink = InMemorySink()
     state = new_state()
-    actions_taken = 0
-
-    def step_fn(line: str) -> StepResult:
-        nonlocal actions_taken
-        res = step(state, sink, line, now=datetime.now(timezone.utc))
-        if res.acted:
-            actions_taken += 1
-        return res
+    step_fn, tally = make_step_fn(state, sink)
 
     return repl(
         step_fn,
@@ -374,7 +407,9 @@ def main() -> int:
             "    Type 'help' for commands, 'quests' for the menu, 'quit' to leave.",
             *quests_lines(),
         ],
-        closing_lines=lambda: summary_lines(state, sink, actions_taken=actions_taken),
+        closing_lines=lambda: summary_lines(
+            state, sink, actions_taken=tally.actions_taken
+        ),
     )
 
 
@@ -387,6 +422,8 @@ __all__ = [
     "summary_lines",
     "StepResult",
     "step",
+    "StepTally",
+    "make_step_fn",
     "SessionResult",
     "run_commands",
     "main",

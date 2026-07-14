@@ -26,6 +26,7 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from typing import Callable
 
 from services import mining_workflow as mw
 from services.audit import InMemorySink
@@ -325,6 +326,51 @@ def step(
 
 
 # ---------------------------------------------------------------------------
+# Shared per-step bookkeeping — ONE closure construction for BOTH drivers
+# ---------------------------------------------------------------------------
+@dataclass
+class StepTally:
+    """What the session's step closure accumulates across lines.
+
+    Shared by the scripted and interactive drivers via :func:`make_step_fn`,
+    so the two twins cannot count differently by construction.
+    """
+
+    ok_actions: int = 0  # state-changing actions that committed
+
+
+def make_step_fn(
+    state: mw.MiningState,
+    sink: InMemorySink,
+    *,
+    now: datetime | None = None,
+    rng: random.Random | None = None,
+) -> tuple[Callable[[str], StepResult], StepTally]:
+    """Build THE per-step bookkeeping closure both drivers dispatch through.
+
+    Before this factory, ``main()`` and :func:`run_commands` each hand-rolled
+    a near-identical ``step_fn`` — a drift between the twins (interactive
+    counting differently than scripted) would have been invisible to both
+    suites, because each driver was only ever tested against itself.
+
+    ``now=None`` (the interactive default) stamps each line with the live
+    wall clock, exactly as ``main()`` always did; a fixed *now* makes a
+    scripted run deterministic. Returns ``(step_fn, tally)`` — the caller
+    reads the shared counters from *tally* after (or during) the session.
+    """
+    tally = StepTally()
+
+    def step_fn(line: str) -> StepResult:
+        at = now if now is not None else datetime.now(timezone.utc)
+        res = step(state, sink, line, now=at, rng=rng)
+        if res.is_action and res.ok:
+            tally.ok_actions += 1
+        return res
+
+    return step_fn, tally
+
+
+# ---------------------------------------------------------------------------
 # Scripted (non-interactive) driver — the testable entry point
 # ---------------------------------------------------------------------------
 @dataclass
@@ -365,28 +411,21 @@ def run_commands(
         sink = InMemorySink()
 
     start_coins = state.coins
-    ok_actions = 0
-
-    def step_fn(line: str) -> StepResult:
-        nonlocal ok_actions
-        res = step(state, sink, line, now=now, rng=rng)
-        if res.is_action and res.ok:
-            ok_actions += 1
-        return res
+    step_fn, tally = make_step_fn(state, sink, now=now, rng=rng)
 
     lines = run_scripted(
         step_fn,
         commands,
         banner_lines=status_lines(state, now=now),
         closing_lines=lambda: summary_lines(
-            state, sink, start_coins=start_coins, ok_actions=ok_actions
+            state, sink, start_coins=start_coins, ok_actions=tally.ok_actions
         ),
     )
     return SessionResult(
         lines=lines,
         state=state,
         sink=sink,
-        ok_actions=ok_actions,
+        ok_actions=tally.ok_actions,
         start_coins=start_coins,
     )
 
@@ -399,14 +438,7 @@ def main() -> int:
     sink = InMemorySink()
     state = new_state()
     start_coins = state.coins
-    ok_actions = 0
-
-    def step_fn(line: str) -> StepResult:
-        nonlocal ok_actions
-        res = step(state, sink, line, now=datetime.now(timezone.utc))
-        if res.is_action and res.ok:
-            ok_actions += 1
-        return res
+    step_fn, tally = make_step_fn(state, sink)
 
     return repl(
         step_fn,
@@ -416,7 +448,7 @@ def main() -> int:
             *status_lines(state, now=datetime.now(timezone.utc)),
         ],
         closing_lines=lambda: summary_lines(
-            state, sink, start_coins=start_coins, ok_actions=ok_actions
+            state, sink, start_coins=start_coins, ok_actions=tally.ok_actions
         ),
     )
 
@@ -429,6 +461,8 @@ __all__ = [
     "summary_lines",
     "StepResult",
     "step",
+    "StepTally",
+    "make_step_fn",
     "SessionResult",
     "run_commands",
     "main",

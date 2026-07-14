@@ -30,6 +30,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from typing import Callable
 
 from services import dnd_workflow as dw
 from services.audit import InMemorySink
@@ -228,6 +229,56 @@ def step(
 
 
 # ---------------------------------------------------------------------------
+# Shared per-step bookkeeping — ONE closure construction for BOTH drivers
+# ---------------------------------------------------------------------------
+@dataclass
+class StepTally:
+    """What the session's step closure accumulates across lines.
+
+    Shared by the scripted and interactive drivers via :func:`make_step_fn`,
+    so the two twins cannot count differently by construction.
+    """
+
+    choices_made: int = 0  # ``choose`` picks routed to the seam
+    scenes_visited: list[str] = field(default_factory=list)  # first-seen order
+    story_over: bool = False  # a pick concluded the beat (terminal option)
+
+
+def make_step_fn(
+    state: dw.DnDState,
+    sink: InMemorySink,
+    *,
+    now: datetime | None = None,
+) -> tuple[Callable[[str], StepResult], StepTally]:
+    """Build THE per-step bookkeeping closure both drivers dispatch through.
+
+    Before this factory, ``main()`` and :func:`run_commands` each hand-rolled
+    a near-identical ``step_fn`` — a drift between the twins (interactive
+    counting differently than scripted) would have been invisible to both
+    suites, because each driver was only ever tested against itself.
+
+    ``now=None`` (the interactive default) stamps each line with the live
+    wall clock, exactly as ``main()`` always did; a fixed *now* makes a
+    scripted run deterministic. Returns ``(step_fn, tally)`` — the caller
+    reads the shared counters from *tally* after (or during) the session.
+    """
+    tally = StepTally(scenes_visited=[state.scene_id])
+
+    def step_fn(line: str) -> StepResult:
+        at = now if now is not None else datetime.now(timezone.utc)
+        res = step(state, sink, line, story_over=tally.story_over, now=at)
+        if res.is_choice:
+            tally.choices_made += 1
+            if state.scene_id not in tally.scenes_visited:
+                tally.scenes_visited.append(state.scene_id)
+            if res.ended:
+                tally.story_over = True
+        return res
+
+    return step_fn, tally
+
+
+# ---------------------------------------------------------------------------
 # Scripted (non-interactive) driver — the testable entry point
 # ---------------------------------------------------------------------------
 @dataclass
@@ -267,35 +318,25 @@ def run_commands(
     if sink is None:
         sink = InMemorySink()
 
-    scenes_visited: list[str] = [state.scene_id]
-    choices_made = 0
-    story_over = False
-
-    def step_fn(line: str) -> StepResult:
-        nonlocal choices_made, story_over
-        res = step(state, sink, line, story_over=story_over, now=now)
-        if res.is_choice:
-            choices_made += 1
-            if state.scene_id not in scenes_visited:
-                scenes_visited.append(state.scene_id)
-            if res.ended:
-                story_over = True
-        return res
+    step_fn, tally = make_step_fn(state, sink, now=now)
 
     lines = run_scripted(
         step_fn,
         commands,
         banner_lines=scene_lines(state),
         closing_lines=lambda: summary_lines(
-            state, sink, scenes_visited=scenes_visited, choices_made=choices_made
+            state,
+            sink,
+            scenes_visited=tally.scenes_visited,
+            choices_made=tally.choices_made,
         ),
     )
     return SessionResult(
         lines=lines,
         state=state,
         sink=sink,
-        choices_made=choices_made,
-        scenes_visited=scenes_visited,
+        choices_made=tally.choices_made,
+        scenes_visited=tally.scenes_visited,
     )
 
 
@@ -306,20 +347,7 @@ def main() -> int:
     """Run the interactive REPL. Returns a process exit code."""
     sink = InMemorySink()
     state = new_state()
-    scenes_visited: list[str] = [state.scene_id]
-    choices_made = 0
-    story_over = False
-
-    def step_fn(line: str) -> StepResult:
-        nonlocal choices_made, story_over
-        res = step(state, sink, line, story_over=story_over, now=datetime.now(timezone.utc))
-        if res.is_choice:
-            choices_made += 1
-            if state.scene_id not in scenes_visited:
-                scenes_visited.append(state.scene_id)
-            if res.ended:
-                story_over = True
-        return res
+    step_fn, tally = make_step_fn(state, sink)
 
     return repl(
         step_fn,
@@ -330,7 +358,10 @@ def main() -> int:
             *scene_lines(state),
         ],
         closing_lines=lambda: summary_lines(
-            state, sink, scenes_visited=scenes_visited, choices_made=choices_made
+            state,
+            sink,
+            scenes_visited=tally.scenes_visited,
+            choices_made=tally.choices_made,
         ),
     )
 
@@ -344,6 +375,8 @@ __all__ = [
     "summary_lines",
     "StepResult",
     "step",
+    "StepTally",
+    "make_step_fn",
     "SessionResult",
     "run_commands",
     "main",

@@ -159,6 +159,55 @@ def hub_step(
 
 
 # ---------------------------------------------------------------------------
+# Shared per-step dispatch — ONE closure construction for BOTH drivers
+# ---------------------------------------------------------------------------
+def make_step_fn(
+    entries: tuple[WorldEntry, ...],
+    *,
+    launch: Callable[[WorldEntry], int | None],
+    announce: Callable[[str], object] | None = None,
+) -> tuple[Callable[[str], HubStep], list[str]]:
+    """Build THE hub dispatch closure both drivers loop over.
+
+    Before this factory, ``main()`` and :func:`run_hub` each hand-rolled the
+    same announcing-launch wrapper around :func:`hub_step` — a drift between
+    the twins would have been invisible to both suites, because each driver
+    was only ever tested against itself.
+
+    Every launch is announced with :func:`launching_line` BEFORE the opener
+    runs (the opener is a synchronous sub-session). *announce* is where that
+    banner goes: ``None`` (the scripted default) buffers it into the step's
+    own transcript lines, ahead of the step's output; a callable (the
+    interactive driver passes ``print``) emits it immediately — a buffered
+    line would otherwise render only after the game session ended.
+
+    Returns ``(step_fn, launched)`` — *launched* records the dispatched
+    game_ids in order.
+    """
+    launched: list[str] = []
+
+    def step_fn(line: str) -> HubStep:
+        pre: list[str] = []
+
+        def announcing_launch(entry: WorldEntry) -> int | None:
+            banner = launching_line(entry.game_id)
+            if announce is None:
+                pre.append(banner)
+            else:
+                announce(banner)
+            return launch(entry)
+
+        step = hub_step(line, entries, launch=announcing_launch)
+        if step.launched is not None:
+            launched.append(step.launched)
+        if pre:
+            return HubStep(lines=[*pre, *step.lines], quit=step.quit, launched=step.launched)
+        return step
+
+    return step_fn, launched
+
+
+# ---------------------------------------------------------------------------
 # Scripted (non-interactive) driver — the testable entry point
 # ---------------------------------------------------------------------------
 @dataclass
@@ -197,23 +246,7 @@ def run_hub(
         launch = _default_launch
 
     entries = tuple(registry.all_entries())
-    launched: list[str] = []
-
-    def step_fn(line: str) -> HubStep:
-        # Record the "Launching …" banner BEFORE the opener runs, so the
-        # transcript shows the launch preceding the game session (the launcher
-        # itself is unchanged) — buffered per step, then emitted ahead of the
-        # step's own lines.
-        pre: list[str] = []
-
-        def announcing_launch(entry: WorldEntry) -> int | None:
-            pre.append(launching_line(entry.game_id))
-            return launch(entry)
-
-        step = hub_step(line, entries, launch=announcing_launch)
-        if step.launched is not None:
-            launched.append(step.launched)
-        return HubStep(lines=[*pre, *step.lines], quit=step.quit, launched=step.launched)
+    step_fn, launched = make_step_fn(entries, launch=launch)
 
     lines = run_scripted(
         step_fn,
@@ -231,15 +264,13 @@ def main() -> int:
     """Run the interactive hub REPL. Returns a process exit code."""
     wire_games(world_registry)
     entries = tuple(world_registry.all_entries())
-
-    def interactive_launch(entry: WorldEntry) -> int:
-        # Print the banner BEFORE the opener runs its synchronous sub-session,
-        # so "Launching X…" precedes the game instead of trailing its summary.
-        print(launching_line(entry.game_id))
-        return _default_launch(entry)
+    # announce=print emits "Launching X…" BEFORE the opener runs its
+    # synchronous sub-session, so the banner precedes the game instead of
+    # trailing its summary.
+    step_fn, _launched = make_step_fn(entries, launch=_default_launch, announce=print)
 
     return repl(
-        lambda line: hub_step(line, entries, launch=interactive_launch),
+        step_fn,
         prompt=PROMPT,
         banner_lines=[
             "🎮  Superbot Games — the hub. Type 'help' for commands, 'quit' to leave.",
@@ -260,6 +291,7 @@ __all__ = [
     "help_lines",
     "HubStep",
     "hub_step",
+    "make_step_fn",
     "world_lookup",
     "HubResult",
     "run_hub",
