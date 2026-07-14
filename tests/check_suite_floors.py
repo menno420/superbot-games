@@ -61,12 +61,32 @@ floor file has VANISHED fails LOUDLY (naming it). Conversely, any discovered
 suite that is NOT in the registry fails LOUDLY, so coverage cannot be added
 untracked and then silently removed later.
 
+``--print-suites`` (registry-derived execution paths)
+------------------------------------------------------
+The pytest paths CI executes used to be hand-synced in
+``.github/workflows/tests.yml`` — a SECOND copy of what this registry already
+pins, and exactly the drift class that let ``services/tests`` collect-but-not-
+run (the #107 gap). ``--print-suites`` makes the registry the single source of
+execution truth: it prints the top-level pytest path roots derived from
+``tests/EXPECTED_SUITES.txt``, one per line, in first-seen registry order.
+
+Derivation: a suite's execution root is its outermost enclosing TEST TREE —
+the path prefix up to and including the first component named ``tests``
+(``tests/mining`` -> ``tests``; ``services/tests`` -> ``services/tests``;
+``games/exploration/tests`` -> ``games/exploration/tests``). Running pytest on
+those roots executes every registered suite by construction, and the guard's
+unregistered-suite check (above) guarantees the roots contain nothing that
+isn't registered.
+
 Exit status
 -----------
 0  every suite collected >= its floor AND registry matches discovery (prints a
-   per-suite table).
+   per-suite table); with ``--print-suites``, the registry parsed cleanly and
+   the derived roots were printed (nothing is collected in this mode).
 1  any suite below floor / missing floor file / collection error / zero
-   collected / a registered suite vanished / a discovered suite unregistered.
+   collected / a registered suite vanished / a discovered suite unregistered;
+   with ``--print-suites``, a registry problem or an entry with no ``tests``
+   component (underivable root).
 """
 
 from __future__ import annotations
@@ -103,6 +123,47 @@ def _read_registry() -> tuple[list[str], str | None]:
             f"no suites — it must pin at least one expected suite dir"
         )
     return entries, None
+
+
+def derive_pytest_roots(entries: list[str]) -> tuple[list[str], list[str]]:
+    """Collapse registry *entries* to their top-level pytest execution roots.
+
+    A suite's root is the prefix up to and including its FIRST path component
+    named ``tests`` (the outermost enclosing test tree). Returns
+    ``(roots_in_first_seen_order, underivable_entries)`` — an entry with no
+    ``tests`` component cannot be given a root and is reported, not guessed.
+    """
+    roots: list[str] = []
+    underivable: list[str] = []
+    for entry in entries:
+        parts = entry.split("/")
+        if "tests" not in parts:
+            underivable.append(entry)
+            continue
+        root = "/".join(parts[: parts.index("tests") + 1])
+        if root not in roots:
+            roots.append(root)
+    return roots, underivable
+
+
+def _print_suites() -> int:
+    """The ``--print-suites`` mode: registry-derived pytest roots, one per line."""
+    registry, registry_err = _read_registry()
+    if registry_err is not None:
+        print(f"--print-suites: {registry_err}", file=sys.stderr)
+        return 1
+    roots, underivable = derive_pytest_roots(registry)
+    if underivable:
+        for entry in underivable:
+            print(
+                f"--print-suites: registry entry {entry!r} has no 'tests' path "
+                f"component — cannot derive its pytest root",
+                file=sys.stderr,
+            )
+        return 1
+    for root in roots:
+        print(root)
+    return 0
 
 
 def _discover_suite_dirs() -> list[Path]:
@@ -162,6 +223,9 @@ def _read_floor(suite_dir: Path) -> tuple[int | None, str | None]:
 
 
 def main() -> int:
+    if "--print-suites" in sys.argv[1:]:
+        return _print_suites()
+
     failures: list[str] = []
 
     # --- Registry cross-check (closes the wholesale-suite-removal gap) --------

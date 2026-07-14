@@ -193,7 +193,7 @@ The per-suite pytest count floors the CI coverage ratchet enforces (ORDER-001).
 | `tests/mining` | 188 |
 | `tests/shared/inventory` | 57 |
 | `tests/shared/sim` | 40 |
-| `tests/tools` | 21 |
+| `tests/tools` | 27 |
 
 ## Notes
 
