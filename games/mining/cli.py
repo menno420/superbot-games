@@ -39,11 +39,10 @@ STARTER_TOOL = "pickaxe"
 
 PROMPT = "mining> "
 
-#: Verbs that route to a state-changing seam action (as opposed to the read-only
-#: ``status`` / ``inv`` / ``help`` and the ``quit`` control verbs).
-_ACTION_VERBS = frozenset(
-    {"mine", "harvest", "sell", "buy", "repair", "descend", "ascend", "build", "vault", "skill"}
-)
+#: The verbs that route to a state-changing seam action (as opposed to the
+#: read-only ``status`` / ``inv`` / ``help`` and the ``quit`` control verbs)
+#: are ``_ACTION_VERBS`` — derived from the single dispatch table ``_ACTIONS``
+#: in the dispatch section below, never hand-synced.
 
 
 # ---------------------------------------------------------------------------
@@ -172,6 +171,85 @@ def _split_item_qty(args: list[str]) -> tuple[str, int | None]:
     return " ".join(args), None
 
 
+def _do_mine(state, sink, args, *, now, rng):
+    return mw.mine(state, sink=sink, rng=rng, now=now)
+
+
+def _do_harvest(state, sink, args, *, now, rng):
+    return mw.harvest(state, sink=sink, rng=rng, now=now)
+
+
+def _do_descend(state, sink, args, *, now, rng):
+    return mw.descend(state, sink=sink, now=now)
+
+
+def _do_ascend(state, sink, args, *, now, rng):
+    return mw.ascend(state, sink=sink, now=now)
+
+
+def _do_vault(state, sink, args, *, now, rng):
+    return mw.vault_upgrade(state, sink=sink, now=now)
+
+
+def _do_sell(state, sink, args, *, now, rng):
+    item, qty = _split_item_qty(args)
+    if not item:
+        return None
+    if qty is None:
+        held = state.inventory.get(item, 0)
+        qty = held if held > 0 else 1
+    return mw.sell(state, item, qty, sink=sink, now=now)
+
+
+def _do_buy(state, sink, args, *, now, rng):
+    item = " ".join(args)
+    if not item:
+        return None
+    return mw.buy(state, item, sink=sink, now=now)
+
+
+def _do_repair(state, sink, args, *, now, rng):
+    item = " ".join(args)
+    if not item:
+        return None
+    return mw.repair(state, item, sink=sink, now=now)
+
+
+def _do_build(state, sink, args, *, now, rng):
+    if not args:
+        return None
+    structure, level = _split_item_qty(args)
+    if level is None:
+        level = state.structures.get(structure.strip().lower(), 0)
+    return mw.build_structure(state, structure, level, sink=sink, now=now)
+
+
+def _do_skill(state, sink, args, *, now, rng):
+    branch, points = _split_item_qty(args)
+    if not branch:
+        return None
+    return mw.allocate_skill(state, branch, points if points is not None else 1, sink=sink, now=now)
+
+
+#: THE single source for the action-verb surface: verb → handler. The step()
+#: gate (``_ACTION_VERBS``) is derived from this table, so the gate and the
+#: routing cannot drift; the help-parity test pins ``help_lines()`` to it.
+_ACTIONS = {
+    "mine": _do_mine,
+    "harvest": _do_harvest,
+    "sell": _do_sell,
+    "buy": _do_buy,
+    "repair": _do_repair,
+    "descend": _do_descend,
+    "ascend": _do_ascend,
+    "build": _do_build,
+    "vault": _do_vault,
+    "skill": _do_skill,
+}
+
+_ACTION_VERBS = frozenset(_ACTIONS)
+
+
 def _dispatch_action(
     state: mw.MiningState,
     sink: InMemorySink,
@@ -183,47 +261,10 @@ def _dispatch_action(
 ):
     """Route one action verb to the seam and return its frozen Result (or None
     for a malformed command, whose message is handled by the caller)."""
-    if verb == "mine":
-        return mw.mine(state, sink=sink, rng=rng, now=now)
-    if verb == "harvest":
-        return mw.harvest(state, sink=sink, rng=rng, now=now)
-    if verb == "descend":
-        return mw.descend(state, sink=sink, now=now)
-    if verb == "ascend":
-        return mw.ascend(state, sink=sink, now=now)
-    if verb == "vault":
-        return mw.vault_upgrade(state, sink=sink, now=now)
-    if verb == "sell":
-        item, qty = _split_item_qty(args)
-        if not item:
-            return None
-        if qty is None:
-            held = state.inventory.get(item, 0)
-            qty = held if held > 0 else 1
-        return mw.sell(state, item, qty, sink=sink, now=now)
-    if verb == "buy":
-        item = " ".join(args)
-        if not item:
-            return None
-        return mw.buy(state, item, sink=sink, now=now)
-    if verb == "repair":
-        item = " ".join(args)
-        if not item:
-            return None
-        return mw.repair(state, item, sink=sink, now=now)
-    if verb == "build":
-        if not args:
-            return None
-        structure, level = _split_item_qty(args)
-        if level is None:
-            level = state.structures.get(structure.strip().lower(), 0)
-        return mw.build_structure(state, structure, level, sink=sink, now=now)
-    if verb == "skill":
-        branch, points = _split_item_qty(args)
-        if not branch:
-            return None
-        return mw.allocate_skill(state, branch, points if points is not None else 1, sink=sink, now=now)
-    return None
+    handler = _ACTIONS.get(verb)
+    if handler is None:
+        return None
+    return handler(state, sink, args, now=now, rng=rng)
 
 
 def _blocked_extra(verb: str, result, state: mw.MiningState) -> list[str]:
