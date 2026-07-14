@@ -1,0 +1,1 @@
+- `claude/night-flip-card-parity` · **ci: preflight --flip card-selection parity** — --flip derives the session card from the branch diff (origin/main...HEAD) and passes --session-log; multi-card errors loud, zero cards falls back with a banner · tools/preflight.py, tests/tools/ · 2026-07-14
