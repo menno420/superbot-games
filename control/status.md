@@ -1,134 +1,76 @@
 # world-games · status
-updated: 2026-07-12T10:16:22Z
-phase: docs-correction — landed a docs-only PR correcting stale "plugin contract in flight" claims; no feature-code change. Close-out/archive-prep from the prior wake still stands (5 feature PRs parked for owner merge).
-ladder (per-slice, all four at PURE CORE — workflow/host-adapter rungs NOT yet built):
-  - mining      — PURE CORE shipped (games/mining/core/, 96 tests). workflow (rung 2) = SCOPED-AND-FLAGGED (not built) pending a ⚑ audit-schema decision — see docs/design/mining-workflow-seam.md, PR #60 (READY + green). host-adapter = named-next.
-  - exploration — PURE CORE shipped (games/exploration/, 55 tests). workflow + host-adapter = named-next.
-  - dnd         — PURE CORE shipped (tests/dnd, 31 tests). workflow + host-adapter = named-next.
-  - fishing     — PURE CORE shipped (tests/fishing, 64 tests). workflow + host-adapter = named-next.
-  host-facing adapters can now be built against a CONCRETE contract: menno420/superbot-next docs/game-plugin-contract.md@d3dba9b (binding, ledger D-0056, owner decision 2026-07-09) — the "in flight" framing is corrected as of this PR.
-health: green — main merged work green; local verify on the PR branch: tests/check_suite_floors.py TOTAL 310 (all floors met), pytest tests/ games/exploration/tests/ = 310 passed, tools/gen_balance.py --check clean, bootstrap.py check --strict exit 0 (after session card flipped complete).
-last-shipped: kit substrate-kit v1.12.0 → v1.12.1 (#58). main HEAD 9efe599 (this branch is based on 5ddfbee/#58, which is fine; main has since advanced via fleet-manager PR #61 — see the Archival correction section below), kit substrate-kit v1.12.1.
-open-PR (this wake): #59 docs/plugin-contract-binding-correction — docs-only correction of stale "plugin contract in flight" claims (README + docs/founding-plan-mining.md + docs/design/mining-plugin-layout.md §3 shape note). READY (not draft); auto-merge NOT armed. Branch head af8e9f2 (+ this heartbeat commit). CI: opened this wake; a born-red CI webhook right after the first push is expected noise (born-red session card, since flipped complete). Owner merge is the only path (agent self-merge is platform-classifier-blocked; do NOT attempt).
-orders: acked=001,002,003,004,005,006,007 done=001,002,003,005,006,007 (004 satisfied — see ⚑ below; 006 = NIGHT REPORT section at end of this file; 007 = ORDER 007 section at end of this file — the four SIM-REQUEST closures are recorded in control/outbox.md, and the V043 wiring + V044 guard are landed-or-explicitly-scheduled via PR #83 per the order's done-when)
-⚑ needs-owner: ORDER 004 (self-review) — SATISFIED on main: artifact at docs/retro/close-out-world-games-2026-07-11.md (authored 201f8dd/#47, relocated at close-out 3a4eb98/#57); done=004 is backed by real, spec-compliant content, not a bare marker. Remaining owner items: the OWNER-ACTION block below + docs/retro/archive-ready-2026-07-11.md. ⚑ mining WORKFLOW seam (rung 2) — audit-schema decision (D1 which schema / D2 audit item-grants, a divergence from the oracle) needs owner/lab ratification; scoped in docs/design/mining-workflow-seam.md, PR #60.
-notes: prior-wake self-review + lessons → docs/retro/close-out-world-games-2026-07-11.md · archive resume spec → docs/retro/archive-ready-2026-07-11.md · per-PR state → control/claims/ · session card → .sessions/2026-07-12-plugin-contract-binding-correction.md · telemetry → telemetry/model-usage.jsonl
 
-## Archival correction — 2026-07-12T10:16:22Z (ORDER 005)
-ARCHIVAL CORRECTION ONLY — not a resumption of the close-out lane, no feature work re-added; one dated stamp. The stale heartbeat (updated 2026-07-11T19:39:14Z), whose "5 parked PRs" framing is carried forward into the `## Open PRs` and `## ⚑ OWNER-ACTION` sections below, is SUPERSEDED on two points. Verified against live GitHub 2026-07-12 (GitHub API + `git ls-remote`):
+updated: 2026-07-14T11:32:30Z
+phase: EAP final-day closeout (ORDER 009) — wholesale heartbeat truth-stamp at main HEAD ed2fabb; the closeout walkthrough doc (docs/eap-closeout-walkthrough-2026-07-14.md) is in flight on `claude/eap-closeout-walkthrough`; every other ORDER 009 (a) item is terminal or parked-with-citation below.
+health: green — verified locally at HEAD ed2fabb this wake: `python3 -m pytest -q` = **810 passed** (exit 0); `python3 bootstrap.py check --strict` = all checks passed (exit 0); local/CI gate parity is by construction via `tools/preflight.py` (#128/#131/#133).
+kit: substrate-kit v1.15.0 · check: green · engaged: yes
+last-shipped: #136 — ORDER 009 EAP final-day closeout dispatch (manager-written inbox append, ed2fabb). Last seat-shipped: #135 — truth-stamp of docs/current-state.md recording the #120–#134 hardening wave (34c5b98); #102 (external audit doc, 1c323c1) merged between them 2026-07-14T07:20:35Z.
+blockers: none — the remaining non-terminal items are externally gated and parked with citations (see "Parked" below).
+orders: acked=001-009 done=001-007 (008 ACKED, not done — its done-when needs the full-roster batch SERVED: the fishing-full-roster + cook-leg SIM-REQUESTs are ROUTED to sim-lab via sim-lab's own ORDER 008 per at-HEAD ORDER 009 @ ed2fabb / fm PR #193 dispatch log, verdict pending, tracked below; 009 ACKED — (a) served by this re-stamp with every item terminal-or-parked-cited, (b) walkthrough PR open READY on `claude/eap-closeout-walkthrough`, done=009 claimable once it is on main)
+⚑ needs-owner: 4 standing decisions, none new this wake — the OWNER ACTIONS checklist (deep links + bolded recommendations + VERIFY steps) is docs/eap-closeout-walkthrough-2026-07-14.md §C, surfaced verbatim in control/outbox.md § EAP CLOSE-OUT: (1) D2 audit-grants ratification · (2) rung-3 packaging/hermeticity · (3) persistence format-governance (3 sub-decisions) · (4) transfer-policy source model. RISK: all four are ↩️ reversible decision replies; no destructive click owed.
+notes: doc-conflict recorded, not silently resolved — the seat brief calls this file an ARCHIVE, but the at-HEAD ORDER 009 (ed2fabb) explicitly requires this re-stamp; the order + the control/README.md bus grammar (this Project overwrites its own status.md each session, one writer per file) outrank the brief — same precedent as the ORDER 006 night-report and ORDER 007 ack sections (acked=007 via #84 9caf1b6). The superseded heartbeat (2026-07-12T10:16:22Z stamp + the ORDER 005/006/007 sections) is preserved in git history at ed2fabb per the overwrite-own grammar. Session card for the walkthrough branch → .sessions/2026-07-14-eap-closeout-walkthrough.md · telemetry → telemetry/model-usage.jsonl · work claim → control/claims/eap-order-009-closeout.md (landed via #137; released at session close on the walkthrough branch).
 
-- The five PRs listed as "OPEN, parked for owner merge" are all MERGED — the "Squash & merge the 5 parked feature PRs (#50/#52/#53/#54/#55)" owner ask is DISCHARGED (no owner click owed). Evidence (API-verified `merged_at` UTC · squash-merge commit on main):
-  - #50 dnd-scene-chaining — MERGED 2026-07-11T20:25:22Z · commit 3250181
-  - #52 dnd-clamp-fuzz — MERGED 2026-07-11T20:36:57Z · commit 7a355dc
-  - #53 persistence-save-state-contract — MERGED 2026-07-11T20:25:17Z · commit 87530ba
-  - #54 economy-cross-domain-sim — MERGED 2026-07-11T20:41:20Z · commit 2976538
-  - #55 auto-balance-page — MERGED 2026-07-11T20:43:18Z · commit 320291b
-- The stale `main HEAD 5d38593` claim (that SHA is the old #49 merge) is CORRECTED: live main HEAD is **9efe599** — "control: ORDER 005 — archival truth-stamp of the stale heartbeat (#61)". Main advanced past the five squash-merges above, then close-out #56/#57, kit #58 (5ddfbee), and fleet-manager PR #61 which deposited ORDER 005 into control/inbox.md (the commit main now points at).
+## Truth-stamp evidence — 2026-07-14T11:32Z (ORDER 009 (a))
 
-Net: the close-out lane's deliverables all LANDED on main; nothing in the sections below remains open for owner merge. Current-state lines (the rung-2 ⚑ mining WORKFLOW/audit-schema decision, #59/#60 status) are unaffected by this stamp.
+Prior stamp: `updated: 2026-07-12T10:16:22Z`. Verified at main HEAD
+`ed2fabbef58f3b97a03e6586a4e03ad0ab89c451` (`git ls-remote` 2026-07-14T11:20Z):
+**77 squash-merges have landed since that stamp** (`git log
+--since=2026-07-12T10:16:22Z origin/main`, subjects spanning #59…#136 — the
+ORDER 009 premise "~35 PRs #87–#135" re-verified per Q-0120 and found
+UNDERSTATED: #87–#135 alone is 49 merges). Zero open PRs and an empty
+`control/claims/` at scan (API-verified 2026-07-14T11:24Z). The arc, wave by
+wave (squash SHAs on main; per-PR enumeration lives in
+`docs/current-state.md` § "Recently shipped"):
 
-## Open PRs
-- #59 plugin-contract-binding-correction — docs-only "in flight" → "binding at d3dba9b/D-0056" correction. READY + green. THIS WAKE. Next: owner merge (or leave; it's pure docs). Auto-merge NOT armed.
-- #50 dnd-scene-chaining — D&D data-driven bounded scene transitions (next_scene_id is immutable DATA; DM still can't steer off-menu). Next: owner merge; then trivial tests/dnd floor rebase vs #52.
-- #52 dnd-clamp-fuzz — seeded DM-clamp property-fuzzer (~1,200 adversarial cases: never raises, always clamps to no-op) + §9 production-DM-model addendum (Claude Haiku-4.5-class). Next: owner merge; floor rebase vs #50.
-- #53 persistence-save-state-contract — save-state contract + owner transfer-policy mapping (docs). Next: owner merge; ⚑ transfer source-debit % OWNER-DECIDES (item 4).
-- #54 economy-cross-domain-sim — games/shared/sim/economy_sim.py + invariants (GRANT_WITHIN_GLOBAL_CAP / ITEM_FAUCET_MINTS_NO_CURRENCY / NOOP_MINTS_NOTHING). Next: owner merge; then economy follow-up PR.
-- #55 auto-balance-page — tools/gen_balance.py → docs/balance.md + CI freshness --check. Next: owner merge; then economy follow-up PR.
+- #59–#64 — docs correction + kit v1.12.1 → v1.15.0 (`0082ee2`).
+- #66–#80 — ALL FOUR GAMES PLAYABLE: rung-2 audited seams (#68/#69/#75/#77),
+  standalone CLIs (#70/#71), hub `python3 -m games` (#72 `ef18b4e`);
+  suite 310 → 516.
+- #82–#87 — ORDER 007 sim verdicts V042–V045 consumed: V043 fishing economy +
+  V044 dnd mint-once guard wired (#83 `72a94bb`), the four SIM-REQUESTs closed
+  with dispositions (#84 `9caf1b6`), economy surfaced on docs/balance.md +
+  fishing CLI `sell` (#87 `67de572`); suite → 556.
+- #92/#93 — ORDER 008 landed + full-roster fishing SIM-REQUEST filed
+  (`21937f3`).
+- #95–#107 — night coverage/fix wave (suite → 606; CI-executed test count
+  442 → 606 via #107 `24f6e04`).
+- #108–#119 — CLI/hub/sim coverage, 3 player-visible fixes (#115/#116/#117),
+  README refresh (#118), sim-harness smoke registry (#119); suite → 695.
+- #120–#134 — hardening wave: tripwire registries (#122/#123/#126/#129/#132),
+  shared REPL + scripted-driver seams (#127/#130/#134), preflight gate parity
+  → one-command flip-readiness (#128/#131/#133); suite → **810**, coverage
+  ~97% of games/+services at the #120 groom.
+- #135 — current-state truth-stamp of that wave (`34c5b98`) · #102 — external
+  fleet-cleanup audit doc (`1c323c1`) · #136 — ORDER 009 (`ed2fabb`).
 
-## ⚑ OWNER-ACTION
-- WHAT: Squash & merge the 5 parked feature PRs (#50, #52, #53, #54, #55). WHERE: github.com/menno420/superbot-games/pulls. HOW: each is READY+green — open, Squash & merge; if two collide on tests/dnd/EXPECTED_MIN_TESTS.txt, merge one then bump the other's floor 1 line. WHY-IT-MATTERS: agent self-merge is platform-classifier-blocked — only your click (or a direct in-session "merge" turn) lands them. UNBLOCKS: the improvement queue + the CLI demo. VERIFIED-NEEDED: CI green on each head (confirmed prior wake).
-- WHAT: ORDER 004 — owner-requested lane self-review (~24h) is SATISFIED (no action owed). WHERE: docs/retro/close-out-world-games-2026-07-11.md §"Self-review (last ~24h)" on main. HOW: authored 201f8dd/#47, relocated at close-out 3a4eb98/#57 where done=004 was set; the order's spec permits "control/status.md (or this lane's report convention)", so the retro location complies. WHY-IT-MATTERS: done=004 is backed by real, spec-compliant content, not a bare marker. VERIFIED-NEEDED: none.
-- WHAT: decide transfer-policy source model — TRUE source-debit vs seeded-credit (persistence §5, #53 OWNER-DECIDES item 4). WHERE: docs/design/persistence-design.md. HOW: reply the choice. WHY-IT-MATTERS: seeded-credit violates the doc's own conservation invariant (reviewer finding); working assumption = TRUE DEBIT. UNBLOCKS: cross-server transfer implementation. VERIFIED-NEEDED: none.
-- WHAT (optional): enable a branch-protection merge queue. WHY-IT-MATTERS: serializes merges, removes the floor-file rebase churn between parallel PRs. UNBLOCKS: smoother future batches.
+## SIM-REQUEST routing — fishing full-roster + cook leg (ORDER 009 (a))
 
-## NIGHT REPORT 2026-07-13T09:22Z (ORDER 006 — owner ask 2026-07-13, fm relay)
+ROUTED: the `fishing-full-roster-economy` SIM-REQUEST (filed via #92
+`21937f3`, folding in `fishing-cook-economy`, #89 `ab442e7`) is routed to the
+sim-lab via sim-lab's own ORDER 008 today, per at-HEAD ORDER 009 (`ed2fabb`;
+fm PR #193 carries the dispatch log). Both outbox entries flipped
+`open` → `routed` this wake. Cross-repo verification of sim-lab's inbox was
+attempted once and DENIED on this seat (verbatim: `Access denied: repository
+"menno420/sim-lab" is not configured for this session. Allowed repositories:
+menno420/superbot-games, menno420/superbot-idle`) — the routing citation is
+the at-HEAD order itself. TRACK: wire the verdict's constants VERBATIM on
+receipt (ORDER 008 precedence rule (c): correctness > speed; no numbers
+invented meanwhile).
 
-> This file is a frozen archive; this section is written ONLY under the explicit
-> at-HEAD ORDER 006 (control/inbox.md, landed via PR #78, merged
-> 2026-07-13T09:10:43Z — API-verified). Window: 2026-07-12T22:30Z → 2026-07-13T09:22Z.
+## Parked — honest, one line + citation each (ORDER 009 (a))
 
-### SHIPPED (merges API-verified; squash SHA on main · merged_at UTC)
-- #67 ci: auto-merge-enabler install (fm ORDER 029) — dd867c8 · 00:03:53Z
-- #66 docs: rung-3 host-adapter scoping + ⚑ packaging decision — 60b2773 · 00:10:16Z
-- #65 docs: truth-stamp current-state + 5 merged-claim sweep — 64b3371 · 00:14:25Z
-- #68 feat(mining): rung-2 WORKFLOW audited seam (§5 D1/D2 default) — 1b09a03 · 01:07:34Z
-- #69 feat(fishing): rung-2 WORKFLOW audited seam — 7c13166 · 01:20:15Z
-- #70 feat(mining): standalone CLI `python -m games.mining` — da0e47e · 01:23:35Z
-- #71 feat(fishing): standalone CLI `python -m games.fishing` — c491bd3 · 01:32:11Z
-- #72 feat(hub): world registry + `python -m games` launcher — ef18b4e · 01:42:33Z
-- #73 docs(control): persistence owner-queue entry — 6ecd579 · 01:56:10Z
-- #74 docs: playable game entrypoints — 0e62ee3 · 02:03:58Z
-- #75 feat(dnd): finalize — audited resolver seam + CLI + hub — 0ee7482 · 02:28:32Z
-- #76 control: fm ORDER 037 stamp fix (status-mining) — 425a3d7 · 02:42:35Z
-- #77 feat(exploration): finalize — audited quest seam + CLI + hub — 5aec110 · 02:46:24Z
-- #78 control: ORDER 006 landing (manager-written) — dabba30 · 09:10:43Z
-- Suite 310 → **516** — VERIFIED locally at HEAD dabba30: `python3 -m pytest tests/ games/exploration/tests/ services/tests/ -q` → 516 passed; `tests/check_suite_floors.py` TOTAL 516, all floors met.
-
-### OPEN PRs + check states
-- None — zero open PRs (API-verified 2026-07-13T09:15Z).
-
-### ORDERS served + outstanding
-- 001–005 done pre-window (004 satisfied via docs/retro/close-out-world-games-2026-07-11.md, see ⚑ above).
-- fm ORDER 037 (fleet-manager inbox relay) served in-window via #76.
-- 006 = this report. Outstanding: none.
-
-### SIM-REQUESTs / asks pending (all in control/outbox.md unless noted)
-- DECISION-NOTE D1/D2 — D2 audit-item-grants ratification (reversible divergence; one-line toggle if reversed).
-- SIM-REQUEST mining-economy-tuning (descend gate + source/sink gap).
-- SIM-REQUEST fishing-economy-tuning (empty economy + no in-domain progression).
-- SIM-REQUEST dnd-escort-double-mint (one traversal mints safe_passage 2×).
-- SIM-REQUEST exploration-reward-bands (Q-0087 reconciliation + survival Medium/Hard gradient).
-- OWNER-QUEUE standalone-CLI persistence format-governance decision (3 coupled sub-decisions).
-- ⚑ rung-3 packaging decision — docs/design/mining-host-adapter.md (scoped via #66).
-
-### STALLS / denials (verbatim)
-- None in this repo this window. (One auto-mode force-push denial occurred in a sibling repo during the night run and was handled by a normal commit — not this repo; lane-reported.)
-
-### Wake-chain health (SEAT-LEVEL — one chain serves games/idle/mineverse; the order asks per-repo, the chain is per-seat)
-- Failsafe cron `trig_0131tbQZs8HKmxKR4u5ZD1Hb` "SuperBot World failsafe wake", cron `15 1-23/2 * * *` — API-verified live 2026-07-13T09:16Z: enabled, last fired 09:15:25Z, next 11:15:00Z. Overnight fires 01:15/03:15/05:15/07:15 on schedule (lane-reported; API exposes only the last fire).
-- send_later pacemaker chain continuous through the night; current tick `trig_01K5pWUeY1YEM6taMeWmHvG8` fires 09:19Z (API-verified live, bound to the seat coordinator session).
-- One duplicate-tick incident ~02:35Z detected and pruned the same wake; anti-stack check added since (lane-reported).
-
-### Next-3
-1. Build on the D2/SIM-REQUEST answers as they land (wire sim-pinned numbers verbatim).
-2. Rung-3 mining host-adapter if the packaging decision is ratified (docs/design/mining-host-adapter.md).
-3. Generative polish wave (playability follow-ups) on owner green-light.
-
-## ORDER 007 ACK — 2026-07-13T17:45:47Z (Q-0264 verdict fan-out)
-
-> This file is a frozen archive; this section is written ONLY under the explicit
-> at-HEAD ORDER 007 (control/inbox.md @ d6a9526, landed via PR #80, merged
-> 2026-07-13T13:44:13Z — API-verified), whose done-when REQUIRES a status ack
-> (`orders: acked=007`). Doc-conflict note, recorded rather than silently
-> resolved: the seat brief calls this file a read-only ARCHIVE, while the newer
-> at-HEAD ORDER 007 requires the ack here — the order + the control/README.md
-> bus grammar outrank the brief (same precedent as the ORDER 006 night-report
-> section above).
-
-- **V042 · mining-economy-tuning — APPROVE:** ratified, every packet-pinned
-  constant unchanged; disposition + the two reporting-only flags (TOOL-LADDER
-  amount-inert ×1.13/×1.25; FAUCET-BYPASS 0.8 coins/dig → idea-engine
-  PROPOSAL 035, sim-ready) recorded on the closed SIM-REQUEST in
-  control/outbox.md. Earn-rate anchor on record: 4.571–7.328 coins/dig ×
-  360 digs/h.
-- **V043 · fishing-economy-tuning — APPROVE-WITH-CONSTANTS:** wired VERBATIM
-  via PR #83 (`claude/order-007-verdict-fanout`): sell curve 8/13/27/80,
-  `game_xp = size_rank` per catch, `xp_to_next(L) = 50·L`, milestones L10/L25,
-  levels stat-neutral, audited `sell` leg with sell-OR-cook exclusivity
-  (`games/fishing/core/economy.py`, `games/fishing/inventory/adapter.py`,
-  `services/fishing_workflow.py`).
-- **V044 · dnd-escort-double-mint — MINT-AT-MOST-ONCE:** guard landed via
-  PR #83 (`DnDState.bundle_minted` + choose() guard,
-  `services/dnd_workflow.py`); the 2× characterization test flipped to 1×.
-- **V045 · exploration-reward-bands — RATIFY-WITH-NULL:** placeholders +
-  Medium 50/15s/1 / Hard 40/20s/1 ratified verbatim; honest NULL on the
-  numeric band import recorded as EXPECTED (Q-0087 carries no numeric
-  constants at the pin; import waits on the upstream superbot P0 harness —
-  D-0008's artifact). Recorded on the closed SIM-REQUEST in control/outbox.md.
-- **done-when state:** the four SIM-REQUESTs are closed/answered in
-  control/outbox.md (this PR); acked=007 is on the orders line above. done=007
-  per the order's own clause ("once the V043 wiring + V044 guard land or are
-  explicitly scheduled"): PR #83 is open READY with both landed on its head,
-  scheduled to auto-land on the card flip via the #67 card-guarded enabler.
-  Suite 516 → 546 locally at the PR head; substrate-gate red on #83 pre-flip
-  is the DESIGNED born-red hold, not a defect.
+- exploration numeric band import — PARKED upstream: waits on the superbot P0
+  survival balance-sim artifact (Q-0087 methodology / D-0008 artifact); V045
+  ratified the placeholders with an honest NULL (control/outbox.md
+  § exploration-reward-bands, closed; ORDER 007 item (4)).
+- rung-3 host-adapter packaging + hermeticity — PARKED on the owner/lab
+  build-model decision (docs/design/mining-host-adapter.md § "⚑ OWNER / LAB
+  DECISION REQUIRED", scoped via #66 `60b2773`).
+- standalone-CLI persistence (save/load), transfer-policy source model, and
+  the D2 audit-grants ratification — PARKED on owner decisions
+  (control/outbox.md § OWNER-QUEUE, filed via #73 `6ecd579`;
+  docs/design/persistence-design.md §5 OWNER-DECIDES item 4;
+  control/outbox.md § DECISION-NOTE · D1/D2).
+- fishing full-roster + cook-leg constants — externally gated on the routed
+  sim-lab verdict (section above); nothing implementable in-repo until it
+  lands.
