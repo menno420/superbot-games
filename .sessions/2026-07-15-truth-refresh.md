@@ -1,6 +1,6 @@
 # 2026-07-15 · truth refresh — docs: re-stamp docs/current-state.md at HEAD (docs-only)
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: fable-5 · high · docs-only
 
