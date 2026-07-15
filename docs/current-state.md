@@ -12,23 +12,46 @@
   incl. balance-pin sim — 48 at the #3 merge, grown since) and
   the shared encounter seam (`games/shared/encounter/`) — merged #3, sim-pinned;
   re-audit only on a reported regression or when D-0008's upstream bands arrive.
-- substrate-kit v1.15.0 engagement (adopted in #3; CI gate installed by the wake-up PR;
-  last kit upgrade #64 `0082ee2`).
+- substrate-kit v1.17.0 engagement (adopted in #3; CI gate installed by the wake-up PR;
+  last kit upgrade #144 `42a31c5`, via v1.16.0 at #141 `688cbf1`).
 - CI auto-merge-enabler (#67 `dd867c8`) — supersedes the post-#40 manual-merge
-  doctrine per the owner's uniform-landing directive (fm ORDER 029); the
-  in-progress-card SKIP guard arms a PR only after its session card flips complete.
+  doctrine per the owner's uniform-landing directive (fm ORDER 029). Since #142
+  (`8c9c320`) the card guard is HOST-OWNED: the kit-owned enabler arms
+  card-blind at PR open, and `.github/workflows/automerge-card-guard.yml` (a
+  reconciler run on the same events) DISARMS any PR whose diff adds/modifies a
+  `.sessions/*.md` card still `in-progress`/`drafted`, leaving the arm standing
+  once the card flips; the 17-prefix branch allowlist moved to
+  `substrate.config.json` → `automerge.branch_patterns` (regen-preserved).
+  Merge-safety in the arm→disarm window is the required substrate-gate holding
+  born-red PRs red.
 
 ## In flight
 
-(Truth-stamped 2026-07-14 at HEAD 4330559, substrate-kit v1.15.0 — the prior
+(Truth-stamped 2026-07-15 at HEAD 446a84e, substrate-kit v1.17.0 — the prior
 2026-07-09 wind-down snapshot below is superseded.)
-<!-- truth-stamped-at: 4330559589197a5638e30f25adcdf00367910f3c -->
+<!-- truth-stamped-at: 446a84e654abdb06a75c8ad637fabbdf779a2771 -->
 
-PRs through **#134** are on main (each merge verified against the git log;
-one open PR at scan time beyond this groom: **#102**, another session's
-fleet-cleanup audit doc — verdict NEEDS-CHANGES per the `control/outbox.md`
-review-verdict entry recorded on main via #108: its content verifies, but its
-head fails `bootstrap.py check --strict` on 3 findings). The third
+PRs through **#145** are on main (each merge verified against the git log;
+ZERO open PRs at this groom's scan, API-verified 2026-07-15; **#102**, the
+long-open fleet-cleanup audit doc the #108 outbox verdict held at
+NEEDS-CHANGES, has since MERGED — `1c323c1`, landed 2026-07-14 in the wave
+below). The 2026-07-14/15 close-out wave since the #135 stamp (#135–#145
+plus #102, enumerated under "Recently shipped") was CONTROL + KIT + CI
+traffic, not game code — suite steady at **810 passed** across it
+(re-verified at this groom's HEAD by `python3 -m pytest -q`): the
+**ORDER 009 EAP final-day closeout** (#136 dispatch → #137 claim → #138
+heartbeat truth-stamp with `acked=008,009` and both fishing SIM-REQUESTs
+flipped `open`→`routed` → #139 walkthrough doc
+`docs/eap-closeout-walkthrough-2026-07-14.md` with the OWNER ACTIONS
+checklist → #140 done-ack), **two kit upgrades** (v1.15.0→v1.16.0 #141,
+v1.16.0→v1.17.0 #144), the **#142 host card-guard split** (see "Stability
+baseline"), the **#143 `scripts/preflight.py` plant** (the kit-conventional
+wrapper delegating to `tools/preflight.py`, so `bootstrap.py check
+--strict` stops silently skipping its preflight leg), and the **#145
+ORDER 010 note: EAP EXTENDED through 2026-07-21** — the 2026-07-14
+dormancy orders are superseded pending the owner's per-project reboot
+review; the seat's ack is owed on its first rebooted wake, and routines
+stay un-armed until the owner's per-seat go. The third
 2026-07-14 night wave (#120–#134, enumerated under "Recently shipped") was
 an IMPROVEMENT wave over the playable four-game surface — suite
 695 → **810 passed** across it (verified at this groom's HEAD by
@@ -97,7 +120,10 @@ live owner turn 2026-07-13 ~21:59Z, landed via #92 `21937f3`) is received
 and acknowledged — bigger sim batches, a production-grade standing target
 for all games, with correctness > speed precedence. Its first instance, the
 **fishing-full-roster-economy SIM-REQUEST** (`control/outbox.md`, filed via
-#92, status `open`), asks the sim-lab to pin the ENTIRE remaining legacy
+#92, status `routed` since 2026-07-14 — routed to the sim-lab via sim-lab's
+own ORDER 008 per the at-HEAD ORDER 009, recorded by #138 `41e8a5b`; verdict
+pending, ORDER 008 stays ACKED-not-done until the batch is SERVED), asks the
+sim-lab to pin the ENTIRE remaining legacy
 fishing roster (29 not-yet-pinned species, enumerated read-only from the
 legacy fleet repo) in ONE verdict batch; implementation is externally gated
 on that verdict and no numbers are invented meanwhile. The batch-sim work
@@ -105,9 +131,10 @@ claim was released via #93 (`e2f6699`).
 
 Fishing's second economy leg is sim-gated: the cook leg (sell-OR-cook
 exclusivity already wired in #83) has NO pinned constants — a
-**fishing-cook-economy SIM-REQUEST** is open in `control/outbox.md`
-(#89 `ab442e7`, status `open`, awaiting a sim-lab verdict; the #92
-full-roster batch asks the lab to serve its asks in the SAME run), alongside
+**fishing-cook-economy SIM-REQUEST** is in `control/outbox.md`
+(#89 `ab442e7`, status `routed` since 2026-07-14 — folded into the #92
+full-roster batch, which asks the lab to serve its asks in the SAME run;
+awaiting the sim-lab verdict), alongside
 an advisory-only lane→manager KIT-ASK for a mechanical ledger-drift check on
 this file.
 
@@ -132,15 +159,57 @@ _Superseded 2026-07-09 wind-down snapshot (kept for provenance):_
 
 ## Recently shipped (newest first)
 
-_(Note 2026-07-14: the 2026-07-12/14 wave #61–#134 is enumerated below (each
+_(Note 2026-07-15: the 2026-07-12/15 wave #61–#145 is enumerated below (each
 entry cites its squash-merge SHA on main; #61–#94 API-verified at earlier
 grooms, #95–#107 verified against the git log at the #109 groom, #108–#119
-at the #120 groom, and #120–#134 against the git log at this one — those
-fifteen bullets scaffolded via `tools/stamp_scaffold.py` from the #119
-anchor, the tool's first production groom). #13–#60
+at the #120 groom, #120–#134 at the #135 groom, and #135–#145 plus #102
+against the git log at this one — scaffolded via `tools/stamp_scaffold.py`
+from the #134 anchor). #13–#60
 remain unenumerated — the authoritative history for that span is in git.
-#83/#84 are listed in merge order: #84 merged 17:47:46Z, #83 17:50:38Z.)_
+#83/#84 are listed in merge order: #84 merged 17:47:46Z, #83 17:50:38Z; the
+out-of-sequence #102 likewise — it merged between #135 and #136.)_
 
+- **#145** (2026-07-15, `446a84e`) — control: ORDER 010 landed in
+  `control/inbox.md` — EAP EXTENDED through 2026-07-21; the 2026-07-14
+  dormancy orders superseded pending the owner's per-project reboot review
+  (do NOT re-arm routines before the owner's per-seat go); ack owed on the
+  seat's first rebooted wake.
+- **#144** (2026-07-14, `42a31c5`) — kit: substrate-kit v1.16.0 → v1.17.0.
+- **#143** (2026-07-14, `d7595aa`) — fix: planted `scripts/preflight.py` —
+  the kit-conventional wrapper (dep-ensure + delegate to
+  `tools/preflight.py`), so `bootstrap.py check --strict` stops silently
+  skipping its preflight leg (`substrate.config.json` names the kit-default
+  path, which didn't exist); `SBG_PREFLIGHT` nested-run self-skip keeps
+  `preflight --flip` from running the suite twice. Suite held at 810.
+- **#142** (2026-07-14, `8c9c320`) — ci: host card-guard split out of the
+  kit-owned enabler — the born-red-card disarm + Head-ref squash provenance
+  moved to host-owned `.github/workflows/automerge-card-guard.yml`
+  (a reconciler; arming decisions stay the enabler's), the 17-prefix branch
+  allowlist to `substrate.config.json` → `automerge.branch_patterns`
+  (regen-preserved), and `auto-merge-enabler.yml` regenerated byte-identical
+  to the kit template so future regens are no-ops (mirrors idle #137).
+- **#141** (2026-07-14, `688cbf1`) — kit: substrate-kit v1.15.0 → v1.16.0
+  (the upgrade whose enabler clobber-then-hand-restore motivated #142).
+- **#140** (2026-07-14, `717e36c`) — control: ORDER 009 done — walkthrough
+  on main (#139), heartbeat reports `done=009`.
+- **#139** (2026-07-14, `2969034`) — docs: EAP closeout walkthrough
+  (`docs/eap-closeout-walkthrough-2026-07-14.md`, sections A–E incl. the
+  OWNER ACTIONS checklist with per-item recommendations + VERIFY steps;
+  ORDER 009 (b)).
+- **#138** (2026-07-14, `41e8a5b`) — control: ORDER 009 (a) — heartbeat
+  truth-stamped at `ed2fabb` (77 merges since the prior 2026-07-12 stamp),
+  `acked=008,009`, both fishing SIM-REQUESTs flipped `open`→`routed`,
+  remaining non-terminal items parked with one-line citations.
+- **#137** (2026-07-14, `e3930f1`) — control: work claim — ORDER 009 EAP
+  closeout (claim-before-build; fast lane).
+- **#136** (2026-07-14, `ed2fabb`) — control: ORDER 009 — EAP final-day
+  closeout dispatch (inbox append).
+- **#102** (2026-07-14, `1c323c1`) — docs: fleet cleanup audit 2026-07-13
+  (zero open PRs at its scan; repo ACTIVE, not DARK) — the long-open
+  external audit doc, landed after the #108 NEEDS-CHANGES verdict cycle.
+- **#135** (2026-07-14, `34c5b98`) — docs: truth-stamp of this ledger —
+  recorded the #120–#134 night improvement wave, re-stamped "In flight" at
+  `4330559`.
 - **#134** (2026-07-14, `4330559`) — refactor: one step-closure per game —
   `make_step_fn` factories shared by `main()` and `run_commands`/`run_hub`
   across all five entrypoint pairs (the #130 follow-up: the loops were
