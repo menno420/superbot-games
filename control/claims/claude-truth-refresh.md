@@ -1,1 +1,0 @@
-- `claude/truth-refresh` · **truth refresh: docs/current-state.md** · docs/current-state.md .sessions/ · 2026-07-15
