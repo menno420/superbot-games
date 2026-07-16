@@ -30,6 +30,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 from games.mining.core.rewards import ore_weights_for_depth
+from games.shared import rng as shared_rng
 
 # Compass + vertical movement tokens.  N/S/E/W move laterally within a depth
 # band; UP/DOWN change the band — the caller routes those through the light-gated
@@ -117,22 +118,16 @@ _BARREN_NOTE: dict[CellFeature, str] = {
     CellFeature.BARREN: "The rock here is barren — slim pickings.",
 }
 
-# 64-bit mask for the stable coordinate hash (Python ints are unbounded).
-_MASK = (1 << 64) - 1
-
-
 def _cell_seed(seed: int, x: int, y: int, z: int) -> int:
     """A stable 64-bit hash of ``(seed, x, y, z)`` — deterministic across processes.
 
     Built from integer arithmetic only (a splitmix64-style mix), so it never
     depends on Python's per-process string-hash randomization; negative
-    coordinates wrap deterministically under the mask.
+    coordinates wrap deterministically under the mask. The mix lives in the
+    shared :func:`games.shared.rng.cell_seed` seam (byte-identical to the copy
+    this module used to inline).
     """
-    h = seed & _MASK
-    for value in (x, y, z):
-        h = (h ^ (value & _MASK)) & _MASK
-        h = (h + 0x9E3779B97F4A7C15 + ((h << 6) & _MASK) + (h >> 2)) & _MASK
-    return h
+    return shared_rng.cell_seed(seed, x, y, z)
 
 
 @dataclass(frozen=True)

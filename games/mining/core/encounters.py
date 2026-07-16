@@ -71,40 +71,25 @@ from enum import Enum
 
 from games.mining.core import energy as energy_model
 from games.mining.core import equipment, grid, rewards
-
-# 64-bit mask — mirrors grid._cell_seed's convention (Python ints are unbounded).
-_MASK = (1 << 64) - 1
+from games.shared import rng as shared_rng
 
 # A domain salt so the encounter stream is *independent* of the grid's
 # feature-selection stream at the same cell (mixing the same base seed twice with
-# no salt would correlate the two rolls). Mirrors grid._cell_seed's splitmix64
-# step; kept self-contained here to avoid depending on a private grid helper.
+# no salt would correlate the two rolls). Layered on the shared splitmix64 seam
+# (:func:`games.shared.rng.cell_seed`) — the grid's own base convention.
 _ENCOUNTER_SALT = 0xD1B54A32D192ED03
-
-
-def _cell_seed(seed: int, x: int, y: int, z: int) -> int:
-    """Stable 64-bit hash of ``(seed, x, y, z)`` — mirrors ``grid._cell_seed``.
-
-    Integer-only splitmix64 mixing, so it never depends on Python's per-process
-    string-hash randomisation; negative coordinates wrap deterministically.
-    """
-    h = seed & _MASK
-    for value in (x, y, z):
-        h = (h ^ (value & _MASK)) & _MASK
-        h = (h + 0x9E3779B97F4A7C15 + ((h << 6) & _MASK) + (h >> 2)) & _MASK
-    return h
 
 
 def encounter_seed(seed: int, x: int, y: int, z: int) -> int:
     """Deterministic per-cell encounter seed — a distinct stream from the grid's.
 
-    Reuses the grid's ``(seed, x, y, z)`` splitmix64 convention, then mixes a
-    domain salt so the encounter roll does not correlate with the cell's feature
+    Reuses the grid's ``(seed, x, y, z)`` splitmix64 convention (the shared
+    :func:`games.shared.rng.cell_seed` seam), then xors a domain salt and mixes
+    once more so the encounter roll does not correlate with the cell's feature
     selection. Process-independent (unit-tested via a subprocess check).
     """
-    h = (_cell_seed(seed, x, y, z) ^ _ENCOUNTER_SALT) & _MASK
-    h = (h + 0x9E3779B97F4A7C15 + ((h << 6) & _MASK) + (h >> 2)) & _MASK
-    return h
+    h = shared_rng.cell_seed(seed, x, y, z) ^ _ENCOUNTER_SALT
+    return shared_rng.mix64(h)
 
 
 class EncounterKind(Enum):
