@@ -1,6 +1,6 @@
 # 2026-07-16 · shared RNG seam — extract mining's splitmix64 into games/shared/rng.py, migrate the two mining call sites (pure refactor)
 
-> **Status:** `in-progress`
+> **Status:** ✅ `complete`
 >
 > 📊 Model: Claude Opus 4.x · high · refactor/test
 
@@ -61,3 +61,35 @@ forward: #143's own 💡 (a `tests/tools` pin that every
 `preflight_scripts` config token EXISTS as a file) is still unbuilt at
 this HEAD (`grep -rl preflight_scripts tests/` empty), so the silent-skip
 class it named still has no in-repo tripwire.
+
+## ✅ Close-out — Verification
+
+Shipped in PR [#150](https://github.com/menno420/superbot-games/pull/150)
+(`claude/shared-rng-seam`). `games/shared/rng.py` holds the mining
+splitmix64 family (`mix64` + `cell_seed`, lifted verbatim);
+`grid._cell_seed` delegates to it and `encounters.encounter_seed` reuses
+it (its duplicate private `_cell_seed` deleted). New registered suite
+`tests/shared/rng/` (11 tests, floor 11) added to
+`tests/EXPECTED_SUITES.txt`; `docs/balance.md` regenerated for its row.
+
+**Byte-identical invariant — held.** A 7 658-record sequence hash over
+`grid._cell_seed` / `encounter_seed` / `cell_at` / `resolve_at` across
+seeds `{0,1,7,12345,999,2^63,2^64-1}` + a coord sweep was captured on
+`origin/main` before the change and re-computed after: SHA
+`f081d413…b634fee` on **both** sides — `BYTE-IDENTICAL TO BASELINE: True`.
+Mining's produced RNG sequences did not move a bit.
+
+**Suite — green.** `python3 -m pytest -q` = **821 passed in 32.94s** (810
+baseline + 11 new). `python3 bootstrap.py check --strict` pre-flip = exit
+1 **solely** on this card's designed born-red hold (advisory-only findings
+otherwise — the pre-existing `[model-line-*]` payload nags on the
+historical 2026-07-14 cards + one `[owner-action-fields]` nudge, both at
+baseline and on files this slice never touched); post-flip clears the hold.
+A tripped `tools/gen_balance` / preflight red during the run was the
+expected new-suite balance-doc staleness, resolved by `gen_balance --write`
+(the single `tests/shared/rng | 11` row) — not a determinism change.
+
+This flip commit releases the claim gate and commits the accumulated
+`.substrate/guard-fires.jsonl` telemetry delta (the #142/#143 flip-commit
+precedent). The claim file `control/claims/claude-shared-rng-seam.md` rides
+the branch, deleted at session close per `control/claims/README.md`.
