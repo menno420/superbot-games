@@ -1,6 +1,6 @@
 # 2026-07-16 · current-state refresh — docs: re-stamp docs/current-state.md at live HEAD (docs-only)
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus 4.x · high · docs/records
 
@@ -67,4 +67,47 @@ this HEAD, so fishing's clean copy can still drift silently.
 
 ## ✅ Close-out — Verification
 
-_(filled by the flip-to-complete commit.)_
+Shipped in PR [#151](https://github.com/menno420/superbot-games/pull/151)
+(`claude/current-state-refresh-0716`). `docs/current-state.md` is re-stamped
+**2026-07-16 at HEAD `197966d`** (`<!-- truth-stamped-at: 197966d… -->`); the
+exact stale → corrected claims:
+
+- Truth-stamp date/anchor `2026-07-15` / `446a84e…` → `2026-07-16` /
+  `197966d8f0e51d0de0b52b08cb9c3f6d6b724fb1`.
+- "PRs through **#145** … **ZERO open PRs** (API-verified 2026-07-15)" →
+  "through **#150** with ONE exception: **#149 is still OPEN**", enumerating
+  the four merges since the prior stamp (#146 `1543c4b`, #147 `8e7acc2`, #148
+  `5db902a`, #150 `197966d`) and #149 (`claude/mirror-reconcile-race-fix`,
+  DRAFT, `do-not-automerge`) as the single open PR held for owner merge.
+- Suite figure at the groom's HEAD **810 → 821** (810 baseline + #150's 11
+  new `tests/shared/rng/` tests).
+- ORDER 010 ack **"owed on the seat's first rebooted wake"** → **LANDED via
+  #148** (`5db902a`, acknowledged in `control/outbox.md`); the `#145`
+  shipped-bullet tail corrected the same way.
+- "Recently shipped" gains #146/#147/#148/#150; the enumeration-range note
+  `#61–#145` → `#61–#150` with #149 called out as the one open number, not a
+  merge.
+
+`control/status.md` (read-only archive) was NOT touched.
+
+**Suite — green.** `python3 -m pytest -q` = **821 passed** at this HEAD
+(docs-only change; unmoved from the #150 baseline). **`bootstrap.py check
+--strict`** pre-flip = exit 1 SOLELY on this card's designed born-red hold
+(`check: HOLD (by design): … declares an in-progress Status`; gating card
+correctly selected as `.sessions/2026-07-16-current-state-refresh.md`); this
+flip-to-complete commit clears the hold and `check --strict` then exits 0 —
+`check: all checks passed.` The `[model-line-*]` advisories are pre-existing,
+never-exit-affecting nags on untouched historical 2026-07-14 cards (baseline
+carried 15; unchanged by this slice).
+
+**Collision guard (recorded):** at this slice's scan the ONLY open PR was
+#149 (not a current-state refresh) and no live claim reserved a 2026-07-16
+current-state refresh. `control/claims/claude-truth-refresh.md` (dated
+2026-07-15) is a STALE leftover — its work merged as #147 (`8e7acc2`) and PR
+#149 is already deleting it; not active work, so not a collision. Swept-claim
+cleanup stays out of this slice's `docs/current-state.md`-only scope.
+
+This flip commit releases the claim gate and commits the accumulated
+`.substrate/guard-fires.jsonl` telemetry delta (the #142/#143/#150 flip-commit
+precedent). The claim file `control/claims/claude-current-state-refresh.md`
+rides the branch, deleted at session close per `control/claims/README.md`.
