@@ -27,18 +27,30 @@
 
 ## In flight
 
-(Truth-stamped 2026-07-15 at HEAD 446a84e, substrate-kit v1.17.0 — the prior
+(Truth-stamped 2026-07-16 at HEAD 197966d, substrate-kit v1.17.0 — the prior
 2026-07-09 wind-down snapshot below is superseded.)
-<!-- truth-stamped-at: 446a84e654abdb06a75c8ad637fabbdf779a2771 -->
+<!-- truth-stamped-at: 197966d8f0e51d0de0b52b08cb9c3f6d6b724fb1 -->
 
-PRs through **#145** are on main (each merge verified against the git log;
-ZERO open PRs at this groom's scan, API-verified 2026-07-15; **#102**, the
-long-open fleet-cleanup audit doc the #108 outbox verdict held at
-NEEDS-CHANGES, has since MERGED — `1c323c1`, landed 2026-07-14 in the wave
-below). The 2026-07-14/15 close-out wave since the #135 stamp (#135–#145
-plus #102, enumerated under "Recently shipped") was CONTROL + KIT + CI
-traffic, not game code — suite steady at **810 passed** across it
-(re-verified at this groom's HEAD by `python3 -m pytest -q`): the
+PRs through **#150** are on main (each merge verified against the git log)
+with ONE exception: **#149 is still OPEN**. Since the 2026-07-15 stamp four
+PRs merged — **#146** (`1543c4b`, merge-automation verification probe),
+**#147** (`8e7acc2`, the prior truth refresh itself), **#148** (`5db902a`,
+ORDER 010 EAP-extension ack) and **#150** (`197966d`, the shared
+deterministic-RNG seam `games/shared/rng.py` extracted from mining) — and
+exactly **ONE open PR** remains at this groom's scan (API-verified
+2026-07-16): **#149** (`claude/mirror-reconcile-race-fix`, **DRAFT**,
+labelled `do-not-automerge`) — the reconcile-race provenance-disarm fix
+mirrored from superbot-idle #142, held for the owner's review+merge; it is
+NOT the "ZERO open PRs" the prior stamp recorded. (This refresh's own PR is
+the vehicle landing this stamp.) **#102**, the long-open fleet-cleanup audit
+doc the #108 outbox verdict held at NEEDS-CHANGES, MERGED earlier —
+`1c323c1`, landed 2026-07-14 in the wave below. The 2026-07-14/15 close-out
+wave since the #135 stamp (#135–#145 plus #102, enumerated under "Recently
+shipped") was CONTROL + KIT + CI
+traffic, not game code — suite steady at **810 passed** across it; the
+shared-RNG seam #150 since added the `tests/shared/rng/` suite (11 tests),
+so the suite reads **821 passed** at this 2026-07-16 groom's HEAD
+(re-verified by `python3 -m pytest -q`): the
 **ORDER 009 EAP final-day closeout** (#136 dispatch → #137 claim → #138
 heartbeat truth-stamp with `acked=008,009` and both fishing SIM-REQUESTs
 flipped `open`→`routed` → #139 walkthrough doc
@@ -50,8 +62,9 @@ wrapper delegating to `tools/preflight.py`, so `bootstrap.py check
 --strict` stops silently skipping its preflight leg), and the **#145
 ORDER 010 note: EAP EXTENDED through 2026-07-21** — the 2026-07-14
 dormancy orders are superseded pending the owner's per-project reboot
-review; the seat's ack is owed on its first rebooted wake, and routines
-stay un-armed until the owner's per-seat go. The third
+review; the seat's ORDER 010 ack has since **LANDED via #148** (`5db902a`,
+acknowledged in `control/outbox.md`), and routines stay un-armed until the
+owner's per-seat go. The third
 2026-07-14 night wave (#120–#134, enumerated under "Recently shipped") was
 an IMPROVEMENT wave over the playable four-game surface — suite
 695 → **810 passed** across it (verified at this groom's HEAD by
@@ -159,21 +172,45 @@ _Superseded 2026-07-09 wind-down snapshot (kept for provenance):_
 
 ## Recently shipped (newest first)
 
-_(Note 2026-07-15: the 2026-07-12/15 wave #61–#145 is enumerated below (each
+_(Note 2026-07-16: the 2026-07-12/16 wave #61–#150 is enumerated below (each
 entry cites its squash-merge SHA on main; #61–#94 API-verified at earlier
 grooms, #95–#107 verified against the git log at the #109 groom, #108–#119
-at the #120 groom, #120–#134 at the #135 groom, and #135–#145 plus #102
-against the git log at this one — scaffolded via `tools/stamp_scaffold.py`
-from the #134 anchor). #13–#60
-remain unenumerated — the authoritative history for that span is in git.
-#83/#84 are listed in merge order: #84 merged 17:47:46Z, #83 17:50:38Z; the
-out-of-sequence #102 likewise — it merged between #135 and #136.)_
+at the #120 groom, #120–#134 at the #135 groom, #135–#145 plus #102 at the
+#147 groom, and #146/#147/#148/#150 against the git log + GitHub API at this
+one — scaffolded via `tools/stamp_scaffold.py` from the #134 anchor). **#149
+is the one open number, not a merge** — it is the DRAFT
+`claude/mirror-reconcile-race-fix` PR still awaiting owner merge (see "In
+flight"). #13–#60 remain unenumerated — the authoritative history for that
+span is in git. #83/#84 are listed in merge order: #84 merged 17:47:46Z, #83
+17:50:38Z; the out-of-sequence #102 likewise — it merged between #135 and
+#136.)_
 
+- **#150** (2026-07-16, `197966d`) — slice: shared deterministic-RNG seam —
+  mining's splitmix64 `(seed, coords…)` derivation extracted verbatim into a
+  new reusable `games/shared/rng.py` (`mix64` + `cell_seed`); both mining
+  call sites (`grid._cell_seed`, `encounters.encounter_seed`) route through
+  it and the duplicate private copy is deleted, mining's produced RNG
+  sequences byte-identical before/after (7 658-record hash pinned). New
+  registered `tests/shared/rng/` suite (11 tests, floor 11). Suite 810 → 821.
+- **#148** (2026-07-16, `5db902a`) — control: ack ORDER 010 (EAP extension)
+  — outbox-only append acknowledging the EAP-extension order that #145
+  landed (the ack the #145 note recorded as owed). Control-only fast lane,
+  no session card.
+- **#147** (2026-07-15, `8e7acc2`) — docs: prior truth refresh of this
+  ledger — re-stamped "In flight" at `446a84e` (kit v1.15.0 → v1.17.0, the
+  #142 host card-guard split, #102 marked merged, both fishing SIM-REQUESTs
+  `open` → `routed`, shipped record extended through #145). The stamp this
+  2026-07-16 groom supersedes.
+- **#146** (2026-07-15, `1543c4b`) — docs: merge-automation verification
+  probe — a tiny inert content-only change landed on green CI to confirm the
+  auto-merge-on-green path (enabler + card-guard + substrate-gate) lands with
+  zero human click, after the fleet audit's survey step hit a transient API
+  error on this repo.
 - **#145** (2026-07-15, `446a84e`) — control: ORDER 010 landed in
   `control/inbox.md` — EAP EXTENDED through 2026-07-21; the 2026-07-14
   dormancy orders superseded pending the owner's per-project reboot review
-  (do NOT re-arm routines before the owner's per-seat go); ack owed on the
-  seat's first rebooted wake.
+  (do NOT re-arm routines before the owner's per-seat go); ack landed via
+  #148.
 - **#144** (2026-07-14, `42a31c5`) — kit: substrate-kit v1.16.0 → v1.17.0.
 - **#143** (2026-07-14, `d7595aa`) — fix: planted `scripts/preflight.py` —
   the kit-conventional wrapper (dep-ensure + delegate to
