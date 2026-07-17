@@ -1,6 +1,14 @@
-"""RNG determinism tests: identical sequences, stable order-sensitive derive_seed."""
+"""RNG determinism tests: identical sequences, stable order-sensitive derive_seed.
+
+Plus the module's *bad-input contract* — every guard clause raises its specific,
+documented exception, the ``lo == hi`` ``randint`` boundary, and the direction of
+``weighted_choice`` proportionality. These pin the behaviour the deterministic
+engine (Q-0040) relies on so a careless refactor of a guard fails loudly here.
+"""
 
 from __future__ import annotations
+
+import pytest
 
 from games.exploration.quest.rng import DetRng, derive_seed
 
@@ -86,3 +94,55 @@ def test_derive_seed_stable_across_pythonhashseed(tmp_path) -> None:
         return out.stdout.strip()
 
     assert run("0") == run("1")
+
+
+# --- bad-input contract: guard clauses raise their specific exception ---
+
+
+def test_randint_rejects_inverted_range() -> None:
+    # hi < lo is a caller bug, not a valid empty range — it must raise loudly
+    # rather than silently compute a negative span and skew the % below.
+    rng = DetRng(1)
+    with pytest.raises(ValueError, match=r"randint: hi \(3\) < lo \(7\)"):
+        rng.randint(7, 3)
+
+
+def test_randint_single_value_range() -> None:
+    # lo == hi is a valid span-1 range: every draw is exactly that value.
+    rng = DetRng(42)
+    assert [rng.randint(5, 5) for _ in range(500)] == [5] * 500
+
+
+def test_choice_rejects_empty_sequence() -> None:
+    # % len(seq) with an empty seq would be a ZeroDivisionError; the guard turns
+    # it into the sequence-shaped IndexError callers can reason about.
+    with pytest.raises(IndexError, match="empty sequence"):
+        DetRng(1).choice([])
+
+
+def test_weighted_choice_rejects_length_mismatch() -> None:
+    # Mismatched items/weights must raise, not zip to the shorter of the two and
+    # silently drop the tail (which would corrupt the weighting invisibly).
+    with pytest.raises(ValueError, match="length mismatch"):
+        DetRng(1).weighted_choice(["a", "b", "c"], [1, 1])
+
+
+def test_weighted_choice_rejects_nonpositive_total() -> None:
+    # An all-zero weight vector (total == 0) would reach next_u64() % 0; the
+    # guard forbids it. Same for the degenerate empty/empty case (total 0).
+    with pytest.raises(ValueError, match="positive value"):
+        DetRng(1).weighted_choice(["a", "b"], [0, 0])
+    with pytest.raises(ValueError, match="positive value"):
+        DetRng(1).weighted_choice([], [])
+
+
+def test_weighted_choice_weights_by_magnitude() -> None:
+    # Beyond "weight 0 is never chosen" (covered elsewhere): a heavier item must
+    # be chosen strictly more often than a lighter one, and both must be
+    # reachable. Fixed seed sweep keeps this deterministic, not statistical.
+    items = ["light", "heavy"]
+    weights = [1, 9]
+    picks = [DetRng(seed).weighted_choice(items, weights) for seed in range(400)]
+    light, heavy = picks.count("light"), picks.count("heavy")
+    assert light > 0 and heavy > 0  # neither bucket is unreachable
+    assert heavy > light  # magnitude drives selection frequency
