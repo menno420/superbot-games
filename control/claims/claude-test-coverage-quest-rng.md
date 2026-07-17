@@ -1,1 +1,0 @@
-- `claude/test-coverage-quest-rng-0716` · **quest DetRng bad-input contract tests** — guard the untested error paths + boundaries in games/exploration/quest/rng.py · games/exploration/tests/ · 2026-07-16

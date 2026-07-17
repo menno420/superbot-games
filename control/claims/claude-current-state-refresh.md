@@ -1,1 +1,0 @@
-- `claude/current-state-refresh-0716` · **truth refresh: docs/current-state.md at HEAD 197966d (#148+#150 merged, #149 open — the stale "zero open PRs / through #145" corrected)** · docs/current-state.md · 2026-07-16

@@ -1,1 +1,0 @@
-- `claude/overnight-menu-0716` · **overnight planning menu: 60-idea un-filtered owner-triage proposal set at docs/planning/2026-07-16-overnight-menu.md (breadth over shortlist, grounded at HEAD 197966d)** · docs/planning/2026-07-16-overnight-menu.md · 2026-07-16
