@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 from games.mining.core import capacity, energy
 
 
@@ -53,6 +55,38 @@ def test_restore_caps_at_max() -> None:
     assert s.current == 60
     assert energy.restore_value("energy drink") == 50
     assert energy.restore_value("stone") is None
+
+
+def test_seconds_until_already_reached_returns_zero() -> None:
+    # target at or below current settled energy → already there, 0 wait.
+    full = energy.EnergyState(60, 1000)
+    assert energy.seconds_until(full, now=1000, target=60) == 0
+    assert energy.seconds_until(full, now=1000, target=10) == 0
+
+
+def test_seconds_until_reachable_target_counts_regen_seconds() -> None:
+    # empty bar, no partial remainder: 5 units × 10s/unit = 50s to reach 5.
+    empty = energy.EnergyState(0, 1000)
+    assert energy.seconds_until(empty, now=1000, target=5) == 50
+    # sub-interval remainder is credited: 7s already elapsed toward the next unit.
+    assert energy.seconds_until(empty, now=1007, target=5) == 50 - 7
+    # a full bar is reachable in 0s.
+    assert energy.seconds_until(empty, now=1000, target=60) == 600
+
+
+def test_seconds_until_unreachable_target_is_infinite_not_zero() -> None:
+    # target above max_energy can never be reached by passive regen — it must
+    # signal that honestly (math.inf), not read as "already reached" (0).
+    full = energy.EnergyState(60, 1000)
+    assert energy.seconds_until(full, now=1000, target=61) == math.inf
+    assert energy.seconds_until(full, now=1000, target=999) == math.inf
+    # unreachable even from an empty bar (regression: old clamp returned a
+    # finite wait to the cap, masking the out-of-range target).
+    empty = energy.EnergyState(0, 1000)
+    assert energy.seconds_until(empty, now=1000, target=61) == math.inf
+    # honors a caller-supplied max_energy for the reachability boundary.
+    assert energy.seconds_until(full, now=1000, target=61, max_energy=100) == 10
+    assert energy.seconds_until(full, now=1000, target=200, max_energy=100) == math.inf
 
 
 def test_vault_capacity_ladder() -> None:

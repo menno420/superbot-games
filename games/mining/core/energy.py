@@ -18,6 +18,7 @@ background ticker — ADR-001/002: no external state, no scheduler dependency).
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 # --- Sim-pinned tunables (docs/planning/mining-economy-balance-2026-06-22.md) ---
@@ -114,12 +115,21 @@ def seconds_until(
     *,
     max_energy: int = MAX_ENERGY,
     regen_seconds: int = REGEN_SECONDS,
-) -> int:
-    """Seconds of passive regen until settled energy reaches *target* (0 if already)."""
+) -> int | float:
+    """Seconds of passive regen until settled energy reaches *target*.
+
+    Returns ``0`` if *target* is already met.  Returns ``math.inf`` when
+    *target* exceeds *max_energy*: passive regen caps at the bar, so such a
+    target is **unreachable** and must not read as "already reached" (the old
+    ``min(max_energy, target)`` clamp silently returned ``0`` on a full bar,
+    misleading callers into thinking an out-of-range target was satisfied).
+    """
+    if target > max_energy:
+        return math.inf
     s = settle(state, now, max_energy=max_energy, regen_seconds=regen_seconds)
     if s.current >= target:
         return 0
-    needed = min(max_energy, target) - s.current
+    needed = target - s.current
     remainder = now - s.updated_at  # 0 ≤ remainder < regen_seconds
     return max(0, needed * regen_seconds - remainder)
 
