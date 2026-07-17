@@ -158,6 +158,71 @@ def test_skill_allocation_is_a_recorded_action() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Case-insensitive item / branch / structure tokens (regression)
+#
+# The catalog, inventory, skill-branch and structure keys are all lowercase, so
+# a capitalised token a player naturally types must resolve the same as its
+# lowercase form — the CLI normalises case at its boundary (mirroring the fishing
+# CLI's ``args[0].lower()``). Before the fix, ``sell Iron`` falsely reported
+# "0 held", ``buy Torch`` stored a mismatched ``"Torch"`` key, and
+# ``skill Mining`` was rejected as "not a skill branch".
+# ---------------------------------------------------------------------------
+def test_sell_is_case_insensitive_for_the_item_name() -> None:
+    unit = market.sell_price("iron")
+    assert unit is not None
+    result = run_commands(
+        ["sell Iron 2", "quit"],
+        state=_fresh(inventory={"iron": 5}),
+        now=FIXED_NOW,
+    )
+    # Capitalised name still finds the held iron, sells it and credits coins.
+    assert result.state.inventory["iron"] == 3
+    assert result.state.coins == unit * 2
+    assert len(result.sink.records) == 1
+
+
+def test_sell_default_quantity_is_case_insensitive() -> None:
+    unit = market.sell_price("iron")
+    result = run_commands(
+        ["sell IRON", "quit"],
+        state=_fresh(inventory={"iron": 4}),
+        now=FIXED_NOW,
+    )
+    # The default-qty path also keys on the lowercased name (else it read 0 held).
+    assert result.state.inventory["iron"] == 0
+    assert result.state.coins == unit * 4
+
+
+def test_buy_is_case_insensitive_and_stores_the_canonical_key() -> None:
+    price = market.buy_price("torch")
+    assert price is not None
+    result = run_commands(
+        ["buy Torch", "quit"],
+        state=_fresh(coins=price + 5),
+        now=FIXED_NOW,
+    )
+    assert result.state.coins == 5
+    # The bought item lands under the canonical lowercase key, not "Torch".
+    assert result.state.inventory.get("torch") == 1
+    assert "Torch" not in result.state.inventory
+
+
+def test_skill_allocation_is_case_insensitive_for_the_branch() -> None:
+    result = run_commands(["skill Mining 2", "quit"], state=_fresh(), now=FIXED_NOW)
+    assert result.state.skills.get("mining") == 2
+    assert result.ok_actions == 1
+
+
+def test_repair_is_case_insensitive_for_the_item_name() -> None:
+    # A worn starter pickaxe repaired via a capitalised name still resolves.
+    state = _fresh(coins=1_000)
+    state.durability["pickaxe"] = 5
+    result = run_commands(["repair Pickaxe", "quit"], state=state, now=FIXED_NOW)
+    assert result.state.durability["pickaxe"] == equipment.max_durability("pickaxe")
+    assert result.ok_actions == 1
+
+
+# ---------------------------------------------------------------------------
 # REPL ergonomics — help, unknown, empty, quit summary
 # ---------------------------------------------------------------------------
 def test_help_lists_every_command() -> None:

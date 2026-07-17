@@ -166,11 +166,16 @@ def _split_item_qty(args: list[str]) -> tuple[str, int | None]:
     """Split ``["iron", "3"]`` → ``("iron", 3)`` / ``["iron"]`` → ``("iron", None)``.
 
     A trailing integer is the quantity; everything before it is the (possibly
-    multi-word) item name.
+    multi-word) item name. The name is **lower-cased** so a player who capitalises
+    a token (``sell Iron``, ``skill Mining``, ``build Forge``) hits the same
+    lowercase keys the seam, inventory, catalog, skill branches and structure
+    registry all use — mirroring the fishing CLI's ``args[0].lower()`` convention.
+    Those key spaces are entirely lowercase, so this only ever normalises case,
+    never meaning.
     """
     if args and args[-1].lstrip("-").isdigit():
-        return " ".join(args[:-1]), int(args[-1])
-    return " ".join(args), None
+        return " ".join(args[:-1]).lower(), int(args[-1])
+    return " ".join(args).lower(), None
 
 
 def _do_mine(state, sink, args, *, now, rng):
@@ -204,14 +209,14 @@ def _do_sell(state, sink, args, *, now, rng):
 
 
 def _do_buy(state, sink, args, *, now, rng):
-    item = " ".join(args)
+    item = " ".join(args).lower()
     if not item:
         return None
     return mw.buy(state, item, sink=sink, now=now)
 
 
 def _do_repair(state, sink, args, *, now, rng):
-    item = " ".join(args)
+    item = " ".join(args).lower()
     if not item:
         return None
     return mw.repair(state, item, sink=sink, now=now)
