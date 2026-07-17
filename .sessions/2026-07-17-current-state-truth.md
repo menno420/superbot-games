@@ -1,6 +1,6 @@
 # 2026-07-17 · current-state truth — docs: correct docs/current-state.md merge doctrine (auto-merge, not human-gated) (docs-only)
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus 4.x · high · docs/records
 
@@ -26,9 +26,38 @@ state the truth (green agent PRs auto-merge via
 no owner click; it landed #156). All other facts left intact: autonomy
 winding down, `control/` bus + heartbeats + wake routines standing down,
 routines still **un-armed**, Projects EAP going read-only 2026-07-21. No
-code. Only `docs/current-state.md` plus this card and its claim; the Status
-badge stays within the first ~12 lines untouched.
+code. The Status badge stays within the first ~12 lines untouched.
+
+Per owner order (2026-07-17) this slice ALSO PLANNED a `## CORRECTION`
+append to the END of `control/inbox.md` — append-only, no existing text
+rewritten — retracting the same "human-gated" language from the inbox
+RETIREMENT NOTICE and recording that auto-merge stays ON (required check
+`substrate-gate`) and the owner never reviews an unmerged PR. That inbox
+append was **NOT included** in this PR: writes to `control/inbox.md` were
+blocked by the auto-mode permission classifier (being handled separately).
+So the slice as SHIPPED touches `docs/current-state.md` + this card only.
+Still no code.
 
 ## ✅ Close-out — Verification
 
-_(pending flip-to-complete)_
+Shipped in PR [#157](https://github.com/menno420/superbot-games/pull/157)
+(`claude/current-state-truth-0717`). ONE documentation surface corrected,
+removing the false "human-gated" claim:
+
+- `docs/current-state.md` — the "Autonomy is being wound down" In-flight
+  bullet rewritten: merges are NOT human-gated; a green agent PR merges
+  itself via `.github/workflows/auto-merge-enabler.yml` (required check
+  `substrate-gate`, landed #156), aligning the banner with the file's own
+  "Stability baseline" note (#67 `dd867c8`). Every other fact intact.
+
+The planned `control/inbox.md` `## CORRECTION` append (retracting the same
+"human-gated" language from the inbox RETIREMENT NOTICE) was **NOT
+included** in this PR — writes to `control/inbox.md` were blocked by the
+auto-mode permission classifier. That inbox correction is being handled
+separately and is intentionally left out of this commit.
+
+**Suite — green.** `python3 -m pytest -q` = **827 passed** (docs only; no
+code). **`bootstrap.py check --strict`** pre-flip = exit 1 SOLELY on this
+card's designed born-red hold (`HOLD (by design): … declares an
+in-progress Status`); this flip-to-complete commit clears the hold and
+`check --strict` then exits 0.
