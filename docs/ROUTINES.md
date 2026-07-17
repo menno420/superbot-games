@@ -9,6 +9,14 @@
 > scheduler health). Platform observations are dated evidence, not eternal
 > truths — re-verify them in YOUR environment before building on them.
 
+> **⚠️ RETIRED — wake-chain / self-poll doctrine (2026-07-17 fresh-start
+> cleanup).** Self-bound triggers, failsafe crons, and `send_later` pacemaker
+> chains are the **autonomy apparatus being wound down** in the fleet-wide
+> stand-down (Claude Code Projects go read-only 2026-07-21 and are being
+> recreated). Routines stay **un-armed** pending the owner's per-seat go; do
+> **not** arm any wake routine or carry this doctrine into the recreated
+> project. Retained for provenance only.
+
 ## Choosing the binding — by lifetime, then VERIFY delivery
 
 - **A self-bound trigger dies with its session.** Arm self-bind only for a

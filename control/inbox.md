@@ -150,3 +150,22 @@ do: EAP EXTENDED through 2026-07-21 (Anthropic mail, Diana Liu, 2026-07-14T23:07
 why: the seat's dormancy record predates the extension; without this note a rebooted session would treat dormancy as current
 done-when: seat acknowledges on its first rebooted wake
 provenance: relayed by the Fleet Manager coordinator on live owner directives, 2026-07-15
+
+## RETIREMENT NOTICE · 2026-07-17 · fresh-start cleanup
+
+> **The `control/` autonomy message-bus is being wound down.** Claude Code
+> Projects go **read-only 2026-07-21** and are being recreated; per-seat
+> heartbeats, the manager↔lane inbox/outbox, and self-arm wake routines all
+> stand down. Do not treat the ORDERS above as live directives, and do not
+> carry any "self-arm your wake routine" instruction into the recreated
+> project.
+>
+> **ORDER 002 (self-arm the hourly wake routine) is OBSOLETE** — retired here,
+> and already contradicted by ORDER 010 ("do NOT re-arm routines; wait for the
+> owner's per-seat go"). Self-arming wake routines is exactly the autonomy
+> apparatus being retired.
+>
+> Still-live owner decisions extracted from this bus, and the games program's
+> next steps, live in `docs/NEXT-TASKS.md`. Live status: `docs/current-state.md`.
+> (Appended per the inbox append-only law — existing ORDERS are left byte-for-byte
+> intact above.)

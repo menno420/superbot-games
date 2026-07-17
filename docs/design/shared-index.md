@@ -9,10 +9,9 @@
 
 - [`world-inventory-resource-contract.md`](world-inventory-resource-contract.md) — PLAN:
   unify the six divergent item/reward/inventory shapes across the world games into one
-  `games/shared/inventory/` contract.
-  - advisory claim: [`../claims/world-games-inventory-contract.md`](../claims/world-games-inventory-contract.md)
-  - migration PR-1 stands up the pure-domain seam `games/shared/inventory/` —
-    implementation claim: [`../claims/world-games-inventory-seam.md`](../claims/world-games-inventory-seam.md)
+  `games/shared/inventory/` contract. (The two `docs/claims/` reservation files for this
+  seam were retired in the 2026-07-17 fresh-start cleanup — the seam exists on main and no
+  in-flight PR touches it, satisfying the claims' own delete-when-stable lifecycle.)
 - [`persistence-design.md`](persistence-design.md) — DESIGN: versioned, per-domain-namespaced
   `PlayerState` save/load contract (deterministic canonical JSON, forward-only two-tier
   migration, host owns storage / this repo owns the shape) plus the owner's cross-server

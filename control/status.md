@@ -1,5 +1,14 @@
 # world-games · status
 
+> **⚠️ RETIRED — per-seat heartbeat (2026-07-17 fresh-start cleanup).** This
+> status heartbeat and the `control/` autonomy bus are **standing down** in the
+> fleet-wide autonomy wind-down (Projects go read-only 2026-07-21 and are being
+> recreated); routines stay **un-armed** pending the owner's per-seat go. The
+> fields below are a **stale snapshot** — they predate the wind-down (they read
+> kit v1.15.0 and "EAP final-day closeout COMPLETE"; actual main is kit v1.17.0,
+> #151 merged / #149 closed). Live status: [`../docs/current-state.md`](../docs/current-state.md);
+> next work: [`../docs/NEXT-TASKS.md`](../docs/NEXT-TASKS.md). Retained for provenance.
+
 updated: 2026-07-14T11:41:04Z
 phase: EAP final-day closeout (ORDER 009) — COMPLETE: heartbeat truth-stamped (#138 `41e8a5b`), walkthrough doc ON MAIN (#139 `2969034`, docs/eap-closeout-walkthrough-2026-07-14.md), close-out summary + OWNER ACTIONS surfaced (control/outbox.md § EAP CLOSE-OUT); every other (a) item terminal or parked-with-citation below.
 health: green — verified locally at HEAD ed2fabb this wake: `python3 -m pytest -q` = **810 passed** (exit 0); `python3 bootstrap.py check --strict` = all checks passed (exit 0); local/CI gate parity is by construction via `tools/preflight.py` (#128/#131/#133).

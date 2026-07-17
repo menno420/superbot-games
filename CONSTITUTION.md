@@ -70,16 +70,22 @@ these rails are its adopter-side operating form:
   / planning call — architectural included — is **decided-and-flagged**:
   decide it, one-line rationale, flag it on the run report; route to the
   owner only genuine product-intent forks (PL-001 · PL-012).
-- **Owner absent = normal; silence = consent.** Unattended execution is
-  the design: "wait for the owner to review / approve / confirm" is a
-  hallucinated gate unless it names an owner-only class below — proceed.
-  Ship on green CI; unremarked work is accepted — owner control is
-  reaction after visibility, never pre-approval (PL-012).
-- **An open PR is never a reason to stop.** Open READY (never draft) →
-  arm auto-merge while checks pend → it lands itself; blocked branch →
-  update it (merge, never force) and re-arm; a real, verbatim
-  arming/merge denial → park the PR ready, queue ONE owner item for the
-  systemic cause, take the next slice the same turn (PL-012).
+- **[RETIRED — autonomous EAP phase] Owner absent = silence = consent.**
+  This unattended-execution rail belonged to the autonomous EAP phase, which
+  is being wound down (Claude Code Projects go read-only 2026-07-21 and are
+  being recreated). It no longer holds: work is **not** self-landed on green
+  CI without owner review, and "unremarked work is accepted" / "silence =
+  consent" do **not** carry forward. For the recreated project the default is
+  **explicit owner review before merge** (see the next bullet).
+- **An open PR is not a stopping point — but the agent does not merge it.**
+  Open the PR **ready** (never draft), get CI **green**, and **STOP there**;
+  then take the next slice the same turn. The agent never arms, drives, or
+  forces a merge, and nothing is landed on CI status alone. The merge is
+  **landed on the server side, under human control** — the owner reviews and
+  merges via the PR UI (any auto-merge, if the repo has one, is host/owner-
+  owned and owner-armed, never agent-armed). A blocked branch is updated by
+  **merge, never force**. Green CI is a **precondition** for landing, not a
+  trigger the agent pulls.
 - **Ask first only for the owner-only classes:** repo settings / rulesets
   / required checks · secrets / env vars / host provisioning · external
   publish + spending money · destructive prod-data ops · account/portal

@@ -27,6 +27,28 @@
 
 ## In flight
 
+> **FRESH-START CLEANUP — truth-stamped 2026-07-17.** This seat is being wound
+> down as part of the fleet-wide autonomy stand-down; where the 2026-07-16
+> narrative below conflicts with this banner, this banner wins.
+>
+> - **Backlog cleared / zero open agent PRs (2026-07-17).** #151 (this ledger's
+>   prior truth-refresh) **MERGED**; #149 (`claude/mirror-reconcile-race-fix`,
+>   the reconcile-race draft) was **CLOSED un-merged** — superseded, since the
+>   auto-merge card-guard it patched is itself being retired. The 2026-07-16
+>   snapshot below still records #149 as "still OPEN"; that is **now stale**.
+> - **Claude Code Projects EAP goes READ-ONLY Tuesday 2026-07-21** (Anthropic,
+>   ORDER 010). After that this seat cannot push or merge from a Project session.
+> - **Autonomy is being wound down and the Projects are being recreated.** The
+>   auto-merge apparatus, the `control/` message-bus, per-seat heartbeats, and
+>   the self-arm wake routines are all standing down; routines stay **un-armed**
+>   pending the owner's per-seat go. Merge doctrine is now **human-gated** — an
+>   agent opens a PR ready and STOPS; the merge is landed server-side / by the
+>   owner, never by the agent on CI status alone (see `CONSTITUTION.md`).
+> - **Next work** for the recreated games program is captured in
+>   [`NEXT-TASKS.md`](NEXT-TASKS.md).
+>
+> _The 2026-07-16 "In flight" narrative below is retained for provenance only._
+
 (Truth-stamped 2026-07-16 at HEAD 197966d, substrate-kit v1.17.0 — the prior
 2026-07-09 wind-down snapshot below is superseded.)
 <!-- truth-stamped-at: 197966d8f0e51d0de0b52b08cb9c3f6d6b724fb1 -->
