@@ -177,7 +177,12 @@ def _offer_and_echo(
     """Handle ``offer <id> [tier]``: parse the bounded args, call the seam, echo."""
     if not args:
         return ["Usage: offer <id> [tier]  (see 'quests').", *quests_lines()]
-    template_id = args[0]
+    # Lower-case the quest id at the boundary (mirroring the mining/fishing CLIs'
+    # ``args[0].lower()`` convention, PR #158): ``catalog.menu()`` ids are all
+    # lowercase, so a capitalised ``offer Supply_Run`` a player naturally types
+    # must resolve the same as ``offer supply_run`` — this only ever normalises
+    # case, never meaning, and the audited quest seam is untouched.
+    template_id = args[0].lower()
     tier = RewardTier.I
     if len(args) > 1:
         token = args[1].upper()
@@ -260,7 +265,11 @@ def _do_act(
     if not args:
         valid = ", ".join(ew.pending_actions(state.quest)) or "(none — accept a quest first)"
         return StepResult(lines=[f"Usage: act <action>. Valid now: {valid}."])
-    res = ew.apply_action(state, args[0], sink=sink, now=now)
+    # Lower-case the action token at the boundary (same #158 convention as
+    # ``offer`` above): objective-action names are lowercase, so ``act Deliver_Crates``
+    # must advance the objective exactly as ``act deliver_crates`` — normalises
+    # case only, seam untouched.
+    res = ew.apply_action(state, args[0].lower(), sink=sink, now=now)
     if not res.ok:
         return StepResult(lines=[res.message])
     out = [f"» {res.message}"]
