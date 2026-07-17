@@ -1,5 +1,9 @@
 # claim · claude/energy-unreachable-target
 
+- `claude/energy-unreachable-target` · `games/mining/core/energy.py`
+  seconds_until unreachable-target fix (+ tests / floor / balance / card) ·
+  2026-07-17
+
 - **Branch:** `claude/energy-unreachable-target`
 - **Scope:** `games/mining/core/energy.py` (`seconds_until` unreachable-target
   fix) + `tests/mining/test_energy_capacity.py` (regression pins) +
