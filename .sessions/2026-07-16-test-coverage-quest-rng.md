@@ -1,6 +1,6 @@
 # 2026-07-16 · test coverage — quest DetRng bad-input contract (games/exploration/quest/rng.py)
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus 4.x · high · test writing
 
@@ -56,4 +56,26 @@ future promotion has a bad-input regression net to migrate against.
 
 ## ✅ Close-out — Verification
 
-_(to be filled at flip)_
+Shipped in PR [#152](https://github.com/menno420/superbot-games/pull/152)
+(`claude/test-coverage-quest-rng-0716`). Six deterministic tests appended to
+`games/exploration/tests/test_rng.py` pin the module's bad-input contract:
+`randint` `hi<lo` → `ValueError` (was line 68, uncovered), `choice` empty
+sequence → `IndexError` (line 75), `weighted_choice` items/weights length
+mismatch → `ValueError` (line 84), `weighted_choice` non-positive weight sum →
+`ValueError` (line 87), the `randint(lo, lo)` span-1 boundary, and the
+direction of `weighted_choice` proportionality (heavier chosen strictly more,
+both buckets reachable). `games/exploration/quest/rng.py` moves 90% → 98% (only
+the documented-unreachable `items[-1]` fallback, line 95, is left — covering it
+needs an impossible `total>0`-with-no-bucket state). Suite floor
+`games/exploration/tests` bumped 55 → 61 and `docs/balance.md`'s per-suite floor
+table regenerated (`tools/gen_balance.py`) to match, so the balance-freshness
+gate stays green.
+
+- `python3 -m pytest -q` → **827 passed in 36.16s** (baseline 821 + 6).
+- `python3 bootstrap.py check --strict` → **all checks passed** (exit 0;
+  "session log …test-coverage-quest-rng.md complete"). Only advisory model-line
+  / owner-action warnings (pre-existing, never exit-affecting).
+
+Landing path: hub-venue, auto-merge armed on green per the night landing
+grammar. No production code touched — tests + floor + regenerated balance page
+only.
