@@ -1,6 +1,6 @@
 # 2026-07-17 · energy-unreachable — fix: `energy.seconds_until` signals an unreachable target instead of reading it as "already reached"
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus 4.x · high · runtime bugfix
 
