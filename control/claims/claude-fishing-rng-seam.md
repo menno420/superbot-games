@@ -1,1 +1,0 @@
-- `claude/fishing-rng-seam-0716` · **migrate fishing to the shared games/shared/rng.py splitmix64 seam, delete the duplicate mix** · games/fishing/core/rng.py + tests/fishing/ · 2026-07-16
