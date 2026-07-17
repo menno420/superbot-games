@@ -1,6 +1,6 @@
 # 2026-07-17 · mining-cli-case — fix: standalone mining CLI item/branch tokens are now case-insensitive (bug + regression tests)
 
-> **Status:** in-progress
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus 4.x · high · runtime bugfix
 
