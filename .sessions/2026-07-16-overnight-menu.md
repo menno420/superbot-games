@@ -1,6 +1,6 @@
 # 2026-07-16 · overnight planning menu — docs: 60-idea un-filtered owner-triage proposal set (docs-only)
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus 4.x · high · planning/docs
 
@@ -65,4 +65,45 @@ docs, so both remain candidates for one future guard slice.
 
 ## ✅ Close-out — Verification
 
-*(to be filled at flip)*
+Shipped in PR [#153](https://github.com/menno420/superbot-games/pull/153)
+(`claude/overnight-menu-0716`). The 60-idea un-filtered owner-triage menu
+`docs/planning/2026-07-16-overnight-menu.md` (committed at `0dc8f99`) is now
+landed with its substrate scaffold: this born-red card, its claim
+`control/claims/claude-overnight-menu.md`, and one read-path link so the doc is
+reachable.
+
+Exact changes this session added on top of the pre-committed doc:
+
+- **Born-red card + claim** (`d3bdf23`): `.sessions/2026-07-16-overnight-menu.md`
+  opened `in-progress` (born-red hold) and `control/claims/claude-overnight-menu.md`
+  reserving `docs/planning/2026-07-16-overnight-menu.md` on this branch.
+- **Reachability fix** (`48951b8`): the un-linked menu raised a `[reachable]`
+  orphan — an exit-affecting finding that would have held substrate-gate red
+  even post-flip (and cascaded into a `test_strict_gate_holds_red_on_an_in_progress_card`
+  preflight failure, because the extra hard finding suppressed the born-red
+  HOLD's "designed hold" text the test asserts). Linked the menu into the
+  read-path **Plans** index in `docs/current-state.md`, mirroring the existing
+  `dnd-story-game-plan.md` entry. One line; the orphan clears and the born-red
+  hold becomes the sole red.
+- **This flip commit**: Status `in-progress → complete`, releasing the gate;
+  it also carries the accumulated `.substrate/guard-fires.jsonl` telemetry delta
+  (the #142/#143/#150/#151 flip-commit precedent).
+
+**Suite — green.** `python3 -m pytest -q` = **821 passed** at this HEAD
+(docs-only change; unmoved from the #150/#151 baseline). **`bootstrap.py check
+--strict`** pre-flip = exit 1 SOLELY on this card's designed born-red hold
+(`HOLD (by design): … declares an in-progress Status`; gating card correctly
+selected as `.sessions/2026-07-16-overnight-menu.md`, orphan already resolved);
+this flip-to-complete commit clears the hold and `check --strict` then exits 0 —
+`check: all checks passed.` The `[owner-action-fields]` and `[model-line-*]`
+advisories are pre-existing, never-exit-affecting nags on untouched
+`control/status.md` and historical 2026-07-14 cards.
+
+**Collision guard (recorded):** at this slice's scan no PR existed for head
+`claude/overnight-menu-0716` and none touched
+`docs/planning/2026-07-16-overnight-menu.md`; the only open PR was #149
+(`claude/mirror-reconcile-race-fix`, a reconcile-race fix, unrelated). No live
+claim reserved a 2026-07-16 planning menu. Fresh land, no duplicate.
+
+The claim file `control/claims/claude-overnight-menu.md` rides the branch,
+deleted at session close per `control/claims/README.md`.
