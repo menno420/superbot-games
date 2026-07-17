@@ -12,6 +12,15 @@
 > Entries are dated and evidence-cited. No balance numbers are invented here:
 > every value quoted below is copied VERBATIM from the pinned core modules.
 
+> **⚠️ RETIRED — autonomy message-bus (2026-07-17 fresh-start cleanup).** This
+> outbox and the whole `control/` manager↔lane bus are **standing down** in the
+> fleet-wide autonomy wind-down (Projects go read-only 2026-07-21 and are being
+> recreated). The still-live owner decisions this outbox holds — D2 audit-grants
+> ratification, rung-3 packaging/hermeticity, persistence format-governance, and
+> the transfer-policy source model — are extracted into
+> [`../docs/NEXT-TASKS.md`](../docs/NEXT-TASKS.md); the SIM-REQUEST / verdict
+> entries below are retained for provenance only.
+
 ---
 
 ## SIM-REQUEST · mining-economy-tuning · 2026-07-13

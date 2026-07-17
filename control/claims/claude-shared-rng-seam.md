@@ -1,1 +1,0 @@
-- `claude/shared-rng-seam` · **games/shared/rng.py + mining rng refactor** · games/shared/ + games/mining/core/ + tests/ · 2026-07-16
