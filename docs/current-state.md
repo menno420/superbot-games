@@ -27,6 +27,41 @@
 
 ## In flight
 
+> **OVERNIGHT FORWARD-WORK LOOP — truth-stamped 2026-07-18 at HEAD `d85227d`.**
+> By owner night order (2026-07-18 — "land small self-initiated slices on green
+> via auto-merge"), forward work was **resumed for one night**: a bounded
+> forward-work resume by owner order, **NOT** a cancellation of the fleet-wide
+> wind-down banner below. Six PRs landed 2026-07-17 → 18, each a contained,
+> tested, independently-landable slice merged on green via the **live**
+> auto-merge apparatus:
+>
+> - **Three real bug fixes.** **#158** (`0a00733`) made the standalone mining
+>   CLI's item/branch/structure tokens case-insensitive (`sell Iron` /
+>   `buy Torch` / `skill Mining` had silently no-op'd); **#159** (`b0a9cfe`)
+>   made `energy.seconds_until` return `math.inf` for an unreachable target
+>   instead of a misleading `0`; **#163** (`d85227d`) fixed a broken-tool
+>   re-announce bug in `services/mining_workflow.py::_apply_wear` (a broken tool
+>   was re-emitted in `broke` on every subsequent `mine` / `explore` / `duel`,
+>   spamming the break message — now announced once, on the tick it breaks).
+> - **Coverage + hardening.** **#160** (`b205c79`) pinned a cross-CLI
+>   case-normalisation invariant and, in doing so, fixed a latent exploration
+>   CLI bug (its `offer` / `act` verbs didn't lowercase) and xfail'd the dnd
+>   off-menu case-fold gap; **#161** (`bcaf032`) pinned fishing CLI
+>   non-integer-qty + multi-word-display-name handling (no bug); **#162**
+>   (`30d56b8`) pinned mining CLI negative / non-int-qty rejection across
+>   sell / build / skill (no bug).
+>
+> Suite at this HEAD: **849 passed, 1 xfailed** (`python3 -m pytest -q`) — up
+> from 827 as the six slices added coverage. Six **owner-input decisions** the
+> deep hunt surfaced (exploration ore-curve divergence, broken-gear
+> consumption, `build_structure` contract, dnd case-fold, display-name
+> resolution, a mining qty diagnostic) are queued for the owner's morning review
+> in [`NEXT-TASKS.md`](NEXT-TASKS.md). The wind-down banner below still stands:
+> routines remain **un-armed** pending the owner's per-seat go (this night was a
+> one-night forward-work resume by order, not a re-arming), the auto-merge
+> apparatus stays **live**, and the Projects EAP read-only cutover is
+> 2026-07-21.
+
 > **FRESH-START CLEANUP — truth-stamped 2026-07-17.** This seat is being wound
 > down as part of the fleet-wide autonomy stand-down; where the 2026-07-16
 > narrative below conflicts with this banner, this banner wins.
