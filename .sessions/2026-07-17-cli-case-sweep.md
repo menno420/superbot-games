@@ -1,8 +1,8 @@
 # 2026-07-17 · cli-case-sweep — test: pin a cross-CLI case-normalisation invariant (guards the #158 drift class)
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
-> 📊 Model: Claude Opus 4.x · high · test-hardening + surgical bugfix
+> 📊 Model: Claude Opus 4.x · high · test writing
 
 ⚑ Self-initiated: small game-improvement slice (owner order 2026-07-17 —
 improve the game via contained, tested, independently-landable slices).
