@@ -16,8 +16,9 @@ production-hardened (~97% coverage, sim-pinned) behind one hub
 inventory unification**, and **wiring the games into `superbot-next`** as a
 game plugin. The autonomy apparatus (auto-merge bus, per-seat heartbeats,
 self-arm wake routines) has been wound down — see `CONSTITUTION.md` and
-`current-state.md`. Merges are **human-gated**: open a PR ready and stop; the
-owner reviews and lands it.
+`current-state.md`. Merges are **not human-gated**: a green `claude/*` PR
+auto-lands via the live auto-merge apparatus once CI (`substrate-gate`) passes;
+the owner reviews already-merged PRs asynchronously.
 
 ## Headline feature — D&D story game (P4)
 
