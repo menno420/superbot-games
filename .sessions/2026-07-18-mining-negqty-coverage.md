@@ -1,6 +1,6 @@
 # 2026-07-18 · mining-negqty-coverage — test(mining): pin CLI negative/non-integer-qty honest rejection
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus 4.x · high · test writing
 
@@ -84,3 +84,16 @@ session). This mining slice pins the SAME CLI→seam negative-qty interaction on
 game over, plus the non-integer edge, so the two are complementary and
 non-overlapping — #161 covered fishing's `sell`, this covers mining's `sell` /
 `build` / `skill`.
+
+## ✅ Landed (PR #162)
+
+Investigation + pins landed (PR #162, `test(mining): pin CLI
+negative/non-integer-qty honest rejection`): the negative-qty path (`sell iron
+-3` / `build forge -1` / `skill mining -2`, each rejected one layer deeper by the
+seam) and the non-integer-qty path (`sell iron abc` / `build forge xyz` /
+`skill mining foo`, folded into the name and rejected as unknown) are pinned for
+all three mining qty verbs — no crash, no state change, no audit row. No bug
+found; no CLI/seam/economy/balance change. `tests/mining` floor 196 → 202,
+`docs/balance.md` regenerated. Full suite `848 passed, 1 xfailed`. The
+malformed-qty-vs-unknown-name diagnostics question is logged above as a deferred
+follow-up.
