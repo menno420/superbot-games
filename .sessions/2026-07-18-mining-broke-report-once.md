@@ -1,6 +1,6 @@
 # 2026-07-18 · mining-broke-report-once — fix(mining): report a gear break only on the tick it breaks
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus 4.x · high · runtime bugfix
 
@@ -102,6 +102,16 @@ mining seam/economy were left untouched by #162, so this slice's edit to
 Green baseline this HEAD: `848 passed, 1 xfailed` (re-run this session before any
 edit).
 
-## ✅ Landed
+## ✅ Landed (PR #163)
 
-_(pending — filled on the final commit once the PR is green)_
+Fix landed (PR #163, `fix(mining): report a gear break only on the tick it
+breaks`): `_apply_wear` now skips an already-broken (`durability <= 0`) slot, so a
+tool/light that broke on an earlier action is no longer re-reported in `broke` on
+every subsequent `mine` / `explore` / `duel` — a break is announced exactly once,
+on the tick it hits 0. Break-tick behaviour unchanged; no balance/economy number
+touched; audited seam `target` / `mutation_type` / message strings untouched. One
+regression test (`test_mine_reports_break_only_on_the_tick_it_breaks`, fails
+before / passes after), `services/tests` floor 216 → 217, `docs/balance.md`
+regenerated. Full suite `849 passed, 1 xfailed`. The three deferred findings above
+(exploration ore-scaling runaway curve; broken-gear-still-usable; `build_structure`
+trusts caller `level`) are logged as owner-input backlog for later slices.
