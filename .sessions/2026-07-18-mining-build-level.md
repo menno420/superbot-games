@@ -1,6 +1,6 @@
 # 2026-07-18 · mining-build-level — fix(mining): build_structure derives its level from state, not the caller's claim
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus 4.x · high · runtime bugfix
 
@@ -89,12 +89,17 @@ makes it a clear no-balance correctness fix (derive from state, exactly as
 `vault_upgrade` does), not a contract-judgment call. Green baseline this HEAD:
 `849 passed, 1 xfailed` (re-run this session before any edit).
 
-## ✅ Landed (PR #pending)
+## ✅ Landed (PR #167)
 
-Pending the born-red flip. On the flip-to-complete commit this section records
-the merged PR number, the one-line fix, both commit SHAs, and the final suite
-count. The first (born-red) commit carries the fix + the two tests + the
-`EXPECTED_MIN_TESTS.txt` 217→218 floor bump + `docs/balance.md` regen + this card
-at Status `in-progress`; `bootstrap.py check --strict` pre-flip reds SOLELY on
-this card's designed born-red hold, and the flip-to-complete commit clears it so
-the live auto-merge apparatus lands the squash on green.
+`build_structure` now derives the authoritative current level from
+`state.structures` (mirroring `vault_upgrade`'s `state.vault_level` read) and
+ignores the caller-supplied `level` for the cost lookup, the `+1` write, and the
+audit `prev_value` — so a typed level can no longer force a downgrade, a
+tier-skip, or a bogus audit row. Building a maxed structure is a clean rejected
+no-op (no mutation, no record).
+
+- Fix + regression tests + `EXPECTED_MIN_TESTS.txt` 217→218 services floor bump
+  landed on the born-red commit; `main` merged in (PRs #165/#166) and
+  `docs/balance.md` regenerated; this flip-to-complete commit clears the
+  designed born-red hold so auto-merge lands the squash on green.
+- Final suite: `852 passed, 1 xfailed`; per-suite floors green.
