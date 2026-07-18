@@ -1,6 +1,6 @@
 # 2026-07-18 · truthrefresh — docs: truth-refresh current-state (tonight's 6 PRs) + queue owner-input decisions
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus 4.x · high · docs/records
 
@@ -79,3 +79,28 @@ in `services/tests/test_mining_workflow.py`, the `services/tests` floor reads
 217, and `docs/balance.md`'s Test-suite-floors section carries the matching
 row. No balance/economy number was touched. Green baseline this HEAD:
 `849 passed, 1 xfailed` (re-run this session before any edit).
+
+## ✅ Landed (PR #164)
+
+Shipped in PR [#164](https://github.com/menno420/superbot-games/pull/164)
+(`claude/truthrefresh-0718`). Two documentation surfaces refreshed, plus this
+card + claim:
+
+- `docs/current-state.md` — new `OVERNIGHT FORWARD-WORK LOOP` banner at the top
+  of "In flight" records the six-PR loop (#158–#163) with per-PR SHAs and the
+  three-real-fixes / three-coverage split, and updates the stability-baseline
+  suite count to `849 passed, 1 xfailed`. The standing wind-down facts are kept
+  intact (auto-merge apparatus LIVE — not human-gated; routines un-armed pending
+  the owner's per-seat go; one-night forward-work resume by owner order, not a
+  cancellation; Projects EAP read-only 2026-07-21). Status badge untouched in
+  the first ~12 lines.
+- `docs/NEXT-TASKS.md` — new `## Owner-input decisions queued (2026-07-18
+  overnight loop)` section listing the six owner-input decisions the deep hunt
+  surfaced, each a crisp question with its file pointer and tradeoff, none
+  duplicating the existing "Owner decisions to unblock" entries.
+
+Docs-only; no code, `control/inbox.md` untouched. **Suite green:** `python3 -m
+pytest -q` = `849 passed, 1 xfailed`. **`bootstrap.py check --strict`** pre-flip
+= exit 1 SOLELY on this card's designed born-red hold (`HOLD (by design): …
+declares an in-progress Status`); this flip-to-complete commit clears the hold
+and the gate goes green so the live auto-merge apparatus lands the squash.
