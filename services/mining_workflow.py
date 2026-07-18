@@ -853,8 +853,11 @@ def _apply_wear(state: MiningState, action: str) -> tuple[str, ...]:
 
     Underground-only slots (the light) wear only below the surface (depth > 0),
     per ``workshop.WEAR_PLAN``. A slot with no ``durability`` entry does not wear
-    (the core's safe default for untracked items). Returns the names of any items
-    that broke (hit 0) this tick.
+    (the core's safe default for untracked items). An item already at 0 (a broken
+    item still sitting in the slot) does not wear again and is NOT re-reported —
+    ``broke`` names only the items that hit 0 THIS tick, not ones that broke on an
+    earlier action and were never cleared. Returns the names of any items that
+    broke (hit 0) this tick.
     """
     broke: list[str] = []
     for slot, underground_only in workshop.WEAR_PLAN.get(action, ()):
@@ -863,7 +866,9 @@ def _apply_wear(state: MiningState, action: str) -> tuple[str, ...]:
         item = state.equipped.get(slot)
         if not item or item not in state.durability:
             continue
-        state.durability[item] = max(0, state.durability[item] - 1)
+        if state.durability[item] <= 0:
+            continue  # already broken — nothing left to wear, and not a fresh break
+        state.durability[item] -= 1
         if state.durability[item] == 0:
             broke.append(item)
     return tuple(broke)

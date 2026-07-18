@@ -336,6 +336,28 @@ def test_mine_light_only_wears_underground():
     assert deep.durability["lantern"] == 99
 
 
+def test_mine_reports_break_only_on_the_tick_it_breaks():
+    """A tool broken on an earlier dig is not re-reported as ``broke`` again.
+
+    ``_apply_wear`` promises ``broke`` names only the items that hit 0 THIS tick.
+    A tool at durability 1 breaks on the first dig (broke=(tool,)); on the next
+    dig it is already at 0, so it must not wear further and must NOT reappear in
+    ``broke`` (regression: it used to be re-reported on every subsequent action).
+    """
+    state = _full_state(
+        inventory={},
+        equipped={"tool": "iron pickaxe"},
+        durability={"iron pickaxe": 1},
+    )
+    r1 = mw.mine(state, sink=InMemorySink(), rng=random.Random(1), now=FIXED_NOW)
+    assert r1.broke == ("iron pickaxe",)  # broke on this tick
+    assert state.durability["iron pickaxe"] == 0
+
+    r2 = mw.mine(state, sink=InMemorySink(), rng=random.Random(1), now=FIXED_NOW)
+    assert r2.broke == ()  # already broken — not a fresh break, not re-reported
+    assert state.durability["iron pickaxe"] == 0  # stays 0, never wears below
+
+
 def test_mine_multiplier_uses_core_verbatim():
     """The seam's multiplier is exactly rewards.mine_multiplier for the loadout."""
     from games.mining.core import rewards
