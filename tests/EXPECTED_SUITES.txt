@@ -24,3 +24,4 @@ tests/shared/rng
 services/tests
 tests/exploration
 tests/tools
+tests/cross_cli
