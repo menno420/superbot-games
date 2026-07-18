@@ -132,3 +132,38 @@ blocked on a destructive click.
    grammar overlaps the qty slot. **Decide:** add the diagnostic, and if so,
    what grammar rule disambiguates a trailing non-int token (qty vs part of the
    name)?
+
+_Added by the 2026-07-18 overnight **fresh-angle** bug-hunt (economy-conservation
++ audit-log angles — a separate pass from the #158–#163 loop above). That hunt's
+genuine auto-fixable finds already shipped as PRs #166 (quest Objective /
+QuestTemplate hashable invariant) and #167 (`build_structure` caller-level
+exploit); the two below are latent / design-level and need the owner's
+balance / design judgment, so they are queued here rather than fixed._
+
+7. **[balance] Cross-game fish valuation gap (latent, unreachable today).**
+   `games/mining/core/items.py::register_fish_species` (~lines 282–304) folds
+   each fish into the mining market as a sellable RESOURCE worth
+   `max(1, size_rank)` = 1–4 coins, while
+   `games/fishing/core/economy.py` (~line 35) sells the same species on the
+   V043 curve at 8 / 13 / 27 / 80 — a ~20× gap. Not reachable today:
+   `register_fish_species` is called only from a test, and no seam routes a
+   caught fish into `MiningState.inventory`. If a future host rung ever wires
+   both games onto a shared inventory, the same fish would sell for two very
+   different prices. **Decide:** which valuation is canonical (or should the
+   mining-market fish registration be removed)? — a balance / design call, out
+   of scope for an autonomous fix.
+
+8. **[design] `economy_audit_log` is not a complete coin ledger.** In
+   `services/mining_workflow.py`, `sell` / `buy` / `repair` write audit rows
+   with `target="coins"` and the coin balance in `prev_value` / `new_value`,
+   but `build_structure` and `vault_upgrade` write rows whose `target` is
+   `structure:<key>` / `vault` with LEVELS (not coins) — even though those ops
+   also move coins (tagged `mining:*_build` / `mining:vault_upgrade`, which
+   `market.py` documents as money-flow events). So reconstructing a wallet
+   purely from `economy_audit_log` under-counts build / vault coin sinks
+   (observed: a 500-coin vault upgrade invisible to a log-derived balance). The
+   live wallet is correct; only an audit-log-derived ledger is incomplete.
+   Arguably by-design (each op audits one primary target). **Decide:** is
+   `economy_audit_log` meant to be a complete coin ledger (if so, build / vault
+   should emit a coin-target row too), or is one-primary-target-per-op intended?
+   — a design call, out of scope for an autonomous fix.
