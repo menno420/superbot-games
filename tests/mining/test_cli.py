@@ -223,6 +223,132 @@ def test_repair_is_case_insensitive_for_the_item_name() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Negative / non-integer quantity — the CLI→seam rejection interaction
+#
+# The qty-taking verbs (``sell`` / ``build`` / ``skill``) split a trailing
+# quantity token off the args with ``_split_item_qty``, whose test is
+# ``args[-1].lstrip("-").isdigit()``. That test SPLITS TWO WAYS, and each edge
+# must reject honestly (no crash, no state change, no audit row):
+#
+#  * A leading-minus token (``-3`` / ``-1`` / ``-2``) PASSES the isdigit test
+#    (the ``lstrip("-")`` strips the sign), so it parses as a NEGATIVE int and is
+#    forwarded to the seam — where the seam's own non-positive / invalid-level
+#    guard rejects it one layer deeper. This is the CLI→seam interaction the
+#    fishing slice (PR #161) pinned for ``sell bass -2``; here it is pinned for
+#    all three mining qty verbs.
+#  * A non-numeric token (``abc`` / ``xyz`` / ``foo``) FAILS the isdigit test, so
+#    ``_split_item_qty`` folds it into the (multi-word) NAME and returns qty
+#    ``None`` — the item/structure/branch then simply does not resolve, and the
+#    seam rejects the unknown name. Unlike the fishing CLI (which int()-parses the
+#    qty at its boundary and says "Quantity must be a number"), the mining CLI has
+#    no dedicated non-numeric-qty message: the token becomes part of the name.
+#    These tests PIN that true mining behavior rather than a fishing-shaped one.
+#
+# Investigation found NO bug on any path — every one is an honest no-op today.
+# ---------------------------------------------------------------------------
+def test_sell_negative_qty_is_honest_noop() -> None:
+    # `sell iron -3` PARSES as qty -3 (the sign survives lstrip("-")), forwarded
+    # to the seam whose non-positive guard no-ops with "must be positive".
+    sink = InMemorySink()
+    result = run_commands(
+        ["sell iron -3", "quit"],
+        sink=sink,
+        state=_fresh(inventory={"iron": 5}),
+        now=FIXED_NOW,
+    )
+    assert "must be positive" in result.text.lower()
+    assert result.state.inventory == {"iron": 5}  # nothing consumed
+    assert result.state.coins == 0
+    assert result.ok_actions == 0
+    assert len(sink.records) == 0  # a rejected sell records NOTHING (D2)
+
+
+def test_sell_non_integer_qty_folds_into_name_and_no_ops() -> None:
+    # `sell iron abc` FAILS the isdigit test, so "abc" folds into the name
+    # ("iron abc"), which is not sellable — an honest no-op, not a crash.
+    sink = InMemorySink()
+    result = run_commands(
+        ["sell iron abc", "quit"],
+        sink=sink,
+        state=_fresh(inventory={"iron": 5}),
+        now=FIXED_NOW,
+    )
+    assert "cannot be sold" in result.text
+    assert result.state.inventory == {"iron": 5}
+    assert result.state.coins == 0
+    assert result.ok_actions == 0
+    assert len(sink.records) == 0
+
+
+def test_build_negative_level_is_honest_noop() -> None:
+    # `build forge -1` PARSES as level -1, forwarded to the seam whose
+    # build_cost returns None for a negative level → honest no-op. The state is
+    # deliberately rich (coins + materials) so affordability is NOT the blocker —
+    # the invalid level is.
+    sink = InMemorySink()
+    result = run_commands(
+        ["build forge -1", "quit"],
+        sink=sink,
+        state=_fresh(coins=100_000, materials={"wood": 999, "stone": 999, "iron": 999}),
+        now=FIXED_NOW,
+    )
+    assert "cannot be upgraded from level -1" in result.text
+    assert result.state.structures == {}  # nothing built
+    assert result.state.coins == 100_000  # no coins spent
+    assert result.ok_actions == 0
+    assert len(sink.records) == 0
+
+
+def test_build_non_integer_level_folds_into_name_and_no_ops() -> None:
+    # `build forge xyz` folds "xyz" into the structure name ("forge xyz"), which
+    # is not a buildable structure → honest no-op.
+    sink = InMemorySink()
+    result = run_commands(
+        ["build forge xyz", "quit"],
+        sink=sink,
+        state=_fresh(coins=100_000, materials={"wood": 999, "stone": 999, "iron": 999}),
+        now=FIXED_NOW,
+    )
+    assert "not buildable" in result.text
+    assert result.state.structures == {}
+    assert result.state.coins == 100_000
+    assert result.ok_actions == 0
+    assert len(sink.records) == 0
+
+
+def test_skill_negative_points_is_honest_noop() -> None:
+    # `skill mining -2` PARSES as points -2, forwarded to the seam whose
+    # non-positive guard no-ops with "must be positive".
+    sink = InMemorySink()
+    result = run_commands(
+        ["skill mining -2", "quit"],
+        sink=sink,
+        state=_fresh(),
+        now=FIXED_NOW,
+    )
+    assert "must be positive" in result.text.lower()
+    assert result.state.skills == {}  # no points allocated
+    assert result.ok_actions == 0
+    assert len(sink.records) == 0
+
+
+def test_skill_non_integer_points_folds_into_name_and_no_ops() -> None:
+    # `skill mining foo` folds "foo" into the branch name ("mining foo"), which
+    # is not a skill branch → honest no-op (no silent zero-point allocation).
+    sink = InMemorySink()
+    result = run_commands(
+        ["skill mining foo", "quit"],
+        sink=sink,
+        state=_fresh(),
+        now=FIXED_NOW,
+    )
+    assert "not a skill branch" in result.text
+    assert result.state.skills == {}
+    assert result.ok_actions == 0
+    assert len(sink.records) == 0
+
+
+# ---------------------------------------------------------------------------
 # REPL ergonomics — help, unknown, empty, quit summary
 # ---------------------------------------------------------------------------
 def test_help_lists_every_command() -> None:
