@@ -51,3 +51,23 @@ def test_every_template_has_objective_and_capability() -> None:
 
 def test_menu_is_ordered_ids() -> None:
     assert menu() == tuple(TEMPLATES.keys())
+
+
+def test_every_template_and_objective_is_hashable() -> None:
+    # The models docstring promises Objective/QuestTemplate stay hashable and
+    # frozen — the reason params is a tuple of pairs. A nested dict value in
+    # those pairs (as the catalog carries) must not break that invariant.
+    for template in TEMPLATES.values():
+        assert hash(template) == hash(template)
+        for obj in template.objectives:
+            assert hash(obj) == hash(obj)
+
+
+def test_match_params_dict_reconstructs_plain_dict() -> None:
+    # params_dict() must hand consumers the plain nested dict content unchanged.
+    supply_run = TEMPLATES["supply_run"]
+    (objective,) = supply_run.objectives
+    assert objective.params_dict() == {"match": {"item": "supply_crate"}}
+
+    escort = TEMPLATES["safe_passage"].objectives[0]
+    assert escort.params_dict() == {"match": {"npc": "traveler", "dest": "waystation"}}
