@@ -1,6 +1,6 @@
 # 2026-07-18 · fishing-cli-coverage — test(fishing): pin CLI non-integer-qty + multi-word-species handling
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus 4.x · high · test writing
 
