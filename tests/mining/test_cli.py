@@ -22,7 +22,7 @@ from games.mining.cli import (
     status_lines,
     step,
 )
-from games.mining.core import energy, equipment, market
+from games.mining.core import energy, equipment, market, structures
 from services import mining_workflow as mw
 from services.audit import InMemorySink
 
@@ -232,10 +232,13 @@ def test_repair_is_case_insensitive_for_the_item_name() -> None:
 #
 #  * A leading-minus token (``-3`` / ``-1`` / ``-2``) PASSES the isdigit test
 #    (the ``lstrip("-")`` strips the sign), so it parses as a NEGATIVE int and is
-#    forwarded to the seam — where the seam's own non-positive / invalid-level
-#    guard rejects it one layer deeper. This is the CLI→seam interaction the
-#    fishing slice (PR #161) pinned for ``sell bass -2``; here it is pinned for
-#    all three mining qty verbs.
+#    forwarded to the seam. For ``sell`` / ``skill`` the seam's own non-positive
+#    guard rejects it one layer deeper (the CLI→seam interaction the fishing
+#    slice, PR #161, pinned for ``sell bass -2``). ``build`` is DIFFERENT: its
+#    seam now treats the trailing level as advisory and derives the authoritative
+#    current level from state (so a typed level can never force a downgrade,
+#    tier-skip, or invalid-level no-op), so ``build forge -1`` simply ignores the
+#    ``-1`` and builds the forge honestly from its real state level.
 #  * A non-numeric token (``abc`` / ``xyz`` / ``foo``) FAILS the isdigit test, so
 #    ``_split_item_qty`` folds it into the (multi-word) NAME and returns qty
 #    ``None`` — the item/structure/branch then simply does not resolve, and the
@@ -280,11 +283,13 @@ def test_sell_non_integer_qty_folds_into_name_and_no_ops() -> None:
     assert len(sink.records) == 0
 
 
-def test_build_negative_level_is_honest_noop() -> None:
-    # `build forge -1` PARSES as level -1, forwarded to the seam whose
-    # build_cost returns None for a negative level → honest no-op. The state is
-    # deliberately rich (coins + materials) so affordability is NOT the blocker —
-    # the invalid level is.
+def test_build_negative_level_is_ignored_and_builds_from_state() -> None:
+    # `build forge -1` PARSES as level -1 and forwards it, but the build seam now
+    # treats the caller-claimed level as advisory and derives the authoritative
+    # current level from state (a fresh forge = 0). The typed -1 therefore cannot
+    # force an invalid-level no-op: the forge builds honestly from level 0 to 1,
+    # paying the real level-0 cost and recording the true prior level.
+    cost = structures.forge_build_cost(0)  # verbatim level-0 cost
     sink = InMemorySink()
     result = run_commands(
         ["build forge -1", "quit"],
@@ -292,11 +297,12 @@ def test_build_negative_level_is_honest_noop() -> None:
         state=_fresh(coins=100_000, materials={"wood": 999, "stone": 999, "iron": 999}),
         now=FIXED_NOW,
     )
-    assert "cannot be upgraded from level -1" in result.text
-    assert result.state.structures == {}  # nothing built
-    assert result.state.coins == 100_000  # no coins spent
-    assert result.ok_actions == 0
-    assert len(sink.records) == 0
+    assert result.state.structures == {"forge": 1}  # built from real state level 0
+    assert result.state.coins == 100_000 - cost.coins  # real level-0 cost charged
+    assert result.ok_actions == 1
+    assert len(sink.records) == 1
+    assert sink.records[-1].prev_value == "0"  # true prior level, not the typed -1
+    assert sink.records[-1].new_value == "1"
 
 
 def test_build_non_integer_level_folds_into_name_and_no_ops() -> None:

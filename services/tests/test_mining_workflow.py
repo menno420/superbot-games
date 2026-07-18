@@ -515,6 +515,37 @@ def test_build_rejects_unknown_structure():
     assert r.ok is False
 
 
+def test_build_structure_uses_state_level_not_caller_claim():
+    # The trailing integer a player can type (`build forge <level>`) is advisory
+    # only: the cost, the level write, and the audit prev_value must all derive
+    # from state.structures, never the caller's claim. Before the fix, `build
+    # forge 0` on a maxed forge downgraded it for the cheap level-0 cost and
+    # `build forge 1` on a fresh forge skipped a tier for free.
+    state = _full_state()
+    sink = InMemorySink()
+    assert mw.build_structure(state, "forge", 0, sink=sink).ok  # 0 -> 1
+    assert mw.build_structure(state, "forge", 1, sink=sink).ok  # 1 -> 2 (max)
+    assert state.structures["forge"] == 2
+    n = len(sink.records)
+
+    # Bogus low claim on a maxed forge: a clean rejected no-op — no downgrade,
+    # no state mutation, no audit row (before fix: downgraded to 1 + bogus row).
+    r = mw.build_structure(state, "forge", 0, sink=sink)
+    assert r.ok is False
+    assert state.structures["forge"] == 2
+    assert len(sink.records) == n
+
+    # Inflated claim on a level-0 forge: builds exactly one tier and records the
+    # real prior level (before fix: jumped to 2 with prev_value "1").
+    fresh = _full_state()
+    s2 = InMemorySink()
+    r2 = mw.build_structure(fresh, "forge", 1, sink=s2)
+    assert r2.ok
+    assert fresh.structures["forge"] == 1
+    assert s2.records[-1].prev_value == "0"
+    assert s2.records[-1].new_value == "1"
+
+
 def test_vault_upgrade_raises_cap_using_core_cost():
     cost = capacity.vault_upgrade_cost(0)  # verbatim base cost (2000)
     state = _full_state(coins=cost + 50, vault_level=0)

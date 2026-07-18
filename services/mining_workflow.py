@@ -662,6 +662,12 @@ def build_structure(
         return BuildResult(ok=False, message=f"{structure} is not buildable.")
 
     key = structure.strip().lower()
+    # The *level* parameter is advisory only — a caller-typed value must never
+    # decide the cost, the write, or the audit prev_value (that lets `build
+    # forge 0` downgrade a maxed forge for the cheap level-0 cost and `build
+    # forge 1` skip a tier for free). Derive the authoritative current level
+    # from state, exactly as ``vault_upgrade`` reads ``state.vault_level``.
+    level = state.structures.get(key, 0)
     cost = structures.build_cost(key, level)
     if cost is None:
         return BuildResult(
