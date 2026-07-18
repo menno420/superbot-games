@@ -73,3 +73,61 @@ destructive click owed):
 
 _Deeper backlog: `docs/planning/2026-07-16-overnight-menu.md` is an unfiltered
 60-idea owner-triage menu (candidates, not approved work)._
+
+## Owner-input decisions queued (2026-07-18 overnight loop)
+
+Surfaced by the deep hunt behind tonight's six-PR improvement loop
+(#158–#163). Each is a real finding that is a **balance / design / contract
+judgment call**, not a clear no-balance correctness fix — so it is an owner
+decision, not an agent slice. None duplicates an entry in "Owner decisions to
+unblock the above" (those are Q-0040, D2 audit-grants, rung-3 packaging,
+persistence format-governance, transfer-policy). All ↩️ reversible; nothing is
+blocked on a destructive click.
+
+1. **[balance] Exploration ore-scaling still uses the retired runaway curve.**
+   `games/mining/core/exploration.py::_scale_amount` (~line 272) scales ore
+   gains by the pre-2026-06-22 steep curve `1 + mining_power // 2` (×5 at
+   diamond) — the exact formula the sim-pinned rebalance flattened to
+   `1 + power * 0.0625` (×1.5 at diamond) in `rewards.mine_multiplier` for the
+   live dig faucet. The rebalance was never propagated to the (still-unwired)
+   exploration engine. **Decide:** propagate the flattened curve, or
+   intentionally keep exploration divergent? (Player impact only once
+   exploration is on a live command path.)
+
+2. **[design] Broken gear stays equipped and fully effective at durability 0.**
+   The mining seam never clears a broken item, so a tool/light at durability 0
+   keeps contributing its full `EffectiveStats` (mine multiplier, depth access,
+   light radius) indefinitely — the durability sink is toothless. The equipment
+   docstring says gear is "consumed on break," but no layer does it. **Decide:**
+   should a break unequip the item, consume it from inventory, or block the
+   action?
+
+3. **[contract] `build_structure` trusts a caller-supplied `level` instead of
+   reading state.** `services/mining_workflow.py::build_structure(state,
+   structure, level)` prices and writes `state.structures[key] = level + 1` from
+   the `level` **argument**, never validating it against
+   `state.structures.get(key, 0)` — unlike `vault_upgrade` / `allocate_skill`,
+   which read the current value from `state`. A stale/wrong `level` silently
+   corrupts the stored level (downgrade / double-charge). **Decide:** tighten
+   the contract to read the level from `state` (may change the established
+   caller interface)?
+
+4. **[product] dnd CLI clamps a capitalised option id to the safe default.**
+   The dnd CLI treats a capitalised option id as off-menu and clamps to the
+   current safe default (behaviour currently `xfail`'d in the case-normalisation
+   sweep). **Decide:** case-fold option ids first, or is "capitalised stays
+   safe" the intended guardrail?
+
+5. **[product] CLIs address items/species by single-token neutral id only.**
+   All game CLIs resolve items/species by a single-token neutral id; a
+   multi-word display name (e.g. "Legendary Carp") honestly no-ops rather than
+   resolving. **Decide:** should CLIs resolve display names → ids (a fuzzy /
+   multi-token resolver), or keep the id-only contract?
+
+6. **[UX] Mining CLI has no "Quantity must be a number" diagnostic.** Unlike the
+   fishing CLI, a non-integer qty in the mining CLI folds into the multi-word
+   item name and is rejected as an unknown item rather than flagged as a bad
+   quantity. Adding a diagnostic is ambiguous because mining's multi-word-name
+   grammar overlaps the qty slot. **Decide:** add the diagnostic, and if so,
+   what grammar rule disambiguates a trailing non-int token (qty vs part of the
+   name)?
