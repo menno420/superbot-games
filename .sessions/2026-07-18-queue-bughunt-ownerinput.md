@@ -1,6 +1,6 @@
 # 2026-07-18 · queue-bughunt-ownerinput — docs: queue two fresh-angle bug-hunt owner-input findings for morning review
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus 4.x · high · docs/records
 
@@ -70,4 +70,28 @@ latent / design-level residue that is NOT auto-fixable. No balance / economy
 number was touched by any of them. Green baseline this HEAD: `852 passed,
 1 xfailed` (re-run this session before any edit).
 
-## ✅ Landed
+## ✅ Landed (PR #168)
+
+Shipped in PR [#168](https://github.com/menno420/superbot-games/pull/168)
+(`claude/queue-bughunt-ownerinput`). One documentation surface refreshed, plus
+this card:
+
+- `docs/NEXT-TASKS.md` — two new entries (7–8) plus a short attribution note in
+  the existing `## Owner-input decisions queued (2026-07-18 overnight loop)`
+  section: `[balance]` cross-game fish valuation gap (mining market's
+  `max(1, size_rank)` = 1–4 coins vs fishing's V043 8 / 13 / 27 / 80, latent
+  until a shared-inventory host rung) and `[design]` `economy_audit_log` not a
+  complete coin ledger (build / vault audit LEVELS, not the coins they also
+  move). Each is a crisp `**Decide:**` question with its file pointer and the
+  reason it needs owner judgment; neither proposes a balance value. The 6
+  existing queued decisions are untouched and un-reordered; the note attributes
+  the pair to the 2026-07-18 fresh-angle hunt and links the hunt's shipped
+  auto-fixable finds (#166 quest hashable, #167 `build_structure` caller-level
+  exploit).
+
+Docs-only; no code, no balance value, `control/inbox.md` untouched. **Suite
+green:** `python3 -m pytest -q` = `852 passed, 1 xfailed` (no test delta, no
+floor bump). **`bootstrap.py check --strict`** pre-flip = the designed born-red
+hold (`HOLD (by design): … declares an in-progress Status`); this
+flip-to-complete commit clears the hold so the gate goes green and the live
+auto-merge apparatus lands the squash.
