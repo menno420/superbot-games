@@ -277,6 +277,78 @@ def test_sell_with_non_numeric_qty_is_graceful() -> None:
     assert len(sink.records) == 0
 
 
+def test_sell_with_float_qty_is_graceful() -> None:
+    # A float-shaped qty fails the CLI-boundary int() parse (int("1.5") raises)
+    # exactly like a word — an honest "must be a number" no-op, NOT a truncation
+    # to 1: nothing is consumed and no audit row is recorded.
+    sink = InMemorySink()
+    result = run_commands(
+        ["sell bass 1.5", "quit"],
+        sink=sink,
+        state=_fresh(haul={"bass": 2}),
+        now=FIXED_NOW,
+    )
+    assert "Quantity must be a number" in result.text
+    assert "'1.5'" in result.text
+    assert result.state.coins == 0
+    assert result.state.haul == {"bass": 2}
+    assert len(sink.records) == 0
+
+
+def test_sell_with_negative_qty_is_honest_noop() -> None:
+    # A negative qty PARSES as an int at the CLI boundary but is rejected one
+    # layer deeper by the audited seam's non-positive guard — a DIFFERENT path
+    # from the non-numeric case above (the CLI forwards it; the seam no-ops).
+    sink = InMemorySink()
+    result = run_commands(
+        ["sell bass -2", "quit"],
+        sink=sink,
+        state=_fresh(haul={"bass": 2}),
+        now=FIXED_NOW,
+    )
+    assert "Quantity must be positive" in result.text
+    assert result.state.coins == 0
+    assert result.state.haul == {"bass": 2}
+    assert len(sink.records) == 0  # a rejected sell records NOTHING (D2)
+
+
+def test_sell_multiword_display_name_is_honest_noop() -> None:
+    # The species whose DISPLAY name is multi-word ("Legendary Carp") is keyed
+    # on the neutral single-token id ``legend_carp`` (games/fishing/core/species.py) —
+    # the id, never the display name, is the CLI's input grammar. So typing the
+    # display name tokenises to species ``legendary`` + qty ``Carp`` and honestly
+    # no-ops on the int() parse ("Quantity must be a number, got 'Carp'."): no
+    # fish consumed, no wrong species touched, no audit row. This PINS the
+    # current single-token-grammar behavior (see the card's Session idea for the
+    # deferred product question of whether CLIs should resolve display names).
+    sink = InMemorySink()
+    result = run_commands(
+        ["sell Legendary Carp 3", "quit"],
+        sink=sink,
+        state=_fresh(haul={"legend_carp": 2}),
+        now=FIXED_NOW,
+    )
+    assert "Quantity must be a number" in result.text
+    assert "'Carp'" in result.text
+    assert result.state.coins == 0
+    assert result.state.haul == {"legend_carp": 2}  # nothing consumed
+    assert len(sink.records) == 0
+
+
+def test_sell_legend_carp_by_neutral_id_commits() -> None:
+    # The counterpart to the multi-word no-op above: the SAME species sells
+    # correctly when addressed by its neutral single-token id, proving the
+    # multi-word species is fully reachable — via its id, not its display name.
+    result = run_commands(
+        ["sell legend_carp 2", "quit"],
+        state=_fresh(haul={"legend_carp": 3}),
+        now=FIXED_NOW,
+    )
+    assert result.state.coins == 2 * economy.sell_value("legend_carp")
+    assert result.state.haul["legend_carp"] == 1  # 2 of 3 consumed
+    assert len(result.sink.records) == 1  # one committed sell → exactly one row
+
+
 # ---------------------------------------------------------------------------
 # V043 display — coins / level in the status header + summary, milestones on cast
 # ---------------------------------------------------------------------------
