@@ -64,3 +64,37 @@ def _master() -> object:
     from games.mining.core.equipment import compute_stats, CHARM
 
     return compute_stats({CHARM: "master angler charm"})
+
+
+# ---------------------------------------------------------------------------
+# Display-name → id resolver (decision #5): a display name resolves to its
+# neutral id, id match is preferred, and an unknown token returns None.
+# ---------------------------------------------------------------------------
+def test_resolve_exact_id_wins() -> None:
+    # An exact neutral id resolves to itself, case-insensitively.
+    assert species.resolve("legend_carp") == "legend_carp"
+    assert species.resolve("Legend_Carp") == "legend_carp"
+    assert species.resolve("bass") == "bass"
+
+
+def test_resolve_multiword_display_name_case_insensitive() -> None:
+    # A multi-word display name resolves to its neutral id regardless of case.
+    assert species.resolve("Legendary Carp") == "legend_carp"
+    assert species.resolve("legendary carp") == "legend_carp"
+    assert species.resolve("LEGENDARY CARP") == "legend_carp"
+
+
+def test_resolve_single_word_display_name() -> None:
+    # A single-word display name ("Bass") resolves to its id ("bass"); here the
+    # display name folds to the same token as the id, but the resolver still
+    # honours the display-name path for names that differ from their id.
+    assert species.resolve("Minnow") == "minnow"
+    assert species.resolve("Pike") == "pike"
+
+
+def test_resolve_unknown_returns_none() -> None:
+    # A token that matches neither an id nor a display name resolves to None,
+    # leaving the caller its honest "unknown species" no-op.
+    assert species.resolve("kraken") is None
+    assert species.resolve("Giant Kraken") is None
+    assert species.resolve("") is None

@@ -85,7 +85,32 @@ next owner-authorized follow-through in the same queue: take the two remaining
 on green. Green baseline at branch base `e0b8123`: `python3 -m pytest -q` passes
 (re-confirmed this session before editing).
 
-## ✅ Landed
+## ✅ Landed (PR #175)
 
-_(PR link + flip recorded on close — see the PR body for the flagged
-owner-default note.)_
+Shipped in PR [#175](https://github.com/menno420/superbot-games/pull/175)
+(`claude/games-cli-id-resolution`), plus this card:
+
+- `games/dnd/cli.py` — `_resolve_choice_id` case-folds a non-digit token against
+  the surfaced option ids before the seam's clamp (decision #4).
+- `games/fishing/core/species.py` — new `resolve(token)` (id-wins, then
+  case-insensitive display name) + a `_BY_NAME` index built from the same table
+  (decision #5).
+- `games/fishing/cli.py` — `_do_sell` reworked to split a trailing integer as
+  the quantity and resolve the (possibly multi-word) name via `species.resolve`,
+  preferring the resolved id and preserving the "Quantity must be a number"
+  diagnostic (decision #5).
+- `tests/cross_cli/test_cli_case_normalisation.py` — dnd case pin un-xfailed
+  (passing assertion) + folded into `CLI_CASES`; docstring dnd Gap → Covered.
+- `tests/fishing/test_cli.py` — multi-word display-name resolution tests
+  (commits / case-insensitive / id-still-commits / unknown no-op).
+- `tests/fishing/test_theme_data.py` — direct `species.resolve` unit tests.
+- `tests/cross_cli/EXPECTED_MIN_TESTS.txt` 4 → 5;
+  `tests/fishing/EXPECTED_MIN_TESTS.txt` 125 → 131; `docs/balance.md`
+  regenerated (`python3 tools/gen_balance.py --write`).
+- `docs/NEXT-TASKS.md` — decisions #4 and #5 marked ✅ RESOLVED with the applied
+  owner-defaults + PR link; the other queued items left untouched.
+
+**Suite green:** `python3 -m pytest -q` = `868 passed` (no xfails — the dnd case
+pin is now a passing assertion). **`bootstrap.py check --strict`** pre-flip = the
+designed born-red hold on this card; the flip-to-complete commit clears it. No
+seam / economy / balance number changed.

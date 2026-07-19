@@ -81,6 +81,11 @@ _SPECIES: tuple[Species, ...] = (
 # Index by id for O(1) lookup — built from the table (still one source of truth).
 _BY_ID: dict[str, Species] = {s.species_id: s for s in _SPECIES}
 
+# Index by CASE-FOLDED display name → neutral id, for resolving a player-typed
+# display name ("Legendary Carp") back to its mechanic key ("legend_carp").
+# Built from the same table, so still one source of truth.
+_BY_NAME: dict[str, str] = {s.name.casefold(): s.species_id for s in _SPECIES}
+
 # The largest size_rank in the table — the resolver scales reported sizes against it
 # (read off the data so adding a bigger species needs no logic change).
 MAX_SIZE_RANK: int = max(s.size_rank for s in _SPECIES)
@@ -106,6 +111,26 @@ def is_species(species_id: str) -> bool:
     return species_id in _BY_ID
 
 
+def resolve(token: str) -> str | None:
+    """Resolve *token* to a neutral species id, or ``None`` if it names nothing.
+
+    Resolution order — **id wins**, so no display name can ever shadow a real id:
+
+    1. Exact neutral id, case-insensitively (``"legend_carp"`` / ``"Legend_Carp"``).
+    2. Case-insensitive display name (``"Legendary Carp"`` / ``"legendary carp"``).
+
+    Returns the neutral id on a match, else ``None`` — leaving the caller its
+    honest "unknown species" no-op. This only ever normalises how a player *types*
+    an EXISTING species (its id or its display name); it never invents a species
+    and never changes a mechanic. Display names are unique in the table, so a
+    match is unambiguous.
+    """
+    folded = token.casefold()
+    if folded in _BY_ID:
+        return _BY_ID[folded].species_id
+    return _BY_NAME.get(folded)
+
+
 __all__ = [
     "Species",
     "MAX_SIZE_RANK",
@@ -113,4 +138,5 @@ __all__ = [
     "species_ids",
     "get",
     "is_species",
+    "resolve",
 ]

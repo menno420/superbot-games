@@ -17,17 +17,13 @@ silently no-ops on BOTH cases cannot pass the sweep vacuously.
 Covered (all normalise at the CLI boundary):
 
 * mining      — ``sell <item>``    (``_split_item_qty`` lower-cases; #158)
-* fishing     — ``sell <species>`` (``args[0].lower()``)
+* fishing     — ``sell <species>`` (``resolve`` case-folds id + display name)
 * exploration — ``offer <id>``     (lower-cased at the boundary in this PR — the
   sweep surfaced that it previously did NOT, the same latent #158 bug)
-
-Gap (tracked as a follow-up, xfailed below):
-
-* dnd — a bounded-menu pick treats a capitalised option id as OFF-MENU and
-  clamps to the scene's safe default BY DESIGN ("anything off-menu keeps you
-  safe"). Folding case-variant option ids into exact matches is a
-  product-semantics decision, not the mechanical ``.lower()`` the other CLIs
-  take, so it is deferred rather than forced.
+* dnd — a menu pick case-folds the option id against the surfaced options, so a
+  capitalised id (``Advance_Escort``) resolves to the same option as its
+  lowercase form instead of clamping to the safe default (decision #4; a token
+  matching NO surfaced id is still passed through verbatim and clamps).
 """
 
 from __future__ import annotations
@@ -108,10 +104,22 @@ def _exploration_outcome(token: str) -> Outcome:
 # The sweep — every covered CLI must resolve a capitalised token identically to
 # its lowercase form (the #158 invariant).
 # ---------------------------------------------------------------------------
+def _dnd_outcome(token: str) -> Outcome:
+    from games.dnd.cli import run_commands
+
+    sink = InMemorySink()
+    result = run_commands([token, "quit"], sink=sink, now=FIXED_NOW)
+    return Outcome(
+        records=len(sink.records),
+        effect=(result.state.scene_id, result.state.global_xp),
+    )
+
+
 CLI_CASES = [
     pytest.param(_mining_outcome, "iron", "Iron", id="mining-sell"),
     pytest.param(_fishing_outcome, "bass", "Bass", id="fishing-sell"),
     pytest.param(_exploration_outcome, "supply_run", "Supply_Run", id="exploration-offer"),
+    pytest.param(_dnd_outcome, "advance_escort", "Advance_Escort", id="dnd-choose"),
 ]
 
 
@@ -133,36 +141,19 @@ def test_cli_normalises_case_at_the_token_boundary(outcome_fn, lower, upper) -> 
 
 
 # ---------------------------------------------------------------------------
-# The dnd gap — pinned, intentional, and self-healing.
+# The dnd case-fold — decision #4 (was the deferred gap, now folded in).
 #
-# dnd's bounded-menu pick clamps a capitalised (off-menu) option id to the
-# scene's safe default BY DESIGN, so its outcome legitimately diverges from the
-# exact lowercase pick. Whether the DM's seat should case-fold option ids before
-# the clamp is a PRODUCT-SEMANTICS call, deferred as a follow-up (see the session
-# card / PR body). ``strict=True`` makes a future fix (dnd starts normalising)
-# trip XPASS, forcing this xfail to be removed and dnd folded into the sweep.
+# dnd's menu pick used to treat a capitalised (off-menu) option id as a clamp to
+# the scene's safe default, so its outcome diverged from the exact lowercase
+# pick. Decision #4's owner-default case-folds the option id against the surfaced
+# options at the CLI boundary, so a capitalised id now resolves to the same
+# option as its lowercase form. A dnd choice records exactly one audit row (D2:
+# the seam audits every ``choose``), so the lowercase baseline commits and the
+# sweep is not vacuous. A token matching NO surfaced id is still passed through
+# verbatim and clamps — that guardrail is unchanged.
 # ---------------------------------------------------------------------------
-def _dnd_outcome(token: str) -> Outcome:
-    from games.dnd.cli import run_commands
-
-    sink = InMemorySink()
-    result = run_commands([token, "quit"], sink=sink, now=FIXED_NOW)
-    return Outcome(
-        records=len(sink.records),
-        effect=(result.state.scene_id, result.state.global_xp),
-    )
-
-
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "dnd CLI treats a capitalised option id as OFF-MENU and clamps to the "
-        "scene's safe default by design (bounded-menu 'anything off-menu keeps "
-        "you safe'); making option-id matching case-insensitive is a "
-        "product-semantics call, tracked as a follow-up backlog item — see PR body"
-    ),
-)
 def test_dnd_option_id_is_case_insensitive() -> None:
     lo = _dnd_outcome("advance_escort")
     hi = _dnd_outcome("Advance_Escort")
+    assert lo.committed, "lowercase baseline did not commit — the sweep would be vacuous"
     assert hi == lo

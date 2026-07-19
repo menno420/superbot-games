@@ -143,12 +143,42 @@ blocked on a destructive click.
    current safe default (behaviour currently `xfail`'d in the case-normalisation
    sweep). **Decide:** case-fold option ids first, or is "capitalised stays
    safe" the intended guardrail?
+   — ✅ **RESOLVED (2026-07-18, PR #175): owner-default applied — case-fold
+   option ids.** `games/dnd/cli.py::_resolve_choice_id` now case-folds a
+   non-digit token against the width-capped SURFACED option ids, so a capitalised
+   id (`Advance_Escort`) resolves to the same option as its lowercase form
+   instead of clamping — mirroring how the other game CLIs lower-case a token at
+   their seam boundary (#158). Only surfaced ids (the exact set the resolver
+   accepts) are matched, so an id beyond the menu still clamps; a token matching
+   NO surfaced id is still passed to the seam verbatim and clamps to the
+   deterministic safe default (the "anything off-menu keeps you safe" guardrail
+   is unchanged). The strict-`xfail` case pin in
+   `tests/cross_cli/test_cli_case_normalisation.py` is converted to a passing
+   assertion and dnd is folded into the shared sweep. Reversible; flagged for
+   owner review.
 
 5. **[product] CLIs address items/species by single-token neutral id only.**
    All game CLIs resolve items/species by a single-token neutral id; a
    multi-word display name (e.g. "Legendary Carp") honestly no-ops rather than
    resolving. **Decide:** should CLIs resolve display names → ids (a fuzzy /
    multi-token resolver), or keep the id-only contract?
+   — ✅ **RESOLVED (2026-07-18, PR #175): owner-default applied — add a
+   display-name → id resolver (id match preferred).**
+   `games/fishing/core/species.py::resolve` maps a token to its neutral id —
+   exact id first (case-insensitive), then a case-insensitive multi-word display
+   name (`"Legendary Carp"` → `legend_carp`), else `None`. The fishing CLI's
+   `sell` path (`games/fishing/cli.py::_do_sell`) now splits a trailing integer
+   as the quantity (mirroring the mining CLI's `sell <item> [qty]` grammar) and
+   resolves the remaining phrase through `resolve`, so `sell Legendary Carp 2`
+   commits. Id resolution is preserved (id wins — a display name never shadows a
+   real id, no ambiguity) and an unknown name still reports the honest "cannot be
+   sold". The existing "Quantity must be a number" diagnostic is preserved via
+   the same catalog-aware disambiguation the mining CLI's decision-#6 diagnostic
+   uses, so this does NOT collide with `_split_item_qty` / `_bad_quantity_token`
+   (#172). The mining CLI needs no change (its catalog key already IS the
+   lowercased display name, so multi-word names like "lucky charm" resolve
+   today), so only the genuine id≠display gap (fishing species) is touched.
+   Reversible; flagged for owner review.
 
 6. **[UX] Mining CLI has no "Quantity must be a number" diagnostic.** Unlike the
    fishing CLI, a non-integer qty in the mining CLI folds into the multi-word
