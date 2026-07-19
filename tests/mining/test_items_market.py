@@ -30,11 +30,42 @@ class _FakeFish:
 
 
 def test_register_fish_species_injection_point() -> None:
+    # Rows with no ``species_id`` fall back to size-scaled max(1, size_rank).
     items.register_fish_species([_FakeFish("salmon", 5), _FakeFish("minnow", 1)])
     assert items.is_fish("salmon") is True
-    assert items.item_value("salmon") == 5  # max(1, size_rank)
+    assert items.item_value("salmon") == 5  # max(1, size_rank) fallback
     assert items.item_value("minnow") == 1
     assert items.classify("salmon") is items.ItemKind.RESOURCE
+
+
+@dataclass(frozen=True)
+class _IdFish:
+    name: str  # market key (lookups lowercase, so use a lookup-safe id here)
+    size_rank: int
+    species_id: str  # neutral V043 key the fishing economy prices on
+
+
+def test_register_fish_species_values_on_fishing_v043_curve() -> None:
+    # Decision #7 (2026-07-18): a registered fish is worth its canonical fishing
+    # V043 price — the fishing economy reused as one source of truth — not the
+    # retired ad-hoc max(1, size_rank). Registered under the neutral species id
+    # (a lookup-safe key), each mining-market value must equal the V043 price.
+    from games.fishing.core import economy, species
+
+    rows = [_IdFish(s.species_id, s.size_rank, s.species_id) for s in species.all_species()]
+    items.register_fish_species(rows)
+    for r in rows:
+        assert items.item_value(r.name) == economy.sell_value(r.species_id)
+    # Concretely: legend_carp is 80 on the V043 curve, not 4 (its size_rank).
+    assert items.item_value("legend_carp") == 80
+    assert items.item_value("legend_carp") != max(1, 4)
+
+
+def test_register_fish_species_off_curve_falls_back_to_size_rank() -> None:
+    # A species_id absent from the V043 curve keeps the size-scaled fallback,
+    # so an ad-hoc injected row still values sanely (no KeyError, no minting).
+    items.register_fish_species([_IdFish("kraken", 9, "kraken")])
+    assert items.item_value("kraken") == 9  # max(1, size_rank), not on V043
 
 
 def test_classify_and_tool_ladder() -> None:

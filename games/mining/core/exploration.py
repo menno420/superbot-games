@@ -34,6 +34,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 from games.mining.core import equipment
+from games.mining.core import rewards
 
 
 class Biome(Enum):
@@ -260,8 +261,14 @@ _ORE_ITEMS: frozenset[str] = frozenset(
 def _scale_amount(outcome: ExploreOutcome, stats: equipment.EffectiveStats) -> int:
     """Apply equipped-gear scaling to a positive payout.
 
-    ``mining_power`` multiplies ore gains — power 2 → ×2 (matching the old
-    pickaxe bonus), power 4 (an iron pickaxe) → ×3; ``loot_bonus`` adds a flat
+    ``mining_power`` multiplies ore gains on the **flattened faucet curve** —
+    the same gentle linear gain the live dig faucet uses
+    (:func:`rewards.mine_multiplier`): ``1 + power * rewards.TOOL_POWER_GAIN``,
+    so diamond-pickaxe power 8 → ×1.5 (not the retired ×5 runaway curve the
+    2026-06-22 rebalance flattened; see
+    ``docs/planning/mining-economy-balance-2026-06-22.md``). The fractional
+    multiplier is rounded into a whole ore count, never below 1 — the exact
+    rounding :func:`rewards.roll_mine_loot` applies. ``loot_bonus`` adds a flat
     extra to any gain.  Penalties (negative amounts) are never scaled — gear
     protects gains, it does not amplify losses.
     """
@@ -269,7 +276,8 @@ def _scale_amount(outcome: ExploreOutcome, stats: equipment.EffectiveStats) -> i
     if amount <= 0:
         return amount
     if outcome.item in _ORE_ITEMS:
-        amount *= 1 + stats.mining_power // 2
+        mult = 1.0 + stats.mining_power * rewards.TOOL_POWER_GAIN
+        amount = max(1, round(amount * mult))
     amount += stats.loot_bonus
     return amount
 

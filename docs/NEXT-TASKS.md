@@ -94,6 +94,16 @@ blocked on a destructive click.
    exploration engine. **Decide:** propagate the flattened curve, or
    intentionally keep exploration divergent? (Player impact only once
    exploration is on a live command path.)
+   — ✅ **RESOLVED (2026-07-18, PR #174): owner-default applied — propagate the
+   flattened curve.** `games/mining/core/exploration.py::_scale_amount` now
+   scales ore gains by the same flattened faucet curve as the live dig faucet,
+   reusing `rewards.TOOL_POWER_GAIN` (`1 + power * 0.0625` → ×1.5 at diamond
+   power 8, not the retired ×5) and the same `max(1, round(base * mult))`
+   rounding `rewards.roll_mine_loot` uses — so the constant + rounding have one
+   source of truth. `test_scale_amount_uses_flattened_faucet_curve` pins the
+   diamond-tier ×1.5-equivalent and that it is not the retired ×5. Penalties are
+   still never amplified. Latent (exploration unwired); reversible; the ×-factor
+   remains a balance call the owner can override.
 
 2. **[design] Broken gear stays equipped and fully effective at durability 0.**
    The mining seam never clears a broken item, so a tool/light at durability 0
@@ -176,6 +186,17 @@ balance / design judgment, so they are queued here rather than fixed._
    different prices. **Decide:** which valuation is canonical (or should the
    mining-market fish registration be removed)? — a balance / design call, out
    of scope for an autonomous fix.
+   — ✅ **RESOLVED (2026-07-18, PR #174): owner-default applied — the fishing
+   V043 curve is canonical.** `games/mining/core/items.py::register_fish_species`
+   now values a fish by its fishing-economy V043 price (8 / 13 / 27 / 80),
+   reusing `games.fishing.core.economy.sell_value` as the single source of truth
+   via a **lazy** import performed at host-wiring time — so the mining core keeps
+   its import-time fishing severance. A fish whose `species_id` is absent from
+   the V043 curve (or a row exposing none) keeps the `max(1, size_rank)`
+   fallback. `test_register_fish_species_values_on_fishing_v043_curve` pins that
+   a registered fish's mining-market value equals its fishing V043 price (e.g.
+   legend_carp = 80, not 4). Latent (no seam routes a caught fish into
+   `MiningState.inventory`); reversible; flagged for owner review.
 
 8. **[design] `economy_audit_log` is not a complete coin ledger.** In
    `services/mining_workflow.py`, `sell` / `buy` / `repair` write audit rows
