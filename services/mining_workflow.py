@@ -898,11 +898,12 @@ def _apply_wear(state: MiningState, action: str) -> tuple[str, ...]:
 
     Underground-only slots (the light) wear only below the surface (depth > 0),
     per ``workshop.WEAR_PLAN``. A slot with no ``durability`` entry does not wear
-    (the core's safe default for untracked items). An item already at 0 (a broken
-    item still sitting in the slot) does not wear again and is NOT re-reported —
-    ``broke`` names only the items that hit 0 THIS tick, not ones that broke on an
-    earlier action and were never cleared. Returns the names of any items that
-    broke (hit 0) this tick.
+    (the core's safe default for untracked items). When an item hits 0 it BREAKS
+    and is *consumed on break* (the equipment model's promise, decision #2): the
+    break tick unequips it, drops its ``durability`` entry, and removes one held
+    unit from ``inventory`` (see :func:`_consume_broken`), so a spent tool/light
+    stops contributing its ``EffectiveStats`` from the very next action. ``broke``
+    names only the items that hit 0 THIS tick. Returns those names.
     """
     broke: list[str] = []
     for slot, underground_only in workshop.WEAR_PLAN.get(action, ()):
@@ -912,11 +913,34 @@ def _apply_wear(state: MiningState, action: str) -> tuple[str, ...]:
         if not item or item not in state.durability:
             continue
         if state.durability[item] <= 0:
-            continue  # already broken — nothing left to wear, and not a fresh break
+            continue  # defensive: a pre-broken item left in the slot — never wears below 0
         state.durability[item] -= 1
         if state.durability[item] == 0:
             broke.append(item)
+            _consume_broken(state, slot, item)
     return tuple(broke)
+
+
+def _consume_broken(state: MiningState, slot: str, item: str) -> None:
+    """Consume a just-broken *item* out of *slot*: unequip it, drop its
+    durability entry, and remove one held unit from inventory.
+
+    This is what makes the durability sink bite — after a break the item no
+    longer sits in ``equipped`` feeding ``equipment.compute_stats``, so its mine
+    multiplier / depth access / light radius are gone on the next action. The
+    inventory leg is guarded: if a copy of the item is carried it debits one
+    (deleting the key at zero), and it is a no-op when no copy is held (the
+    starter loadout equips gear that is not mirrored in the pack), so it never
+    drives a count negative.
+    """
+    if state.equipped.get(slot) == item:
+        del state.equipped[slot]
+    state.durability.pop(item, None)
+    held = state.inventory.get(item, 0)
+    if held > 1:
+        state.inventory[item] = held - 1
+    elif held == 1:
+        del state.inventory[item]
 
 
 __all__ = [

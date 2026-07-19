@@ -102,6 +102,15 @@ blocked on a destructive click.
    docstring says gear is "consumed on break," but no layer does it. **Decide:**
    should a break unequip the item, consume it from inventory, or block the
    action?
+   — ✅ **RESOLVED (2026-07-18, PR #173): owner-default applied — consume on
+   break** (per the equipment docstring's "consumed on break" promise). When
+   `services/mining_workflow.py::_apply_wear` ticks an equipped item to
+   durability 0 it now consumes it via `_consume_broken`: unequips it from
+   `state.equipped`, drops its `state.durability` entry, and removes one held
+   unit from `state.inventory` — so a spent tool/light stops contributing its
+   `EffectiveStats` from the very next action. Items above 0 are unaffected and
+   the last tool breaking leaves an empty slot without a crash. No economy /
+   balance number changed. Reversible; flagged for owner review.
 
 3. **[contract] `build_structure` trusts a caller-supplied `level` instead of
    reading state.** `services/mining_workflow.py::build_structure(state,
