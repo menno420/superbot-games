@@ -1,6 +1,6 @@
 # 2026-07-18 · games-mining-qty-diagnostic — feat(mining-cli): add "Quantity must be a number" diagnostic
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus 4.x · high · feature build
 
@@ -65,7 +65,36 @@ more queued owner-input decision (#6), apply its stated default, flag it, and
 land on green. Green baseline at branch base `99cbc59`: `853 passed, 1 xfailed`
 (`python3 -m pytest -q`, re-confirmed this session before editing).
 
-## ✅ Landed
+## ✅ Landed (PR #172)
 
-_Filled on the flip-to-complete commit once the PR is open and the suite is
-green._
+Shipped in PR [#172](https://github.com/menno420/superbot-games/pull/172)
+(`claude/games-mining-qty-diagnostic`), plus this card:
+
+- `games/mining/cli.py` — `_do_sell` now consults the item catalog before
+  folding a trailing non-int token into the name: a new private
+  `_bad_quantity_token` helper flags "Quantity must be a number, got X" only
+  when the tokens before it resolve via `items.lookup` to a known catalogued
+  item AND the whole phrase does not (decision #6). On a flag it returns an
+  `ok=False` seam-shaped `mw.TradeResult`, so nothing mutates and no audit row
+  is recorded — mirroring the fishing CLI's boundary diagnostic. `build` /
+  `skill` fold behavior untouched.
+- `tests/mining/test_cli.py` — the prior
+  `test_sell_non_integer_qty_folds_into_name_and_no_ops` (which pinned the OLD
+  "cannot be sold" fold) is replaced by
+  `test_sell_non_integer_qty_with_known_item_flags_bad_quantity` (asserts the
+  new "Quantity must be a number, got 'abc'" flag, and that the old unknown-item
+  message is gone), plus
+  `test_sell_genuine_multiword_item_name_still_resolves_no_false_quantity_error`
+  (`sell iron pickaxe` → "cannot be sold", no false quantity flag) and
+  `test_sell_unknown_single_token_item_still_reports_unknown_item` (`sell
+  foobar` → "cannot be sold"). Net +2 tests.
+- `tests/mining/EXPECTED_MIN_TESTS.txt` 202 → 204; `docs/balance.md`
+  regenerated (`python3 tools/gen_balance.py --write`).
+- `docs/NEXT-TASKS.md` — decision #6 marked ✅ RESOLVED with the applied
+  owner-default + PR link; the other queued items left untouched.
+
+**Suite green:** `python3 -m pytest -q` = `855 passed, 1 xfailed` (+2 from the
+net test change). **`bootstrap.py check --strict`** pre-flip = the designed
+born-red hold on this card; this flip-to-complete commit clears it so the gate
+goes green and the auto-merge apparatus lands the squash. No seam / economy /
+balance number changed.
