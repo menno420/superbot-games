@@ -31,7 +31,7 @@ from typing import Callable
 from services import mining_workflow as mw
 from services.audit import InMemorySink
 
-from games.mining.core import energy, equipment, world
+from games.mining.core import energy, equipment, items, world
 from games.shared.cli import repl, run_scripted
 
 #: The base tool a fresh player starts equipped with — the core's entry-tier
@@ -178,6 +178,37 @@ def _split_item_qty(args: list[str]) -> tuple[str, int | None]:
     return " ".join(args).lower(), None
 
 
+def _bad_quantity_token(args: list[str], is_known: Callable[[str], bool]) -> str | None:
+    """Return the trailing token if it reads as a botched quantity, else ``None``.
+
+    Mining's ``sell <item> [qty]`` grammar lets the item name be multi-word, so a
+    non-integer trailing token is grammatically ambiguous: it could be a mistyped
+    quantity, or the last word of a longer name. This disambiguates the way the
+    fishing CLI's boundary ``int()`` parse would if it had a multi-word grammar —
+    a trailing non-int token is a *quantity* mistake only when the tokens BEFORE
+    it already resolve to a known name (``is_known(remainder)``) AND the whole
+    phrase does not (so a genuine multi-word name like ``iron pickaxe`` is never
+    falsely flagged). Returns the offending token (for the "got X" message) when
+    both hold, else ``None`` — leaving it to fold into the name exactly as before.
+
+    Only reached on the ``qty is None`` branch, where ``_split_item_qty`` already
+    established the trailing token is non-integer; the ``lstrip("-").isdigit()``
+    guard below simply keeps the helper honest if called from elsewhere.
+    """
+    if len(args) < 2:
+        return None  # no tokens before the trailing one to stand as a name
+    last = args[-1]
+    if last.lstrip("-").isdigit():
+        return None  # a real (possibly negative) quantity — not this path
+    whole = " ".join(args).lower()
+    if is_known(whole):
+        return None  # the whole phrase is itself a known name — keep it as the item
+    remainder = " ".join(args[:-1]).lower()
+    if is_known(remainder):
+        return last
+    return None
+
+
 def _do_mine(state, sink, args, *, now, rng):
     return mw.mine(state, sink=sink, rng=rng, now=now)
 
@@ -203,6 +234,18 @@ def _do_sell(state, sink, args, *, now, rng):
     if not item:
         return None
     if qty is None:
+        # A trailing non-int token folded into the name (``_split_item_qty``). If
+        # the player clearly meant it as a quantity — the tokens before it already
+        # name a known item, yet the whole phrase does not — flag the bad quantity
+        # (mirroring the fishing CLI's "Quantity must be a number") instead of an
+        # unhelpful "unknown item"; a genuine multi-word name is left untouched.
+        bad = _bad_quantity_token(args, lambda name: items.lookup(name) is not None)
+        if bad is not None:
+            return mw.TradeResult(
+                ok=False,
+                message=f"Quantity must be a number, got {bad!r}.",
+                item=item,
+            )
         held = state.inventory.get(item, 0)
         qty = held if held > 0 else 1
     return mw.sell(state, item, qty, sink=sink, now=now)

@@ -241,13 +241,17 @@ def test_repair_is_case_insensitive_for_the_item_name() -> None:
 #    ``-1`` and builds the forge honestly from its real state level.
 #  * A non-numeric token (``abc`` / ``xyz`` / ``foo``) FAILS the isdigit test, so
 #    ``_split_item_qty`` folds it into the (multi-word) NAME and returns qty
-#    ``None`` — the item/structure/branch then simply does not resolve, and the
-#    seam rejects the unknown name. Unlike the fishing CLI (which int()-parses the
-#    qty at its boundary and says "Quantity must be a number"), the mining CLI has
-#    no dedicated non-numeric-qty message: the token becomes part of the name.
-#    These tests PIN that true mining behavior rather than a fishing-shaped one.
+#    ``None``. Decision #6 added a `sell`-path diagnostic (PR #172): when the
+#    tokens BEFORE the trailing non-int token already name a known catalogued item
+#    (``items.lookup``) and the whole phrase does not, the CLI now flags the bad
+#    quantity ("Quantity must be a number, got X") — mirroring the fishing CLI —
+#    rather than folding it into the name. A genuine multi-word item name (e.g.
+#    ``iron pickaxe``) still resolves as the item (no false quantity error), and a
+#    truly unknown name still reports "cannot be sold". The ``build`` / ``skill``
+#    verbs are unchanged — their non-numeric token still folds into the
+#    structure / branch name and the seam rejects the unknown name.
 #
-# Investigation found NO bug on any path — every one is an honest no-op today.
+# Every path remains an honest no-op — no crash, no state change, no audit row.
 # ---------------------------------------------------------------------------
 def test_sell_negative_qty_is_honest_noop() -> None:
     # `sell iron -3` PARSES as qty -3 (the sign survives lstrip("-")), forwarded
@@ -266,9 +270,12 @@ def test_sell_negative_qty_is_honest_noop() -> None:
     assert len(sink.records) == 0  # a rejected sell records NOTHING (D2)
 
 
-def test_sell_non_integer_qty_folds_into_name_and_no_ops() -> None:
-    # `sell iron abc` FAILS the isdigit test, so "abc" folds into the name
-    # ("iron abc"), which is not sellable — an honest no-op, not a crash.
+def test_sell_non_integer_qty_with_known_item_flags_bad_quantity() -> None:
+    # Decision #6 (PR #172): `sell iron abc` — "abc" fails the isdigit test, but
+    # the tokens before it ("iron") name a known resource and the whole phrase
+    # ("iron abc") does not, so the CLI now flags the botched quantity instead of
+    # folding it into the name. Mirrors the fishing CLI's boundary diagnostic:
+    # an honest no-op (nothing sold, no audit row), not an "unknown item".
     sink = InMemorySink()
     result = run_commands(
         ["sell iron abc", "quit"],
@@ -276,9 +283,48 @@ def test_sell_non_integer_qty_folds_into_name_and_no_ops() -> None:
         state=_fresh(inventory={"iron": 5}),
         now=FIXED_NOW,
     )
-    assert "cannot be sold" in result.text
+    assert "Quantity must be a number" in result.text
+    assert "'abc'" in result.text
+    assert "cannot be sold" not in result.text  # NOT the old unknown-item message
     assert result.state.inventory == {"iron": 5}
     assert result.state.coins == 0
+    assert result.ok_actions == 0
+    assert len(sink.records) == 0
+
+
+def test_sell_genuine_multiword_item_name_still_resolves_no_false_quantity_error() -> None:
+    # The disambiguation guard: `sell iron pickaxe` names a REAL multi-word item
+    # (the "iron pickaxe" TOOL is in the catalog), so the whole phrase resolves as
+    # the item and must NOT be mistaken for "iron" + a bad qty "pickaxe". The tool
+    # simply isn't a sellable resource, so the honest seam message is "cannot be
+    # sold" — never a false "Quantity must be a number".
+    sink = InMemorySink()
+    result = run_commands(
+        ["sell iron pickaxe", "quit"],
+        sink=sink,
+        state=_fresh(inventory={"iron": 5}),
+        now=FIXED_NOW,
+    )
+    assert "cannot be sold" in result.text
+    assert "Quantity must be a number" not in result.text  # no false quantity flag
+    assert result.state.inventory == {"iron": 5}
+    assert result.ok_actions == 0
+    assert len(sink.records) == 0
+
+
+def test_sell_unknown_single_token_item_still_reports_unknown_item() -> None:
+    # An unknown single-token name has no tokens before it to stand as a known
+    # item, so the quantity diagnostic never triggers: `sell foobar` still folds
+    # to the (unknown) name and the seam reports the honest "cannot be sold".
+    sink = InMemorySink()
+    result = run_commands(
+        ["sell foobar", "quit"],
+        sink=sink,
+        state=_fresh(inventory={"iron": 5}),
+        now=FIXED_NOW,
+    )
+    assert "cannot be sold" in result.text
+    assert "Quantity must be a number" not in result.text
     assert result.ok_actions == 0
     assert len(sink.records) == 0
 
