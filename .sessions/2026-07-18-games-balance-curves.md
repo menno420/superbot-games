@@ -1,6 +1,6 @@
 # 2026-07-18 · games-balance-curves — flatten exploration ore-scaling + make the fishing V043 curve canonical for fish valuation
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: opus-4.8 · high · feature build
 
@@ -60,6 +60,42 @@ had turned out already-fixed): `_scale_amount` still reads `1 + mining_power //
 2`, and `register_fish_species` still values via `_fish_value = max(1,
 size_rank)`.
 
-## ✅ Landed
+## ✅ Landed (PR #174)
 
-_(filled at close-out)_
+Shipped in PR [#174](https://github.com/menno420/superbot-games/pull/174)
+(`claude/games-balance-curves`). Two balance changes + tests + bookkeeping + this
+card. Base = `729694c` (#173, main HEAD at branch cut).
+
+- `games/mining/core/exploration.py::_scale_amount` — ore gains now scale on the
+  flattened faucet curve `1 + power * rewards.TOOL_POWER_GAIN` (importing the
+  constant from `rewards`, one source of truth) with the faucet's
+  `max(1, round(base * mult))` rounding, retiring the `1 + mining_power // 2`
+  ×5 runaway. Diamond power 8 → ×1.5. Penalties still never amplified;
+  `loot_bonus` still flat-added.
+- `games/mining/core/items.py::register_fish_species` / `_fish_value` — a
+  registered fish is valued by its fishing V043 price via a **lazy**
+  `from games.fishing.core.economy import is_sellable, sell_value` (import-time
+  fishing severance preserved); off-curve/no-`species_id` rows keep the
+  `max(1, size_rank)` fallback. `FishLike` gains an optional `species_id`.
+- Tests: `tests/mining/test_exploration_world.py::
+  test_scale_amount_uses_flattened_faucet_curve` (diamond ×1.5-equivalent, not
+  ×5, and parity with `rewards.mine_multiplier`);
+  `tests/mining/test_items_market.py::
+  test_register_fish_species_values_on_fishing_v043_curve` (registered fish =
+  V043 price; legend_carp 80 not 4) + `…_off_curve_falls_back_to_size_rank`. The
+  pre-existing `…_injection_point` test (no `species_id`) still pins the
+  size-rank fallback.
+- Bookkeeping: `tests/mining/EXPECTED_MIN_TESTS.txt` 204 → 207; `docs/balance.md`
+  regenerated (`python3 tools/gen_balance.py --write`, `--check` exit 0);
+  `docs/NEXT-TASKS.md` items #1 and #7 marked RESOLVED with applied default +
+  PR.
+
+**Suite green:** `python3 -m pytest -q` = `860 passed, 1 xfailed` (base was `857
+passed, 1 xfailed`; the three new mining tests — one exploration + two
+items-market — lift it to 860, no tests removed).
+`python3 tests/check_suite_floors.py` passes.
+`bootstrap.py check --strict` pre-flip = exit 0 with the designed born-red HOLD
+on this card's in-progress Status; this flip-to-complete commit clears the hold
+so the live auto-merge apparatus lands the squash on green. No live faucet
+number changed (`TOOL_POWER_GAIN` unchanged); both changes are latent today and
+flagged for owner review.
