@@ -175,7 +175,26 @@ jobs:
                   print("squash body already carries Head-ref — nothing to do.")
                   sys.exit(0)
               print(f"stamping squash-body provenance: Head-ref: {head_ref}")
-              gh("pr", "merge", "--disable-auto", pr, "--repo", repo)
+              d = gh("pr", "merge", "--disable-auto", pr, "--repo", repo,
+                     fatal=False)
+              if d.returncode != 0:
+                  # TOCTOU window: auto-merge can land the PR between the
+                  # merged-check above and this disarm (the benign
+                  # post-merge `reconcile` failures + auto-merge churn
+                  # seen on #171–#175). Nothing is mis-armed either way —
+                  # provenance is a survey aid, not a gate.
+                  print(d.stderr, file=sys.stderr)
+                  view = json.loads(gh("api", f"repos/{repo}/pulls/{pr}").stdout)
+                  if view.get("merged"):
+                      print("::notice::auto-merge fired before the "
+                            "provenance stamp — PR merged without "
+                            "Head-ref, skipping.")
+                  else:
+                      print("::warning::provenance disarm failed but the "
+                            "PR is not merged — leaving the enabler's "
+                            "arm standing; the stamp can ride a later "
+                            "`synchronize`.")
+                  sys.exit(0)
               r = gh("pr", "merge", "--auto", "--squash", pr, "--repo", repo,
                      "--body", f"Head-ref: {head_ref}", fatal=False)
               if r.returncode != 0:
