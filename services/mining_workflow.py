@@ -46,6 +46,7 @@ from games.mining.core import (
     capacity,
     energy,
     equipment,
+    exploration,
     market,
     rewards,
     skills,
@@ -63,6 +64,7 @@ from games.mining.core.energy import EnergyState
 # ``mining:<verb>`` token for them — a structural field (no balance meaning), on
 # the same ``mining:*`` namespace the core reason tokens already use.
 MUTATION_MINE = "mining:mine"
+MUTATION_EXPLORE = "mining:explore"
 MUTATION_HARVEST = "mining:harvest"
 MUTATION_DESCEND = "mining:descend"
 MUTATION_ASCEND = "mining:ascend"
@@ -129,6 +131,23 @@ class MineResult:
     ore: str | None = None
     amount: int = 0
     broke: tuple[str, ...] = ()
+    record: AuditRecord | None = None
+
+
+@dataclass(frozen=True)
+class ExploreResult:
+    """Outcome of an :func:`explore` op.
+
+    ``message`` is the engine's own resolved narration (VERBATIM — the CLI
+    renders it directly). ``ok`` is True only when the roll committed an
+    inventory change; a "found nothing" outcome is an honest no-op (``ok=False``,
+    no audit row).
+    """
+
+    ok: bool
+    message: str
+    item: str | None = None
+    amount: int = 0
     record: AuditRecord | None = None
 
 
@@ -324,6 +343,69 @@ def mine(
         ore=ore,
         amount=amount,
         broke=broke,
+        record=record,
+    )
+
+
+def explore(
+    state: MiningState,
+    *,
+    sink: Sink,
+    guild_id: int | None = None,
+    actor_id: int | None = None,
+    actor_type: str = ACTOR_PLAYER,
+    rng: random.Random | None = None,
+    now: datetime | None = None,
+    mutation_id_factory: Callable[[], str] | None = None,
+) -> ExploreResult:
+    """Explore the current biome once: resolve a weighted outcome and apply it.
+
+    Wires the player's real position and loadout through the (previously dead)
+    outcome-resolution path: ``world.biome_for_depth(state.depth)`` picks the
+    depth band, then ``exploration.explore_from_state`` gates on the equipped
+    gear + inventory consumables and scales any ore gain on the flattened
+    ``1 + power * TOOL_POWER_GAIN`` faucet curve (see
+    ``exploration._scale_amount``). The resolved ``(item, amount)`` is granted to
+    (or, for a hazard, debited from) the pack — never driven below zero.
+
+    A "found nothing" roll (no item, or a zero delta) is an honest no-op:
+    ``ok=False`` and NOTHING recorded (D2). A real gain or loss commits and
+    audits exactly one row, mirroring :func:`mine`.
+    """
+    now_dt = _resolve_now(now)
+    biome = world.biome_for_depth(state.depth)
+    text, item, amount = exploration.explore_from_state(
+        state.equipped,
+        state.inventory,
+        biome=biome,
+        rng=rng,
+    )
+
+    if item is None or amount == 0:
+        # Nothing gained or lost — an honest no-op that records nothing (D2).
+        return ExploreResult(ok=False, message=text, item=item, amount=amount)
+
+    prev = state.inventory.get(item, 0)
+    new_total = max(0, prev + amount)  # a hazard loss never drives the pack negative
+    state.inventory[item] = new_total
+
+    record = _make_record(
+        mutation_type=MUTATION_EXPLORE,
+        target=f"inventory:{item}",
+        prev_value=str(prev),
+        new_value=str(new_total),
+        now=now_dt,
+        mutation_id=_resolve_id(mutation_id_factory),
+        guild_id=guild_id,
+        actor_id=actor_id,
+        actor_type=actor_type,
+    )
+    sink.record(record)
+    return ExploreResult(
+        ok=True,
+        message=text,
+        item=item,
+        amount=amount,
         record=record,
     )
 
@@ -949,6 +1031,7 @@ __all__ = [
     "InMemorySink",
     "MiningState",
     "MineResult",
+    "ExploreResult",
     "HarvestResult",
     "TradeResult",
     "RepairResult",
@@ -958,11 +1041,13 @@ __all__ = [
     "SkillResult",
     "ACTOR_PLAYER",
     "MUTATION_MINE",
+    "MUTATION_EXPLORE",
     "MUTATION_HARVEST",
     "MUTATION_DESCEND",
     "MUTATION_ASCEND",
     "MUTATION_ALLOCATE_SKILL",
     "mine",
+    "explore",
     "harvest",
     "sell",
     "buy",

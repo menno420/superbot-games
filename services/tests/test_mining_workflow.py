@@ -96,6 +96,11 @@ def _do_mine(state, sink):
     return mw.mine(state, sink=sink, rng=random.Random(1), now=FIXED_NOW, mutation_id_factory=_fixed_id)
 
 
+def _do_explore(state, sink):
+    # seed 3 resolves the surface "secret chest" (wood +3) — a committed gain.
+    return mw.explore(state, sink=sink, rng=random.Random(3), now=FIXED_NOW, mutation_id_factory=_fixed_id)
+
+
 def _do_harvest(state, sink):
     return mw.harvest(state, sink=sink, rng=random.Random(1), now=FIXED_NOW, mutation_id_factory=_fixed_id)
 
@@ -138,6 +143,7 @@ def _do_skill(state, sink):
 
 _STATE_CHANGING = [
     ("mine", _do_mine, mw.MUTATION_MINE),
+    ("explore", _do_explore, mw.MUTATION_EXPLORE),
     ("harvest", _do_harvest, mw.MUTATION_HARVEST),
     ("sell", _do_sell, market.SELL_REASON),
     ("buy", _do_buy, market.BUY_REASON),
@@ -189,6 +195,12 @@ def test_state_changing_action_records_a_well_formed_primary_record(name, action
 def _noop_mine(state, sink):
     state.energy = EnergyState(0, int(FIXED_NOW.timestamp()))
     return mw.mine(state, sink=sink, now=FIXED_NOW)
+
+
+def _noop_explore_nothing(state, sink):
+    # seed 5 resolves the surface "got lost" outcome (no item, zero delta) — an
+    # honest no-op that records NOTHING (D2), the explore analogue of an empty roll.
+    return mw.explore(state, sink=sink, rng=random.Random(5), now=FIXED_NOW)
 
 
 def _noop_sell_unsellable(state, sink):
@@ -245,6 +257,7 @@ def _noop_skill_bad_branch(state, sink):
 
 _NO_OP = [
     ("mine_no_energy", _noop_mine),
+    ("explore_nothing", _noop_explore_nothing),
     ("sell_unsellable", _noop_sell_unsellable),
     ("sell_too_many", _noop_sell_too_many),
     ("buy_broke", _noop_buy_broke),
@@ -454,6 +467,88 @@ def test_harvest_axe_doubles_the_band():
     ra = mw.harvest(with_axe, sink=InMemorySink(), rng=random.Random(2))
     rb = mw.harvest(without, sink=InMemorySink(), rng=random.Random(2))
     assert ra.amount == rb.amount * 2
+
+
+# ---------------------------------------------------------------------------
+# Behavioural — explore (wires the previously-dead exploration engine)
+# ---------------------------------------------------------------------------
+def test_explore_grants_the_engines_find_and_records():
+    """A committed explore grants the engine's resolved (item, amount) and audits.
+
+    seed 3 resolves the surface "secret chest" (wood +3); the seam grants it to
+    the pack and records exactly one inventory row keyed on the found item.
+    """
+    state = _full_state(inventory={})
+    sink = InMemorySink()
+    r = mw.explore(state, sink=sink, rng=random.Random(3), now=FIXED_NOW)
+    assert r.ok
+    assert (r.item, r.amount) == ("wood", 3)
+    assert state.inventory["wood"] == 3
+    assert len(sink.records) == 1
+    assert sink.records[0].target == "inventory:wood"
+    assert sink.records[0].mutation_type == mw.MUTATION_EXPLORE
+    assert sink.records[0] is r.record
+
+
+def test_explore_nothing_found_is_a_noop_that_records_nothing():
+    """A "found nothing" roll leaves the pack untouched and records NOTHING (D2)."""
+    state = _full_state(inventory={"iron": 10, "stone": 10, "pickaxe": 1})
+    before = dict(state.inventory)
+    sink = InMemorySink()
+    r = mw.explore(state, sink=sink, rng=random.Random(5), now=FIXED_NOW)
+    assert r.ok is False
+    assert r.record is None
+    assert r.item is None and r.amount == 0
+    assert state.inventory == before
+    assert sink.records == []
+
+
+def test_explore_hazard_never_drives_the_pack_negative():
+    """A hazard loss debits the pack but is clamped at zero — never negative.
+
+    seed 0 resolves the surface "monster ambush" (stone -2). With only 1 stone
+    held the loss clamps the count to 0 (not -1), and the loss still audits.
+    """
+    state = _full_state(inventory={"stone": 1})
+    sink = InMemorySink()
+    r = mw.explore(state, sink=sink, rng=random.Random(0), now=FIXED_NOW)
+    assert (r.item, r.amount) == ("stone", -2)
+    assert state.inventory["stone"] == 0  # clamped, not -1
+    assert len(sink.records) == 1
+    assert sink.records[0].new_value == "0"
+
+
+def test_explore_uses_the_players_current_biome():
+    """The engine is fed the biome for the player's real depth, not a fixed one.
+
+    A torch-lit player standing in the Cavern (depth 1) can reach the
+    torch-gated "hidden diamond vein" — an outcome unreachable at the Surface —
+    proving ``explore`` threads ``world.biome_for_depth(state.depth)`` through.
+    """
+    from games.mining.core import exploration, world
+
+    state = _full_state(equipped={"tool": "iron pickaxe", "light": "torch"}, depth=1, inventory={})
+    # Confirm the seam picks the Cavern biome for depth 1 (single source of truth).
+    assert world.biome_for_depth(state.depth) is exploration.Biome.CAVERN
+    # Drive enough rolls to hit the deep, torch-gated diamond vein; assert it can.
+    found_deep = False
+    for seed in range(50):
+        s = _full_state(equipped={"tool": "iron pickaxe", "light": "torch"}, depth=1, inventory={})
+        r = mw.explore(s, sink=InMemorySink(), rng=random.Random(seed), now=FIXED_NOW)
+        if r.item == "diamond":
+            found_deep = True
+            break
+    assert found_deep, "a Cavern explore must be able to reach the torch-gated diamond vein"
+
+
+def test_explore_deterministic_with_seeded_rng():
+    a = _full_state(inventory={})
+    b = _full_state(inventory={})
+    sink_a, sink_b = InMemorySink(), InMemorySink()
+    ra = mw.explore(a, sink=sink_a, rng=random.Random(3), now=FIXED_NOW, mutation_id_factory=_fixed_id)
+    rb = mw.explore(b, sink=sink_b, rng=random.Random(3), now=FIXED_NOW, mutation_id_factory=_fixed_id)
+    assert (ra.item, ra.amount) == (rb.item, rb.amount)
+    assert sink_a.records[0] == sink_b.records[0]
 
 
 # ---------------------------------------------------------------------------
