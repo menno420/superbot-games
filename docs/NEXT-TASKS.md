@@ -138,6 +138,15 @@ blocked on a destructive click.
    grammar overlaps the qty slot. **Decide:** add the diagnostic, and if so,
    what grammar rule disambiguates a trailing non-int token (qty vs part of the
    name)?
+   — ✅ **RESOLVED (2026-07-18, PR #172): owner-default applied — added the
+   diagnostic to the `sell` path with a catalog-aware disambiguation rule.** A
+   trailing non-int token is flagged "Quantity must be a number, got X" only when
+   the tokens BEFORE it already name a known catalogued item (`items.lookup`) AND
+   the whole phrase does not — so `sell iron abc` flags the bad quantity, while a
+   genuine multi-word item name (`sell iron pickaxe`) still resolves as the item
+   (no false quantity error) and a truly unknown name still reports "cannot be
+   sold". `build` / `skill` fold behavior is unchanged. Reversible; flagged for
+   owner review.
 
 _Added by the 2026-07-18 overnight **fresh-angle** bug-hunt (economy-conservation
 + audit-log angles — a separate pass from the #158–#163 loop above). That hunt's
