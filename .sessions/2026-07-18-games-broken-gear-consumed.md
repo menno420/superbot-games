@@ -1,6 +1,6 @@
 # 2026-07-18 · games-broken-gear-consumed — fix(mining): consume gear on break (durability 0)
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus 4.x · high · runtime bugfix
 
@@ -56,6 +56,36 @@ from `docs/NEXT-TASKS.md`, landing main at `11e1451`. This slice is the next
 owner-authorized follow-through in the same queue: take one more queued
 owner-input decision (#2), apply its stated default, flag it, and land on green.
 
-## ✅ Landed
+## ✅ Landed (PR #173)
 
-_Filled on the flip-to-complete commit._
+Shipped in PR [#173](https://github.com/menno420/superbot-games/pull/173)
+(`claude/games-broken-gear-consumed`), plus this card:
+
+- `services/mining_workflow.py` — `_apply_wear` now consumes an item the moment
+  it ticks to durability 0: a new private `_consume_broken(state, slot, item)`
+  helper unequips it (`del state.equipped[slot]`), drops its `state.durability`
+  entry, and debits one held unit from `state.inventory` (deleting the key at
+  zero, a no-op when no copy is carried — the starter loadout equips gear not
+  mirrored in the pack, so it never drives a count negative). `broke` still
+  names only the items that hit 0 this tick. `_apply_wear` is called only from
+  `mine`, so the change is contained to the dig wear path.
+- `services/tests/test_mining_workflow.py` — the prior
+  `test_mine_reports_break_only_on_the_tick_it_breaks` (which pinned the OLD
+  "broken tool stays at durability 0 in the slot" behavior) is replaced by
+  `test_mine_consumes_gear_on_break_and_reports_it_once` (asserts the item is
+  gone from `equipped` / `durability` / `inventory` after the break tick and a
+  follow-up dig neither re-reports it nor crashes), plus
+  `test_break_stops_gear_contributing_stats_next_action` (a broken diamond
+  pickaxe no longer lifts `rewards.mine_multiplier` above the empty-loadout
+  baseline) and `test_mine_does_not_consume_gear_above_zero_durability` (gear
+  above 0 wears 1 and stays equipped). Net +2 tests.
+- `services/tests/EXPECTED_MIN_TESTS.txt` 219 → 221; `docs/balance.md`
+  regenerated (`python3 tools/gen_balance.py --write`).
+- `docs/NEXT-TASKS.md` — decision #2 marked ✅ RESOLVED with the applied
+  owner-default + PR link; the other queued items left untouched.
+
+**Suite green:** `python3 -m pytest -q` = `857 passed, 1 xfailed` (+2 from the
+net test change). **`bootstrap.py check --strict`** pre-flip = the designed
+born-red hold on this card (exit 0); this flip-to-complete commit clears it so
+the gate goes green and the auto-merge apparatus lands the squash. No economy /
+balance number changed.
