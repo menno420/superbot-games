@@ -292,13 +292,36 @@ def _do_sell(
     SINGLE mutation path (sell-OR-cook exclusivity lives there, not here)."""
     if not args:
         return StepResult(lines=["Usage: sell <species> [qty]  (see 'haul' for what you hold)"])
-    species = args[0].lower()
-    qty: int | None = None
-    if len(args) > 1:
-        try:
-            qty = int(args[1])
-        except ValueError:
-            return StepResult(lines=[f"Quantity must be a number, got {args[1]!r}."])
+    # Grammar: a trailing INTEGER is the quantity; everything before it is the
+    # (possibly multi-word) species — addressable by its neutral id OR its
+    # display name. This mirrors the mining CLI's ``sell <item> [qty]`` split so
+    # a multi-word display name ("Legendary Carp") resolves, not just the
+    # single-token id ("legend_carp").
+    if args[-1].lstrip("-").isdigit():
+        name = " ".join(args[:-1])
+        qty: int | None = int(args[-1])
+    else:
+        name = " ".join(args)
+        qty = None
+    if not name:
+        # A bare quantity with no species (e.g. "sell 3").
+        return StepResult(lines=["Usage: sell <species> [qty]  (see 'haul' for what you hold)"])
+
+    resolved = species_table.resolve(name)
+    if qty is None and resolved is None:
+        # Trailing token is non-integer AND the whole phrase names no species.
+        # Disambiguate a botched QUANTITY from part of a longer NAME exactly as
+        # the mining CLI does: flag "Quantity must be a number" only when the
+        # tokens BEFORE the last already resolve to a species yet the whole phrase
+        # does not — so "sell bass lots" flags the bad quantity, while a genuine
+        # multi-word display name ("sell Legendary Carp") still resolves.
+        if len(args) >= 2 and species_table.resolve(" ".join(args[:-1])) is not None:
+            return StepResult(lines=[f"Quantity must be a number, got {args[-1]!r}."])
+
+    # Prefer the resolved neutral id (id match wins inside ``resolve``); fall back
+    # to the lower-cased raw token so a genuinely unknown species still reaches
+    # the seam for its honest "cannot be sold" no-op.
+    species = resolved if resolved is not None else name.lower()
     if qty is None:
         # Mirror the mining CLI's default: sell everything you hold (or ask
         # the seam for 1, whose honest "You only have 0×" no-op answers).

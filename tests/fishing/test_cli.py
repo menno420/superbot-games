@@ -312,33 +312,41 @@ def test_sell_with_negative_qty_is_honest_noop() -> None:
     assert len(sink.records) == 0  # a rejected sell records NOTHING (D2)
 
 
-def test_sell_multiword_display_name_is_honest_noop() -> None:
-    # The species whose DISPLAY name is multi-word ("Legendary Carp") is keyed
-    # on the neutral single-token id ``legend_carp`` (games/fishing/core/species.py) —
-    # the id, never the display name, is the CLI's input grammar. So typing the
-    # display name tokenises to species ``legendary`` + qty ``Carp`` and honestly
-    # no-ops on the int() parse ("Quantity must be a number, got 'Carp'."): no
-    # fish consumed, no wrong species touched, no audit row. This PINS the
-    # current single-token-grammar behavior (see the card's Session idea for the
-    # deferred product question of whether CLIs should resolve display names).
+def test_sell_multiword_display_name_resolves_to_id_and_commits() -> None:
+    # Decision #5 owner-default: a multi-word DISPLAY name ("Legendary Carp")
+    # now resolves to its neutral id ``legend_carp`` (games/fishing/core/species.py)
+    # via ``species.resolve`` and commits, instead of tokenising to species
+    # ``legendary`` + a bad qty ``Carp`` and no-oping. The trailing integer is the
+    # quantity; the words before it are the (multi-word) species name.
     sink = InMemorySink()
     result = run_commands(
-        ["sell Legendary Carp 3", "quit"],
+        ["sell Legendary Carp 2", "quit"],
         sink=sink,
+        state=_fresh(haul={"legend_carp": 3}),
+        now=FIXED_NOW,
+    )
+    assert result.state.coins == 2 * economy.sell_value("legend_carp")
+    assert result.state.haul["legend_carp"] == 1  # 2 of 3 consumed
+    assert len(sink.records) == 1  # one committed sell → exactly one row
+
+
+def test_sell_multiword_display_name_is_case_insensitive() -> None:
+    # The display-name resolver is case-insensitive: the fully lower-cased
+    # display name resolves to the same id as the canonical-cased form.
+    result = run_commands(
+        ["sell legendary carp", "quit"],  # no qty → sell all held
         state=_fresh(haul={"legend_carp": 2}),
         now=FIXED_NOW,
     )
-    assert "Quantity must be a number" in result.text
-    assert "'Carp'" in result.text
-    assert result.state.coins == 0
-    assert result.state.haul == {"legend_carp": 2}  # nothing consumed
-    assert len(sink.records) == 0
+    assert result.state.coins == 2 * economy.sell_value("legend_carp")
+    assert result.state.haul["legend_carp"] == 0
+    assert len(result.sink.records) == 1
 
 
-def test_sell_legend_carp_by_neutral_id_commits() -> None:
-    # The counterpart to the multi-word no-op above: the SAME species sells
-    # correctly when addressed by its neutral single-token id, proving the
-    # multi-word species is fully reachable — via its id, not its display name.
+def test_sell_legend_carp_by_neutral_id_still_commits() -> None:
+    # Id-based resolution is preserved unchanged: the SAME species still sells
+    # correctly when addressed by its neutral single-token id (id match wins in
+    # ``resolve``, so the id path is never shadowed by display-name matching).
     result = run_commands(
         ["sell legend_carp 2", "quit"],
         state=_fresh(haul={"legend_carp": 3}),
@@ -347,6 +355,25 @@ def test_sell_legend_carp_by_neutral_id_commits() -> None:
     assert result.state.coins == 2 * economy.sell_value("legend_carp")
     assert result.state.haul["legend_carp"] == 1  # 2 of 3 consumed
     assert len(result.sink.records) == 1  # one committed sell → exactly one row
+
+
+def test_sell_unknown_multiword_name_is_honest_noop() -> None:
+    # A multi-word phrase that matches no id AND no display name still honestly
+    # no-ops (unknown species), NOT a false "Quantity must be a number" — the
+    # trailing token is only flagged as a bad quantity when the prefix already
+    # names a species (mirrors the mining CLI's catalog-aware disambiguation).
+    sink = InMemorySink()
+    result = run_commands(
+        ["sell Giant Kraken", "quit"],
+        sink=sink,
+        state=_fresh(haul={"bass": 1}),
+        now=FIXED_NOW,
+    )
+    assert "Quantity must be a number" not in result.text
+    assert "cannot be sold" in result.text
+    assert result.state.coins == 0
+    assert result.state.haul == {"bass": 1}  # nothing consumed
+    assert len(sink.records) == 0
 
 
 # ---------------------------------------------------------------------------

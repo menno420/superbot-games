@@ -150,12 +150,17 @@ class StepResult:
 
 
 def _resolve_choice_id(state: dw.DnDState, token: str) -> str:
-    """Map a menu number to a surfaced option id; pass any other token through.
+    """Map a menu number OR a case-variant option id to a surfaced option id.
 
-    A digit within the surfaced range resolves to that option's id; a digit out
-    of range or any non-digit token is passed to the seam VERBATIM — the resolver
-    then clamps it (off-menu) to the scene's deterministic safe default. The CLI
-    never re-implements that clamp.
+    A digit within the surfaced range resolves to that option's id. Otherwise the
+    token is case-folded against the surfaced option ids: a capitalised id
+    (``Advance_Escort``) resolves to the same surfaced option as its lowercase
+    form (``advance_escort``), mirroring how the other game CLIs lower-case a
+    token at their seam boundary (#158). Only the width-capped SURFACED ids are
+    matched — the exact set the resolver would accept — so an id beyond the menu
+    still clamps. A token that matches no surfaced id is passed to the seam
+    VERBATIM; the resolver then clamps it (off-menu) to the scene's deterministic
+    safe default. The CLI never re-implements that clamp.
     """
     scene = get_scene(state.scene_id)
     options = dw.surfaced_options(scene, xp=state.xp)
@@ -163,6 +168,10 @@ def _resolve_choice_id(state: dw.DnDState, token: str) -> str:
         idx = int(token)
         if 1 <= idx <= len(options):
             return options[idx - 1].id
+    folded = token.casefold()
+    for opt in options:
+        if opt.id.casefold() == folded:
+            return opt.id
     return token
 
 
