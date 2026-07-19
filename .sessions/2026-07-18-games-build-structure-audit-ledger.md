@@ -1,6 +1,6 @@
 # 2026-07-18 · games-build-structure-audit-ledger — fix(mining): build_structure derives level from state + complete coin ledger in economy_audit_log
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus 4.x · high · runtime bugfix
 
@@ -75,3 +75,27 @@ now confirmed already closed by #167, #8 the coin-ledger completeness call) in
 follow-through: apply both stated defaults, flag them, land on green. Green
 baseline at branch base `1039e8a`: `852 passed, 1 xfailed`
 (`python3 -m pytest -q`, re-confirmed this session before editing).
+
+## ✅ Landed (PR #171)
+
+Shipped in PR [#171](https://github.com/menno420/superbot-games/pull/171)
+(`claude/games-build-structure-audit-ledger`), plus this card:
+
+- `services/mining_workflow.py` — `build_structure` and `vault_upgrade` now emit
+  a second `target="coins"` audit row (same money-flow reason token, prev/new =
+  coin balance before/after the sink) alongside the existing LEVEL row (decision
+  #8). The LEVEL row stays the primary `result.record` at index 0.
+- Tests — new
+  `test_economy_audit_log_coin_rows_reconstruct_the_wallet_after_build_and_vault`
+  (`services/tests/test_mining_workflow.py`); the seam's per-action record-count
+  test and the mining CLI / repl committed-build count asserts updated for the
+  now-two-row build / vault ops; `records[-1]` level assertions select the
+  structure row. `services/tests` floor 218 → 219; `docs/balance.md` regenerated.
+- `docs/NEXT-TASKS.md` — decisions #3 (verified already landed by #167) and #8
+  marked ✅ RESOLVED with the applied owner-default + PR link; the other queued
+  items left untouched.
+
+**Suite green:** `python3 -m pytest -q` = `853 passed, 1 xfailed` (+1 from the
+new test). **`bootstrap.py check --strict`** pre-flip = the designed born-red
+hold; this flip-to-complete commit clears it so the gate goes green and the live
+auto-merge apparatus lands the squash. No balance / economy number changed.
