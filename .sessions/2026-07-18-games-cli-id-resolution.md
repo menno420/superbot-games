@@ -1,6 +1,6 @@
 # 2026-07-18 · games-cli-id-resolution — feat(cli): case-fold dnd option ids + resolve multi-word display names to ids
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: opus-4.8 · high · feature build
 
