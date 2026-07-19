@@ -1,6 +1,6 @@
 # 2026-07-18 · games-records-planning-refresh — docs: refresh current-state truth-stamp + post-freeze forward plan after the 2026-07-19 decision sweep
 
-> **Status:** 🚧 `in-progress`
+> **Status:** ✅ `complete`
 >
 > 📊 Model: opus-4.8 · high · docs-only
 
