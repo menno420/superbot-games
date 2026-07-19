@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from games.mining.core import capacity, energy, market, skills, structures, workshop
+from games.mining.core import capacity, energy, market, rewards, skills, structures, workshop
 from games.mining.core.energy import EnergyState
 from services import audit, mining_workflow as mw
 from services.audit import AuditRecord, InMemorySink, Sink
@@ -354,26 +354,65 @@ def test_mine_light_only_wears_underground():
     assert deep.durability["lantern"] == 99
 
 
-def test_mine_reports_break_only_on_the_tick_it_breaks():
-    """A tool broken on an earlier dig is not re-reported as ``broke`` again.
+def test_mine_consumes_gear_on_break_and_reports_it_once():
+    """A tool at durability 1 breaks on the first dig and is CONSUMED (decision #2).
 
-    ``_apply_wear`` promises ``broke`` names only the items that hit 0 THIS tick.
-    A tool at durability 1 breaks on the first dig (broke=(tool,)); on the next
-    dig it is already at 0, so it must not wear further and must NOT reappear in
-    ``broke`` (regression: it used to be re-reported on every subsequent action).
+    ``_apply_wear`` ticks the tool to 0, reports it in ``broke`` exactly once,
+    and consumes it: unequips it from ``equipped``, drops its ``durability``
+    entry, and removes one held copy from ``inventory``. A follow-up dig with the
+    now-empty tool slot neither re-reports the break nor crashes.
     """
     state = _full_state(
-        inventory={},
+        inventory={"iron pickaxe": 1},
         equipped={"tool": "iron pickaxe"},
         durability={"iron pickaxe": 1},
     )
     r1 = mw.mine(state, sink=InMemorySink(), rng=random.Random(1), now=FIXED_NOW)
     assert r1.broke == ("iron pickaxe",)  # broke on this tick
-    assert state.durability["iron pickaxe"] == 0
+    # Consumed: gone from every place it lived.
+    assert "tool" not in state.equipped
+    assert "iron pickaxe" not in state.durability
+    assert "iron pickaxe" not in state.inventory
 
+    # A subsequent dig with an emptied tool slot must not crash or re-report.
     r2 = mw.mine(state, sink=InMemorySink(), rng=random.Random(1), now=FIXED_NOW)
-    assert r2.broke == ()  # already broken — not a fresh break, not re-reported
-    assert state.durability["iron pickaxe"] == 0  # stays 0, never wears below
+    assert r2.ok
+    assert r2.broke == ()  # nothing left to break — not re-reported
+
+
+def test_break_stops_gear_contributing_stats_next_action():
+    """Once consumed, a broken tool stops feeding the mine multiplier.
+
+    Before the break the equipped diamond pickaxe lifts the multiplier above the
+    bare-hands baseline; after it breaks and is consumed the equipped loadout is
+    empty, so the next multiplier read matches the empty-loadout value.
+    """
+    state = _full_state(
+        inventory={},
+        equipped={"tool": "diamond pickaxe"},
+        durability={"diamond pickaxe": 1},
+    )
+    before = rewards.mine_multiplier(state.equipped, state.inventory)
+    baseline = rewards.mine_multiplier({}, {})
+    assert before > baseline  # the equipped tool is contributing
+
+    mw.mine(state, sink=InMemorySink(), rng=random.Random(1), now=FIXED_NOW)
+    assert "tool" not in state.equipped
+    after = rewards.mine_multiplier(state.equipped, state.inventory)
+    assert after == baseline  # consumed → no longer contributing
+
+
+def test_mine_does_not_consume_gear_above_zero_durability():
+    """Gear above 0 durability is untouched: it wears 1 and stays equipped."""
+    state = _full_state(
+        inventory={},
+        equipped={"tool": "iron pickaxe"},
+        durability={"iron pickaxe": 5},
+    )
+    r = mw.mine(state, sink=InMemorySink(), rng=random.Random(1), now=FIXED_NOW)
+    assert r.broke == ()
+    assert state.equipped["tool"] == "iron pickaxe"  # still equipped
+    assert state.durability["iron pickaxe"] == 4  # wore 1, not consumed
 
 
 def test_mine_multiplier_uses_core_verbatim():
