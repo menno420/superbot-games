@@ -695,24 +695,45 @@ def build_structure(
             level=level,
         )
 
-    state.coins -= cost.coins
+    prev_coins = state.coins
+    state.coins = prev_coins - cost.coins
     for mat, qty in cost.materials.items():
         state.materials[mat] -= qty
     new_level = level + 1
     state.structures[key] = new_level
 
+    now_dt = _resolve_now(now)
+    reason = market.structure_build_reason(key)
     record = _make_record(
-        mutation_type=market.structure_build_reason(key),
+        mutation_type=reason,
         target=f"structure:{key}",
         prev_value=str(level),
         new_value=str(new_level),
-        now=_resolve_now(now),
+        now=now_dt,
         mutation_id=_resolve_id(mutation_id_factory),
         guild_id=guild_id,
         actor_id=actor_id,
         actor_type=actor_type,
     )
     sink.record(record)
+    # Decision #8 — economy_audit_log completeness: a build is a coin SINK, so in
+    # addition to the structure-LEVEL row above, emit a target="coins" ledger row
+    # carrying the coin balance before/after — the exact row shape sell / buy /
+    # repair use — so a wallet reconstructed purely from the log's coin rows
+    # accounts for this sink. The level row stays the primary ``result.record``.
+    sink.record(
+        _make_record(
+            mutation_type=reason,
+            target="coins",
+            prev_value=str(prev_coins),
+            new_value=str(state.coins),
+            now=now_dt,
+            mutation_id=_resolve_id(mutation_id_factory),
+            guild_id=guild_id,
+            actor_id=actor_id,
+            actor_type=actor_type,
+        )
+    )
     return BuildResult(
         ok=True,
         message=f"Built {structures.level_name(key, new_level)} for {cost.coins} coins.",
@@ -762,18 +783,36 @@ def vault_upgrade(
     state.vault_level = new_level
     new_cap = capacity.vault_capacity(new_level)
 
+    now_dt = _resolve_now(now)
     record = _make_record(
         mutation_type=market.VAULT_UPGRADE_REASON,
         target="vault",
         prev_value=str(level),
         new_value=str(new_level),
-        now=_resolve_now(now),
+        now=now_dt,
         mutation_id=_resolve_id(mutation_id_factory),
         guild_id=guild_id,
         actor_id=actor_id,
         actor_type=actor_type,
     )
     sink.record(record)
+    # Decision #8 — economy_audit_log completeness: a vault upgrade is a coin
+    # SINK, so alongside the vault-LEVEL row above, emit a target="coins" ledger
+    # row (same money-flow reason token) carrying the coin balance before/after —
+    # matching sell / buy / repair — so a log-derived wallet counts this sink.
+    sink.record(
+        _make_record(
+            mutation_type=market.VAULT_UPGRADE_REASON,
+            target="coins",
+            prev_value=str(prev_coins),
+            new_value=str(state.coins),
+            now=now_dt,
+            mutation_id=_resolve_id(mutation_id_factory),
+            guild_id=guild_id,
+            actor_id=actor_id,
+            actor_type=actor_type,
+        )
+    )
     return VaultResult(
         ok=True,
         message=f"Vault upgraded to level {new_level} ({new_cap} slots) for {cost} coins.",

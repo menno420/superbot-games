@@ -112,6 +112,12 @@ blocked on a destructive click.
    corrupts the stored level (downgrade / double-charge). **Decide:** tighten
    the contract to read the level from `state` (may change the established
    caller interface)?
+   — ✅ **RESOLVED (2026-07-18, PR #171): owner-default applied — read the
+   level from `state`.** Verified the default was ALREADY landed by #167
+   (`ba78870`): `build_structure` derives `level = state.structures.get(key, 0)`,
+   and `test_build_structure_uses_state_level_not_caller_claim` pins that a wrong
+   `level` arg cannot change the stored-level outcome. Reversible; flagged for
+   owner review.
 
 4. **[product] dnd CLI clamps a capitalised option id to the safe default.**
    The dnd CLI treats a capitalised option id as off-menu and clamps to the
@@ -167,3 +173,12 @@ balance / design judgment, so they are queued here rather than fixed._
    `economy_audit_log` meant to be a complete coin ledger (if so, build / vault
    should emit a coin-target row too), or is one-primary-target-per-op intended?
    — a design call, out of scope for an autonomous fix.
+   — ✅ **RESOLVED (2026-07-18, PR #171): owner-default applied — complete coin
+   ledger.** `build_structure` and `vault_upgrade` now ALSO emit a
+   `target="coins"` row (same money-flow reason token, prev/new = coin balance
+   before/after the sink), IN ADDITION TO the existing LEVEL row, matching the
+   sell / buy / repair row shape.
+   `test_economy_audit_log_coin_rows_reconstruct_the_wallet_after_build_and_vault`
+   pins that a wallet rebuilt from the log's coin rows equals the live wallet.
+   No balance number changed; only a structural audit row added. Reversible;
+   flagged for owner review.
