@@ -121,6 +121,43 @@ def test_mine_grows_pack_and_wears_the_tool() -> None:
 
 
 # ---------------------------------------------------------------------------
+# explore — drives the (previously dead) exploration engine on a live verb
+# ---------------------------------------------------------------------------
+def test_explore_grows_pack_and_records_the_find() -> None:
+    # seed 3 resolves the surface "secret chest" (wood +3): the CLI drives the
+    # engine through the seam, grows the pack, and records exactly one audit row.
+    sink = InMemorySink()
+    result = run_commands(
+        ["explore", "quit"],
+        sink=sink,
+        state=_fresh(),
+        now=FIXED_NOW,
+        rng=random.Random(3),
+    )
+    assert "found a secret chest with 3 wood" in result.text
+    assert result.state.inventory.get("wood") == 3
+    assert result.ok_actions == 1
+    assert len(sink.records) == 1
+    assert sink.records[0].mutation_type == mw.MUTATION_EXPLORE
+
+
+def test_explore_found_nothing_is_an_honest_noop() -> None:
+    # seed 5 resolves the "got lost" outcome: the CLI prints the engine narration
+    # but commits nothing and records no audit row (D2).
+    sink = InMemorySink()
+    result = run_commands(
+        ["explore", "quit"],
+        sink=sink,
+        state=_fresh(),
+        now=FIXED_NOW,
+        rng=random.Random(5),
+    )
+    assert "found nothing" in result.text
+    assert result.ok_actions == 0
+    assert len(sink.records) == 0
+
+
+# ---------------------------------------------------------------------------
 # Blocked actions — honest message, no crash, no audit row
 # ---------------------------------------------------------------------------
 def test_blocked_descend_yields_the_hint_not_a_crash() -> None:
@@ -408,7 +445,7 @@ def test_skill_non_integer_points_folds_into_name_and_no_ops() -> None:
 # ---------------------------------------------------------------------------
 def test_help_lists_every_command() -> None:
     text = "\n".join(help_lines())
-    for verb in ("mine", "harvest", "sell", "buy", "repair", "descend", "ascend", "build", "vault", "skill"):
+    for verb in ("mine", "explore", "harvest", "sell", "buy", "repair", "descend", "ascend", "build", "vault", "skill"):
         assert verb in text
 
 
