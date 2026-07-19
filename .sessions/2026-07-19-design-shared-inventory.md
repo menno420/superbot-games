@@ -1,6 +1,6 @@
 # 2026-07-19 · design-shared-inventory — planning doc for a shared cross-game inventory (fishing → mining market)
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus 4.x · high · design-doc
 
