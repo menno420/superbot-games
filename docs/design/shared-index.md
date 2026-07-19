@@ -23,6 +23,13 @@
   each domain's per-hour emission, and asserts the global invariants
   `GRANT_WITHIN_GLOBAL_CAP`, `ITEM_FAUCET_MINTS_NO_CURRENCY`, and
   `NOOP_MINTS_NOTHING`.
+- [`../design-shared-cross-game-inventory.md`](../design-shared-cross-game-inventory.md) — PLAN:
+  a one-page design/planning doc (NOT a build) for a shared cross-game inventory that would let
+  fishing catches reach the mining market. Reads the real fishing/mining seams, names where they
+  meet or fail (two id schemes, two store shapes, #174's canonical-but-unreachable V043 price),
+  lays out three options with honest reversibility/blast-radius, recommends the bridge (Option B),
+  and flags every genuine product fork with `⚠️ OWNER PRODUCT CALL:`. Scopes `docs/NEXT-TASKS.md`
+  § "Next session" item 2; companion to the world-inventory-resource-contract above.
 - [`../balance.md`](../balance.md) — REFERENCE: the auto-generated economy balance page
   (`tools/gen_balance.py` regenerates it from the shipped catalogs / sim tunables / caps /
   suite floors; CI enforces freshness via `--check`).
