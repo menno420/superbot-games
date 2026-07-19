@@ -116,6 +116,7 @@ def help_lines() -> list[str]:
     return [
         "Commands:",
         "  mine                 dig once — spend energy, roll loot, wear the tool",
+        "  explore              explore the current biome for a weighted find",
         "  harvest              chop once for wood",
         "  sell <item> [qty]    sell a resource (default: all you hold)",
         "  buy <item>           buy one shop item (e.g. buy torch)",
@@ -213,6 +214,10 @@ def _do_mine(state, sink, args, *, now, rng):
     return mw.mine(state, sink=sink, rng=rng, now=now)
 
 
+def _do_explore(state, sink, args, *, now, rng):
+    return mw.explore(state, sink=sink, rng=rng, now=now)
+
+
 def _do_harvest(state, sink, args, *, now, rng):
     return mw.harvest(state, sink=sink, rng=rng, now=now)
 
@@ -286,6 +291,7 @@ def _do_skill(state, sink, args, *, now, rng):
 #: routing cannot drift; the help-parity test pins ``help_lines()`` to it.
 _ACTIONS = {
     "mine": _do_mine,
+    "explore": _do_explore,
     "harvest": _do_harvest,
     "sell": _do_sell,
     "buy": _do_buy,
