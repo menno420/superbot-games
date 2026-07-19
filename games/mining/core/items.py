@@ -30,10 +30,16 @@ class FishLike(Protocol):
 
     Lets :func:`register_fish_species` accept the fishing plugin's ``SPECIES``
     rows without the mining core importing (or knowing) the fishing package.
+
+    ``species_id`` is optional: when present (the fishing plugin's rows expose
+    it) it keys the canonical V043 sell value; a row without it falls back to
+    ``size_rank``-scaled valuation. Declared with a default so an ad-hoc row
+    exposing only ``name`` + ``size_rank`` still satisfies the protocol.
     """
 
     name: str
     size_rank: int
+    species_id: str = ""
 
 # FISHING COUPLING SEVERED (mining-only port). The oracle folded every fishing
 # species into the catalog via ``from utils.fishing.fish import SPECIES``. The
@@ -274,21 +280,48 @@ _CATALOG.update(
 # instead the host injects fish rows through :func:`register_fish_species` once
 # fishing ports. Until then the mining catalog is byte-identical to the oracle's
 # minus the fish rows (mining items are unaffected — additive-safety).
-def _fish_value(size_rank: int) -> int:
-    """Size-scaled sell value for a raw fish (1…21 across size ranks 1…21)."""
-    return max(1, size_rank)
+def _fish_value(fish: FishLike) -> int:
+    """Sell value (coins) for a registered fish — the canonical fishing curve.
+
+    Reuses the fishing economy's sim-pinned **V043** sell curve as the single
+    source of truth (owner decision #7, 2026-07-18): a fish whose ``species_id``
+    is on that curve is worth exactly its fishing sell value
+    (minnow 8 · bass 13 · pike 27 · legend_carp 80), closing the ~20× gap the
+    old ad-hoc ``max(1, size_rank)`` (1…4 coins) opened against the fishing
+    market — so the same species never sells for two prices once a host wires
+    both games onto a shared inventory.
+
+    The import is **lazy** — done here at host-wiring time, when the fishing
+    package is present — so the pure mining core keeps its **import-time**
+    fishing severance. A row exposing no ``species_id``, an id absent from the
+    V043 curve, or an environment without the fishing package all fall back to
+    the size-scaled ``max(1, size_rank)``.
+    """
+    species_id = getattr(fish, "species_id", "") or ""
+    if species_id:
+        try:
+            from games.fishing.core.economy import is_sellable, sell_value
+        except ImportError:
+            pass
+        else:
+            if is_sellable(species_id):
+                return sell_value(species_id)
+    return max(1, fish.size_rank)
 
 
 def register_fish_species(species: Iterable[FishLike]) -> None:
     """Fold caught-fish species into the item catalog (injection point).
 
     *species* is any iterable of objects exposing ``name: str`` and
-    ``size_rank: int`` (e.g. the fishing plugin's ``SPECIES`` rows). Each becomes
-    a sellable RESOURCE tagged ``fish`` with ``value = max(1, size_rank)`` — the
-    exact rows the oracle's ``utils.fishing.fish.SPECIES`` fold produced. This
-    keeps the mining core independent of the fishing package while preserving the
-    shared-inventory / shared-market behaviour when a host wires both games.
-    Idempotent per name; safe to call once at host wiring time.
+    ``size_rank: int`` (e.g. the fishing plugin's ``SPECIES`` rows, which also
+    expose ``species_id``). Each becomes a sellable RESOURCE tagged ``fish``
+    valued by :func:`_fish_value` — the **canonical fishing V043 sell curve**
+    when the row's ``species_id`` is on it (owner decision #7, 2026-07-18),
+    else the size-scaled ``max(1, size_rank)`` fallback. This keeps the mining
+    core independent of the fishing package at import time (the V043 lookup is a
+    lazy import inside :func:`_fish_value`) while giving the two games one price
+    per species when a host wires them onto a shared inventory. Idempotent per
+    name; safe to call once at host wiring time.
     """
     _CATALOG.update(
         {
@@ -296,7 +329,7 @@ def register_fish_species(species: Iterable[FishLike]) -> None:
                 s.name,
                 ItemKind.RESOURCE,
                 tier=1,
-                value=_fish_value(s.size_rank),
+                value=_fish_value(s),
                 tags=frozenset({"fish"}),
             )
             for s in species

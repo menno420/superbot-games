@@ -5,6 +5,7 @@ from __future__ import annotations
 import random
 
 from games.mining.core import exploration as exp
+from games.mining.core import rewards
 from games.mining.core import world
 from games.mining.core.equipment import EffectiveStats
 
@@ -46,6 +47,21 @@ def test_scale_amount_penalties_never_amplified() -> None:
     hazard = exp.ExploreOutcome("h", "lost {amount} stone", "stone", -2)
     strong = EffectiveStats(mining_power=8, loot_bonus=5)
     assert exp._scale_amount(hazard, strong) == -2  # penalty untouched
+
+
+def test_scale_amount_uses_flattened_faucet_curve() -> None:
+    # Ore gains scale on the flattened 2026-06-22 faucet curve
+    # (1 + power * TOOL_POWER_GAIN), matching rewards.mine_multiplier — NOT the
+    # retired runaway 1 + power // 2. Diamond-pickaxe power 8 → ×1.5, so a 4-ore
+    # find yields round(4 * 1.5) = 6, not the old 4 * 5 = 20.
+    diamond = EffectiveStats(mining_power=8)  # diamond-pickaxe mining_power
+    find = exp.ExploreOutcome("v", "found {amount} diamond", "diamond", 4)
+    assert exp._scale_amount(find, diamond) == 6  # ×1.5-equivalent
+    assert exp._scale_amount(find, diamond) != 20  # retired ×5 runaway is gone
+    # One source of truth: the exploration multiplier is the live faucet's for
+    # the same tool (diamond pickaxe → mining_power 8 → ×1.5).
+    faucet = rewards.mine_multiplier({"tool": "diamond pickaxe"}, {})
+    assert exp._scale_amount(find, diamond) == max(1, round(4 * faucet))
 
 
 def test_world_depth_access_gating_additive_safety() -> None:
