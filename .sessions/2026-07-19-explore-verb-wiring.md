@@ -1,6 +1,6 @@
 # 2026-07-19 · explore-verb-wiring — feat(mining): wire the exploration engine onto a live `explore` verb
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Claude Opus 4.x · high · feature-wiring
 
