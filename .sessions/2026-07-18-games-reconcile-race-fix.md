@@ -1,8 +1,8 @@
 # 2026-07-18 · games-reconcile-race-fix — ci(card-guard): tolerate auto-merge landing before the provenance stamp (port idle #142)
 
-> **Status:** `in-progress`
+> **Status:** ✅ `complete`
 >
-> 📊 Model: opus-4.8 · high · ci bugfix
+> 📊 Model: opus-4.8 · high · runtime bugfix
 
 ⚑ Owner-authorized self-initiated CI fix (menno420, live 2026-07-18):
 port superbot-idle PR #142 (commit `884aeae`) to games'
