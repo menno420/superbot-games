@@ -135,7 +135,11 @@ def test_funded_build_commits_at_the_seam_cost_and_audits() -> None:
     result = cli.run_commands(["build campfire", "quit"], now=FIXED_NOW, state=state)
     assert result.state.structures.get("campfire") == 1
     assert result.state.coins == 0
-    assert result.ok_actions == 1 and len(result.sink.records) == 1
+    # Decision #8: a committed build audits a structure-LEVEL row AND a
+    # target="coins" ledger row → two rows for the one committed action.
+    assert result.ok_actions == 1 and len(result.sink.records) == 2
+    assert any(r.target == "structure:campfire" for r in result.sink.records)
+    assert any(r.target == "coins" for r in result.sink.records)
 
 
 # ---------------------------------------------------------------------------

@@ -150,14 +150,26 @@ _STATE_CHANGING = [
 ]
 
 
+# Decision #8: a coin-SINK structure/vault op ALSO emits a target="coins" ledger
+# row (in addition to its LEVEL row), so those ops record two rows — the LEVEL
+# row stays the primary ``result.record`` at index 0, the coin row is appended.
+_TWO_ROW_ACTIONS = {"build", "vault"}
+
+
 @pytest.mark.parametrize("name,action,expected_mutation", _STATE_CHANGING, ids=[c[0] for c in _STATE_CHANGING])
-def test_state_changing_action_records_exactly_one_well_formed_record(name, action, expected_mutation):
-    """Every state-changing action emits exactly one well-formed AuditRecord."""
+def test_state_changing_action_records_a_well_formed_primary_record(name, action, expected_mutation):
+    """Every state-changing action emits a well-formed primary AuditRecord.
+
+    Coin-sink structure/vault ops ALSO emit a target="coins" ledger row
+    (decision #8), so they record two rows; the primary (``result.record``)
+    stays the LEVEL row at index 0.
+    """
     state = _full_state()
     sink = InMemorySink()
     result = action(state, sink)
     assert result.ok, f"{name} should have succeeded"
-    assert len(sink.records) == 1, f"{name} must record exactly one record"
+    expected_n = 2 if name in _TWO_ROW_ACTIONS else 1
+    assert len(sink.records) == expected_n, f"{name} must record {expected_n} record(s)"
     rec = sink.records[0]
     _assert_well_formed(rec)
     assert rec.mutation_type == expected_mutation
@@ -165,6 +177,12 @@ def test_state_changing_action_records_exactly_one_well_formed_record(name, acti
     # the injected id/clock flow straight through to the record
     assert rec.mutation_id == FIXED_ID
     assert rec.occurred_at == FIXED_NOW
+    # the appended coin-ledger row (if any) is itself well-formed and coins-targeted
+    if name in _TWO_ROW_ACTIONS:
+        coin_row = sink.records[1]
+        _assert_well_formed(coin_row)
+        assert coin_row.target == "coins"
+        assert coin_row.mutation_type == expected_mutation
 
 
 # --- failed / no-op actions record NOTHING ---------------------------------
@@ -536,14 +554,18 @@ def test_build_structure_uses_state_level_not_caller_claim():
     assert len(sink.records) == n
 
     # Inflated claim on a level-0 forge: builds exactly one tier and records the
-    # real prior level (before fix: jumped to 2 with prev_value "1").
+    # real prior level (before fix: jumped to 2 with prev_value "1"). Assert on
+    # the structure-LEVEL row specifically — decision #8 appends a target="coins"
+    # ledger row after it, whose prev/new carry coin balances, not levels.
     fresh = _full_state()
     s2 = InMemorySink()
     r2 = mw.build_structure(fresh, "forge", 1, sink=s2)
     assert r2.ok
     assert fresh.structures["forge"] == 1
-    assert s2.records[-1].prev_value == "0"
-    assert s2.records[-1].new_value == "1"
+    level_row = next(r for r in s2.records if r.target == "structure:forge")
+    assert level_row.prev_value == "0"
+    assert level_row.new_value == "1"
+    assert level_row is r2.record  # the LEVEL row stays the primary record
 
 
 def test_vault_upgrade_raises_cap_using_core_cost():
@@ -562,6 +584,37 @@ def test_vault_upgrade_blocked_when_maxed():
     state = _full_state(coins=10_000_000, vault_level=capacity.MAX_VAULT_LEVEL)
     r = mw.vault_upgrade(state, sink=InMemorySink())
     assert r.ok is False
+
+
+def test_economy_audit_log_coin_rows_reconstruct_the_wallet_after_build_and_vault():
+    """Decision #8: build / vault are coin SINKS that used to audit only a LEVEL
+    row, so a wallet rebuilt from the log's coin rows under-counted them. They now
+    ALSO emit a target="coins" row (balance before/after), matching the sell / buy
+    / repair shape — so a wallet reconstructed purely from economy_audit_log coin
+    rows equals the live wallet after a build and a vault upgrade.
+    """
+    start = 100_000
+    state = _full_state(coins=start, materials={"iron": 100, "stone": 100}, structures={}, vault_level=0)
+    sink = InMemorySink()
+
+    build = mw.build_structure(state, "forge", 0, sink=sink)
+    assert build.ok
+    vault = mw.vault_upgrade(state, sink=sink)
+    assert vault.ok
+
+    # Rebuild the wallet purely from the log's coin-target rows (delta replay).
+    coin_rows = [r for r in sink.records if r.target == "coins"]
+    assert len(coin_rows) == 2, "each coin sink (build + vault) must leave one coins row"
+    reconstructed = start
+    for row in coin_rows:
+        reconstructed += int(row.new_value) - int(row.prev_value)
+    assert reconstructed == state.coins, "log-derived wallet must equal the live wallet"
+
+    # The coin sink actually moved coins (the rows are not vacuous), and the
+    # structure/vault LEVEL rows still coexist alongside the coin rows.
+    assert state.coins < start
+    assert any(r.target == "structure:forge" for r in sink.records)
+    assert any(r.target == "vault" for r in sink.records)
 
 
 # ---------------------------------------------------------------------------

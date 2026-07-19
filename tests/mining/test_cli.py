@@ -300,9 +300,12 @@ def test_build_negative_level_is_ignored_and_builds_from_state() -> None:
     assert result.state.structures == {"forge": 1}  # built from real state level 0
     assert result.state.coins == 100_000 - cost.coins  # real level-0 cost charged
     assert result.ok_actions == 1
-    assert len(sink.records) == 1
-    assert sink.records[-1].prev_value == "0"  # true prior level, not the typed -1
-    assert sink.records[-1].new_value == "1"
+    # Decision #8: a build now emits a structure-LEVEL row AND a target="coins"
+    # ledger row, so a committed build records two rows.
+    assert len(sink.records) == 2
+    level_row = next(r for r in sink.records if r.target == "structure:forge")
+    assert level_row.prev_value == "0"  # true prior level, not the typed -1
+    assert level_row.new_value == "1"
 
 
 def test_build_non_integer_level_folds_into_name_and_no_ops() -> None:
