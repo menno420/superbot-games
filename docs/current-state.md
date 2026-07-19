@@ -62,6 +62,8 @@
 > apparatus stays **live**, and the Projects EAP read-only cutover is
 > 2026-07-21.
 
+> **2026-07-18 (owner live):** the 2026-07-17 note below is superseded for seat operations by the owner's live 2026-07-18 direction (most-recent-wins); the seat loop is resumed under fm ORDER 048. The 2026-07-21 read-only date stays a platform fact to re-verify on the day. See control/inbox.md ORDER 011.
+
 > **FRESH-START CLEANUP — truth-stamped 2026-07-17.** This seat is being wound
 > down as part of the fleet-wide autonomy stand-down; where the 2026-07-16
 > narrative below conflicts with this banner, this banner wins.
