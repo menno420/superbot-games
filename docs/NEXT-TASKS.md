@@ -85,6 +85,15 @@ unblock the above" (those are Q-0040, D2 audit-grants, rung-3 packaging,
 persistence format-governance, transfer-policy). All ↩️ reversible; nothing is
 blocked on a destructive click.
 
+> **✅ Owner-input queue CLEARED 2026-07-19.** All eight decisions below are
+> RESOLVED and merged to main — #171 (decisions #3 + #8), #172 (#6), #173 (#2),
+> #174 (#1 + #7), #175 (#4 + #5) — each with the owner-default applied and a
+> pinning test; all reversible. The concrete owner-input backlog is now dry. The
+> genuinely-open next steps these fixes surfaced (latent seams, owner-triage —
+> not agent slices) are captured in **[Next session — post-2026-07-21-aware
+> forward plan](#next-session--post-2026-07-21-aware-forward-plan)** at the foot
+> of this file.
+
 1. **[balance] Exploration ore-scaling still uses the retired runaway curve.**
    `games/mining/core/exploration.py::_scale_amount` (~line 272) scales ore
    gains by the pre-2026-06-22 steep curve `1 + mining_power // 2` (×5 at
@@ -251,3 +260,47 @@ balance / design judgment, so they are queued here rather than fixed._
    pins that a wallet rebuilt from the log's coin rows equals the live wallet.
    No balance number changed; only a structural audit row added. Reversible;
    flagged for owner review.
+
+## Next session — post-2026-07-21-aware forward plan
+
+_Added 2026-07-19 after the decision sweep (#170–#176) emptied the owner-input
+queue above. These are the genuinely-open next steps today's fixes **surfaced** —
+mostly latent seams the fixes now wait behind. They are **candidates for owner
+triage, not agent slices**: each needs a design/scope call before it becomes
+executable work, and none is a committed deliverable. Reversibility caveat: the
+Projects EAP goes **read-only 2026-07-21**, so a Project-session agent cannot
+push/merge after that date — scope any pick-up accordingly._
+
+1. **Wire the exploration engine onto a live command path.** The flattened
+   ore-scaling curve landed for `games/mining/core/exploration.py::_scale_amount`
+   (decision #1, PR #174) is **latent**: no seam routes exploration through a
+   live dig/command faucet today, so the rebalance has zero player impact until
+   the engine is wired. Open question for the owner: is exploration meant to
+   reach a live command path (host rung / CLI verb), and on what timeline? Until
+   then the flattened curve is a correctness-parity fix waiting on a consumer.
+
+2. **Route caught fish into a shared cross-game inventory (`MiningState`).** The
+   fishing V043 curve is now canonical for fish valuation in the mining market
+   (decision #7, PR #174), but `register_fish_species` is called only from a
+   test and **no seam moves a caught fish into `MiningState.inventory`**. The
+   valuation is correct-by-construction but unreachable until a cross-game
+   inventory seam exists. Open question: does the owner want a shared inventory
+   rung wiring fishing catches into mining's market (and if so, one-directional
+   or a shared ledger)? This is the seam that makes both decision #7 and any
+   future cross-game economy work reachable.
+
+3. **Decision-PR follow-ons already noted in the merged cards.** The eight
+   resolutions each applied the owner-default and flagged themselves "for owner
+   review" — the owner may still want to **override a balance/design call**
+   (e.g. keep exploration divergent instead of propagating the curve #1; a
+   different canonical fish price #7; the "capitalised stays safe" dnd guardrail
+   #4 rather than case-folding). No override is pending; these are listed so the
+   owner's async review has the levers in one place, not buried in merged cards.
+
+4. **Backlog is otherwise dry — no concrete agent-executable slice is queued.**
+   Beyond the latent seams above and the standing "Owner decisions to unblock"
+   items (Q-0040, D2 audit-grants, rung-3 packaging, persistence
+   format-governance, transfer-policy), there is no ready-to-slice correctness
+   or coverage work identified as of 2026-07-19. A future session should either
+   pick up an owner-triaged seam from this list or open a fresh bug-hunt pass
+   before assuming there is executable work.

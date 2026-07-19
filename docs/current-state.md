@@ -27,6 +27,31 @@
 
 ## In flight
 
+> **DECISION SWEEP — truth-stamped 2026-07-19 at HEAD `07c0ad3`.**
+> <!-- truth-stamped-at: 07c0ad315e56796810ab244a338713d41a99d8fa -->
+> Today's landed work drained the concrete owner-input backlog. **ORDER 011**
+> was recorded (**#170** `1039e8a`), and all **eight owner-input decisions** the
+> 2026-07-18 deep hunt queued in [`NEXT-TASKS.md`](NEXT-TASKS.md) were resolved
+> and merged: **#171** (`99cbc59`, `build_structure` reads level from state —
+> decision #3, already landed by #167 and re-verified — + complete-coin-ledger
+> audit rows, decision #8); **#172** (`11e1451`, mining CLI "Quantity must be a
+> number" diagnostic, decision #6); **#173** (`729694c`, consume gear on break
+> at durability 0, decision #2); **#174** (`e0b8123`, flatten exploration
+> ore-scaling onto the live faucet curve — decision #1 — + fishing V043 curve
+> canonical for fish valuation, decision #7); **#175** (`10d7aa3`, case-fold dnd
+> option ids — decision #4 — + display-name→id resolver, decision #5). The
+> reconcile-race card-guard fix landed too (**#176** `07c0ad3`, provenance-stamp
+> disarm made auto-merge-TOCTOU-tolerant). Suite now **868 passed**
+> (`python3 -m pytest -q`) — up from 849/1-xfailed as the eight decision PRs
+> added pins and converted the dnd case-fold xfail to a passing assertion. The
+> owner-input queue is now **CLEARED**; the forward plan for the next session
+> (the latent seams these fixes wait behind — exploration onto a live command
+> path, a caught fish into a shared inventory) is captured in
+> [`NEXT-TASKS.md`](NEXT-TASKS.md). The wind-down facts below still stand:
+> routines **un-armed** pending the owner's per-seat go; auto-merge apparatus
+> **live** (green agent PRs auto-merge, not human-gated); Projects EAP read-only
+> cutover 2026-07-21.
+
 > **OVERNIGHT FORWARD-WORK LOOP — truth-stamped 2026-07-18 at HEAD `d85227d`.**
 > By owner night order (2026-07-18 — "land small self-initiated slices on green
 > via auto-merge"), forward work was **resumed for one night**: a bounded

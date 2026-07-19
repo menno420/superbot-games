@@ -2,7 +2,7 @@
 
 > **Status:** 🚧 `in-progress`
 >
-> 📊 Model: opus-4.8 · high · docs/records
+> 📊 Model: opus-4.8 · high · docs-only
 
 ⚑ Self-initiated: records + planning refresh (owner-authorized — "if you run
 out of executable work start planning"; the concrete owner-input backlog is now
