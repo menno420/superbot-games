@@ -56,9 +56,13 @@ removing fish).
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, replace
+from datetime import datetime, timezone
+from uuid import uuid4
 
 from games.fishing.core import economy
+from services.audit import AuditRecord, Sink
 from services.fishing_workflow import FishingState
 from services.mining_workflow import MiningState
 
@@ -71,6 +75,26 @@ BRIDGE_ENABLED_ENV = "GAMES_INVENTORY_BRIDGE_ENABLED"
 #: The env-string values read as "on" (case-insensitive). Everything else —
 #: including unset — is OFF, so the safe/reversible default needs no config.
 _TRUTHY = frozenset({"1", "true", "yes", "on"})
+
+#: Structural mutation-type token for BOTH audited legs of a bridge exchange
+#: (slice 2). It sits in a game-neutral ``inventory:*`` verb namespace — a
+#: sibling of the per-game ``fishing:sell`` / ``mining:sell`` structural verbs —
+#: because a bridge sale is exactly one cross-game action whose two audit rows
+#: (a fishing-haul debit + a mining-coin credit) are distinguished by their
+#: ``subsystem`` / ``target``, not by inventing two separate verbs. The verb
+#: carries no balance meaning; the AMOUNT moved is the V043 constant reused via
+#: :func:`fish_market_value`.
+MUTATION_EXCHANGE = "inventory:exchange"
+
+#: ``subsystem`` tokens for the two legs — honest about which game's state each
+#: row changed: the fish leave the FISHING haul, the coins land on the MINING
+#: side. Mirrors the seams' own ``subsystem`` field (``"fishing"`` / ``"mining"``).
+SUBSYSTEM_FISHING = "fishing"
+SUBSYSTEM_MINING = "mining"
+
+#: The seam's actor-type token for a human player (the ``actor_type`` field of
+#: :class:`~services.audit.AuditRecord`) — same default the fishing/mining seams use.
+ACTOR_PLAYER = "player"
 
 
 def bridge_enabled() -> bool:
@@ -102,6 +126,12 @@ class BridgeResult:
     coins_delta: int = 0
     new_mining_balance: int | None = None
     gated: bool = False
+    #: The audit rows emitted for a COMMITTED audited exchange
+    #: (:func:`exchange_fish_for_coins_audited`) — the fishing-haul debit leg
+    #: then the mining-coin credit leg, in commit order. Empty for the pure
+    #: :func:`exchange_fish_for_coins` (which audits nothing) and for EVERY
+    #: no-op (gated or failed) — no partial audit is ever left behind.
+    records: tuple[AuditRecord, ...] = ()
 
 
 def fish_market_value(species_id: str, qty: int = 1) -> int:
@@ -197,10 +227,152 @@ def exchange_fish_for_coins(
     )
 
 
+# ---------------------------------------------------------------------------
+# The AUDITED exchange (slice 2) — routes BOTH legs through the shared sink
+# ---------------------------------------------------------------------------
+def _resolve_now(now: datetime | None) -> datetime:
+    """The op's timestamp — the injected *now* or ``datetime.now(timezone.utc)``."""
+    return now if now is not None else datetime.now(timezone.utc)
+
+
+def _resolve_id(factory: Callable[[], str] | None) -> str:
+    """A fresh mutation id — from the injected *factory* or ``uuid4().hex``."""
+    return factory() if factory is not None else uuid4().hex
+
+
+def _exchange_record(
+    *,
+    subsystem: str,
+    target: str,
+    prev_value: str,
+    new_value: str,
+    now: datetime,
+    mutation_id: str,
+    guild_id: int | None,
+    actor_id: int | None,
+    actor_type: str,
+) -> AuditRecord:
+    """Build one leg's :class:`~services.audit.AuditRecord` (the 11-field schema).
+
+    Same structural shape the fishing/mining seams construct for their own
+    ``sell`` legs (verb + target + prev/new + ids), so a bridge sale sits in the
+    ONE ledger those seams already write to. Only structural fields are set here;
+    the moved AMOUNT lives in ``prev_value``/``new_value`` (the balances), quoted
+    from the V043 exchange, never re-derived.
+    """
+    return AuditRecord(
+        mutation_id=mutation_id,
+        subsystem=subsystem,
+        mutation_type=MUTATION_EXCHANGE,
+        target=target,
+        scope="global",
+        guild_id=guild_id,
+        prev_value=prev_value,
+        new_value=new_value,
+        actor_id=actor_id,
+        actor_type=actor_type,
+        occurred_at=now,
+    )
+
+
+def exchange_fish_for_coins_audited(
+    fishing_state: FishingState,
+    mining_state: MiningState,
+    species_id: str,
+    qty: int = 1,
+    *,
+    sink: Sink,
+    enabled: bool | None = None,
+    guild_id: int | None = None,
+    actor_id: int | None = None,
+    actor_type: str = ACTOR_PLAYER,
+    now: datetime | None = None,
+    mutation_id_factory: Callable[[], str] | None = None,
+) -> BridgeResult:
+    """The AUDITED bridge sale (slice 2): exchange fish → coins AND audit both legs.
+
+    Wraps the pure, all-or-nothing :func:`exchange_fish_for_coins` (which owns the
+    gate, the validation, and the atomic mutation) and, ON A COMMITTED exchange,
+    emits the money flow to the SAME injected :class:`~services.audit.Sink` the
+    sibling ``fishing_workflow.sell`` / ``mining_workflow.sell`` legs write to —
+    so the cross-game sale is reconstructable from one ledger. TWO rows are
+    recorded, in commit order:
+
+    1. the **fishing-haul debit** (``subsystem="fishing"``, ``target="haul:<species>"``,
+       prev→new haul count), and
+    2. the **mining-coin credit** (``subsystem="mining"``, ``target="coins"``,
+       prev→new mining balance),
+
+    both with ``mutation_type`` :data:`MUTATION_EXCHANGE`. The prev-state for both
+    legs is captured BEFORE the mutation, so the rows carry honest values.
+
+    **Config-gated + non-destructive (no partial audit).** Because the underlying
+    exchange validates the flag, the species, the quantity, and the held count
+    BEFORE touching either side, a gated OR failed call mutates NOTHING — and this
+    wrapper records NOTHING in that case (``result.ok is False`` ⇒ no ``sink``
+    call, ``records=()``), mirroring the seams' "a no-op records nothing" rule.
+    An exchange can therefore never leave one leg audited without the other, nor
+    fish removed without coins credited. *enabled* / *now* / *mutation_id_factory*
+    are injectable so a host/test can drive the gate and reproduce the rows
+    deterministically.
+    """
+    if enabled is None:
+        enabled = bridge_enabled()
+
+    # Capture the pre-state for BOTH legs BEFORE any mutation, so a committed
+    # exchange's audit rows carry honest prev/new values (and a gated/failed
+    # call — which mutates nothing — emits nothing).
+    prev_held = fishing_state.haul.get(species_id, 0)
+    prev_coins = mining_state.coins
+
+    result = exchange_fish_for_coins(
+        fishing_state, mining_state, species_id, qty, enabled=enabled
+    )
+    if not result.ok:
+        # Gated OR an honest validation no-op: nothing mutated, so NOTHING is
+        # audited — no partial audit is ever left behind (all-or-nothing).
+        return result
+
+    now_dt = _resolve_now(now)
+    new_held = prev_held - result.quantity
+    fish_leg = _exchange_record(
+        subsystem=SUBSYSTEM_FISHING,
+        target=f"haul:{species_id}",
+        prev_value=str(prev_held),
+        new_value=str(new_held),
+        now=now_dt,
+        mutation_id=_resolve_id(mutation_id_factory),
+        guild_id=guild_id,
+        actor_id=actor_id,
+        actor_type=actor_type,
+    )
+    coins_leg = _exchange_record(
+        subsystem=SUBSYSTEM_MINING,
+        target="coins",
+        prev_value=str(prev_coins),
+        new_value=str(result.new_mining_balance),
+        now=now_dt,
+        mutation_id=_resolve_id(mutation_id_factory),
+        guild_id=guild_id,
+        actor_id=actor_id,
+        actor_type=actor_type,
+    )
+    # The state mutation already committed atomically inside
+    # exchange_fish_for_coins; recording BOTH legs is the last commit step.
+    sink.record(fish_leg)
+    sink.record(coins_leg)
+    return replace(result, records=(fish_leg, coins_leg))
+
+
 __all__ = [
     "BRIDGE_ENABLED_ENV",
+    "MUTATION_EXCHANGE",
+    "SUBSYSTEM_FISHING",
+    "SUBSYSTEM_MINING",
+    "ACTOR_PLAYER",
     "BridgeResult",
     "bridge_enabled",
     "fish_market_value",
     "exchange_fish_for_coins",
+    "exchange_fish_for_coins_audited",
 ]

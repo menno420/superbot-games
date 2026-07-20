@@ -37,6 +37,8 @@ from datetime import datetime, timezone
 from typing import Callable
 
 from services import fishing_workflow as fw
+from services import inventory_bridge as bridge
+from services import mining_workflow as mw
 from services.audit import InMemorySink
 
 from games.fishing.core import economy
@@ -137,18 +139,31 @@ def spots_lines(current: str | None = None) -> list[str]:
 
 
 def help_lines() -> list[str]:
-    """The command reference printed by ``help`` (and on an unknown command)."""
+    """The command reference printed by ``help`` (and on an unknown command).
+
+    The cross-game ``exchange`` verb is listed ONLY when the inventory bridge is
+    enabled (``GAMES_INVENTORY_BRIDGE_ENABLED``); with the flag OFF (the default)
+    the verb is unavailable and the help surface is byte-identical to before the
+    bridge existed — no default behaviour changes until the owner flips the flag.
+    """
     valid = ", ".join(spot_table.spot_ids())
-    return [
+    lines = [
         "Commands:",
         "  cast                 cast once at your current spot — spend energy, maybe land a fish",
         "  sell <species> [qty] sell landed fish at the sim-pinned value (default: all you hold)",
+    ]
+    if bridge.bridge_enabled():
+        lines.append(
+            "  exchange <species> [qty] sell landed fish at the MINING market for mining coins (bridge)"
+        )
+    lines += [
         f"  spot <id>            move to a fishing spot (valid: {valid})",
         "  spots                list every spot + its vibe",
         "  status / haul        show energy, current spot, and your running haul",
         "  help                 show this list",
         "  quit / exit          end the session (prints a summary)",
     ]
+    return lines
 
 
 def summary_lines(
@@ -190,6 +205,7 @@ class StepResult:
     quit: bool = False
     is_cast: bool = False  # routed to the state-changing ``cast`` seam verb
     is_sell: bool = False  # routed to the state-changing ``sell`` seam verb (V043)
+    is_exchange: bool = False  # routed to the gated cross-game ``exchange`` bridge verb
     ok: bool = False  # the seam Result was ``ok`` (a committed mutation)
 
 
@@ -230,6 +246,7 @@ def step(
     *,
     now: datetime | None = None,
     rng: random.Random | None = None,
+    mining: mw.MiningState | None = None,
 ) -> StepResult:
     """Run one input *line* against *state*/*sink*; return its output + flags.
 
@@ -243,6 +260,14 @@ def step(
     :func:`~services.fishing_workflow.sell` and prints its honest message —
     committed sells also print the refreshed coins/haul; the seam's no-ops
     (unknown species, too few held) change nothing and record nothing.
+
+    The cross-game ``exchange`` verb (slice 2) is CONFIG-GATED: it is always
+    recognised (never falls through to "Unknown command"), but with the bridge
+    disabled (``GAMES_INVENTORY_BRIDGE_ENABLED`` unset — the default) it is a
+    clean no-op that prints a clear "bridge is disabled" line and records
+    nothing; when enabled it sells landed fish at the mining market and routes
+    BOTH legs through *sink*, crediting *mining*'s coins. *mining* is the
+    session's mining-coin wallet (a fresh one is used if omitted).
     """
     tokens = line.strip().split()
     if not tokens:
@@ -273,6 +298,13 @@ def step(
             )
         state.spot_id = target
         return StepResult(lines=[f"You move to {_spot_label(target)}.", *status_lines(state)])
+
+    # The cross-game bridge verb is always recognised but CONFIG-GATED — routed
+    # here (before the _ACTIONS gate) so a disabled bridge gives a clear "bridge
+    # is disabled" no-op rather than an "Unknown command", mirroring how a
+    # blocked seam action reports its honest reason instead of vanishing.
+    if verb == "exchange":
+        return _do_exchange(state, mining, sink, args, now=now)
 
     if verb not in _ACTION_VERBS:
         return StepResult(lines=[f"Unknown command: {verb!r}.", *help_lines()])
@@ -334,6 +366,80 @@ def _do_sell(
     return StepResult(lines=out, is_sell=True, ok=sell_result.ok)
 
 
+def _do_exchange(
+    state: fw.FishingState,
+    mining: mw.MiningState | None,
+    sink: InMemorySink,
+    args: list[str],
+    *,
+    now: datetime | None,
+) -> StepResult:
+    """The gated cross-game bridge sale — sell landed fish at the MINING market.
+
+    CONFIG-GATED (owner decision 1, DEFAULT OFF): with the bridge disabled this
+    is a clean no-op that prints a clear "bridge is disabled" line and records
+    NOTHING (mirroring a blocked seam action reporting its honest reason). When
+    enabled it routes through the audited
+    :func:`~services.inventory_bridge.exchange_fish_for_coins_audited`, the SINGLE
+    mutation path — fish leave ``state.haul``, coins land on the session's
+    *mining* wallet, and BOTH legs are emitted to *sink*. Same
+    ``<species> [qty]`` grammar as the V043 ``sell`` leg (default: all held).
+    """
+    if mining is None:
+        mining = mw.MiningState()
+    if not bridge.bridge_enabled():
+        # Config-gated OFF (the default): the whole path is unavailable — a clear
+        # disabled response that changes nothing and records nothing.
+        return StepResult(
+            lines=["The cross-game inventory bridge is disabled."],
+            is_exchange=True,
+            ok=False,
+        )
+    if not args:
+        return StepResult(
+            lines=["Usage: exchange <species> [qty]  (see 'haul' for what you hold)"],
+            is_exchange=True,
+        )
+    # Grammar mirrors _do_sell: a trailing INTEGER is the quantity; everything
+    # before it is the (possibly multi-word) species id / display name.
+    if args[-1].lstrip("-").isdigit():
+        name = " ".join(args[:-1])
+        qty: int | None = int(args[-1])
+    else:
+        name = " ".join(args)
+        qty = None
+    if not name:
+        return StepResult(
+            lines=["Usage: exchange <species> [qty]  (see 'haul' for what you hold)"],
+            is_exchange=True,
+        )
+
+    resolved = species_table.resolve(name)
+    if qty is None and resolved is None:
+        # Same botched-quantity disambiguation as _do_sell.
+        if len(args) >= 2 and species_table.resolve(" ".join(args[:-1])) is not None:
+            return StepResult(
+                lines=[f"Quantity must be a number, got {args[-1]!r}."],
+                is_exchange=True,
+            )
+
+    species = resolved if resolved is not None else name.lower()
+    if qty is None:
+        held = state.haul.get(species, 0)
+        qty = held if held > 0 else 1
+
+    result = bridge.exchange_fish_for_coins_audited(
+        state, mining, species, qty, sink=sink, now=now
+    )
+    out = [result.message]
+    if result.ok:
+        out += [
+            f"  mining coins: {mining.coins} (+{result.coins_delta})",
+            f"  haul:         {_render_haul(state.haul)}",
+        ]
+    return StepResult(lines=out, is_exchange=True, ok=result.ok)
+
+
 def _do_cast(
     state: fw.FishingState,
     sink: InMemorySink,
@@ -381,6 +487,7 @@ def make_step_fn(
     *,
     now: datetime | None = None,
     rng: random.Random | None = None,
+    mining: mw.MiningState | None = None,
 ) -> tuple[Callable[[str], StepResult], StepTally]:
     """Build THE per-step bookkeeping closure both drivers dispatch through.
 
@@ -391,14 +498,17 @@ def make_step_fn(
 
     ``now=None`` (the interactive default) stamps each line with the live
     wall clock, exactly as ``main()`` always did; a fixed *now* makes a
-    scripted run deterministic. Returns ``(step_fn, tally)`` — the caller
-    reads the shared counters from *tally* after (or during) the session.
+    scripted run deterministic. *mining* is the session's cross-game mining-coin
+    wallet the gated ``exchange`` verb credits (a fresh one if omitted). Returns
+    ``(step_fn, tally)`` — the caller reads the shared counters from *tally*
+    after (or during) the session.
     """
     tally = StepTally()
+    wallet = mining if mining is not None else mw.MiningState()
 
     def step_fn(line: str) -> StepResult:
         at = now if now is not None else datetime.now(timezone.utc)
-        res = step(state, sink, line, now=at, rng=rng)
+        res = step(state, sink, line, now=at, rng=rng, mining=wallet)
         if res.is_cast:
             tally.casts_made += 1
             if res.ok:
@@ -435,16 +545,19 @@ def run_commands(
     state: fw.FishingState | None = None,
     now: datetime | None = None,
     rng: random.Random | None = None,
+    mining: mw.MiningState | None = None,
 ) -> SessionResult:
     """Drive a scripted, TTY-free session and return its :class:`SessionResult`.
 
     Feeds each string in *commands* through :func:`step` against a shared state +
     sink. Injectable *sink* / *state* / *now* / *rng* make a run fully
-    deterministic for tests. A ``quit`` (or the end of the list) closes the
-    session and appends the summary. ``casts_made`` counts every ``cast`` verb
-    the player issued; ``ok_casts`` counts only the ones that committed a
-    mutation (a too-tired cast is a cast made but not an ok cast, and records
-    nothing).
+    deterministic for tests. *mining* is the cross-game mining-coin wallet the
+    gated ``exchange`` verb credits — pass one to inspect its balance after the
+    run (a fresh one is used if omitted; it stays at zero unless the bridge is
+    enabled). A ``quit`` (or the end of the list) closes the session and appends
+    the summary. ``casts_made`` counts every ``cast`` verb the player issued;
+    ``ok_casts`` counts only the ones that committed a mutation (a too-tired cast
+    is a cast made but not an ok cast, and records nothing).
     """
     now = now if now is not None else datetime(2026, 7, 13, 12, 0, 0, tzinfo=timezone.utc)
     if state is None:
@@ -452,7 +565,7 @@ def run_commands(
     if sink is None:
         sink = InMemorySink()
 
-    step_fn, tally = make_step_fn(state, sink, now=now, rng=rng)
+    step_fn, tally = make_step_fn(state, sink, now=now, rng=rng, mining=mining)
 
     lines = run_scripted(
         step_fn,

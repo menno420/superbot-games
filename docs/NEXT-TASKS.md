@@ -45,11 +45,16 @@ the one-line ⚑ Q-0040 bounded-authority owner sign-off (the plan recommends
    item / quantity / reward handling across all four games. Detail:
    `docs/design/world-inventory-resource-contract.md`.
    - _Underway (2026-07-20):_ the **cross-game inventory bridge** (Option B of
-     `docs/design-shared-cross-game-inventory.md`) — **slice 1** landed the
+     `docs/design-shared-cross-game-inventory.md`). **Slice 1** landed the
      config-gated `services/inventory_bridge.py` service seam (fishing → mining
-     market, V043-valued, `GAMES_INVENTORY_BRIDGE_ENABLED` default OFF; nothing
-     wired into a live verb yet). Next slice: wire the exchange onto a command
-     path + route both legs through the audit sink.
+     market, V043-valued, `GAMES_INVENTORY_BRIDGE_ENABLED` default OFF).
+     **Slice 2** wired the exchange onto a live, gated `exchange` verb in the
+     fishing CLI and routed BOTH legs (haul debit + coin credit) through the
+     shared `services/audit.py` sink via `exchange_fish_for_coins_audited` —
+     still DEFAULT OFF (the verb is unavailable + absent from help until the flag
+     is flipped). Next slice (**slice 3**): the CLI surface / help-text polish —
+     a discoverable help line + a "mining market" wallet readout in the fishing
+     status/summary, and a matching help-parity pin.
 3. **Build the rung-3 host-adapter** so these games actually run inside
    `superbot-next`, against `docs/game-plugin-contract.md`. Blocked on the
    owner packaging/hermeticity + persistence-format decisions — surface those
