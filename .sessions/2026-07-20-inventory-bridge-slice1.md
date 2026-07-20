@@ -1,6 +1,6 @@
 # 2026-07-20 · inventory-bridge-slice1 — feat(inventory): config-gated fishing→mining bridge service seam (Option B, slice 1)
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Opus 4.8 · high · game-economy-service
 
@@ -51,10 +51,12 @@ of both, **#174** made the fishing V043 curve canonical for a fish's mining-mark
 price — the valuation this bridge reuses directly rather than re-deriving. Green
 baseline re-run at base before writing: `python3 -m pytest -q` → 877 passed.
 
-## 🔎 In progress
+## ✅ Complete
 
 Card born red (`in-progress`) in the first commit per the born-red discipline —
-the claim + this card land alone to hold the substrate-gate red; the bridge
-module + tests + doc updates land next. The card flips to `complete` in a final
-commit only after `python3 -m pytest -q` and `python3 bootstrap.py check --strict`
-are both verified green.
+the claim + this card landed alone to hold the substrate-gate red; the bridge
+module + 26 tests + doc updates landed in the second commit. Verified green
+before this flip: `python3 -m pytest -q` → **903 passed**;
+`python3 bootstrap.py check --strict` → exit 0 (advisories only). PR **#180**
+opened ready-for-review; this final commit flips the badge to `complete`,
+clearing the born-red HOLD so the green PR can auto-land.
