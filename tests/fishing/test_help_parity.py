@@ -10,9 +10,13 @@ from __future__ import annotations
 
 from games.fishing import cli
 
-#: The navigation/control verbs help documents alongside the action verbs.
-#: (The accepted-but-undocumented alias ``q`` is deliberately NOT in help.)
-_DOCUMENTED_CONTROL = frozenset({"spot", "spots", "status", "haul", "help", "quit", "exit"})
+#: The navigation/control/read-only verbs help documents alongside the action
+#: verbs. ``value`` is the read-only V043 market-value preview (slice 3) — pure
+#: information, routed separately from the mutating ``_ACTIONS`` and always in
+#: help. (The accepted-but-undocumented alias ``q`` is deliberately NOT in help.)
+_DOCUMENTED_CONTROL = frozenset(
+    {"value", "spot", "spots", "status", "haul", "help", "quit", "exit"}
+)
 
 
 def test_action_verbs_derived_from_dispatch_table() -> None:

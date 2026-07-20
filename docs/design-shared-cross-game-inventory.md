@@ -227,6 +227,21 @@ OFF and unchanged in every §6 default: with `GAMES_INVENTORY_BRIDGE_ENABLED` un
 the verb is unavailable (a clear "bridge is disabled" no-op, absent from the help
 surface, records nothing), so no existing gameplay changes until the owner flips the
 flag. All-or-nothing / non-destructive on error (no partial audit is ever left
-behind) and one-directional (fishing → mining only). Next: **slice 3** — the CLI
-surface/help-text polish (a discoverable help line + a mining-market wallet readout
-in the fishing status/summary).
+behind) and one-directional (fishing → mining only).
+
+Landed by **slice 3**: the surrounding CLI surface + discoverability for the bridge.
+A NEW read-only `value <species> [qty]` verb in the fishing CLI
+(`games/fishing/cli.py::_do_value`) previews what a catch would fetch at the mining
+market via `services/inventory_bridge.py::fish_market_value` (the canonical V043
+price) — pure information, no mutation, no audit row — so, unlike the mutating
+`exchange` verb, it is **available regardless of the flag** and is always listed in
+`help_lines()`. The MUTATING `exchange` verb stays **CONFIG-GATED DEFAULT OFF**: with
+`GAMES_INVENTORY_BRIDGE_ENABLED` unset the mutation surface is byte-identical to
+before the bridge existed. NOTE on the non-interactive/scriptable surface: the games
+hub (`python3 -m games`) and the per-game entry points are pure REPLs with **no
+argv/subcommand dispatch**, so slice 3 did NOT invent a one-shot CLI command — the
+read-only preview is scriptable through the existing TTY-free `run_commands` driver
+(the same path the tests drive), matching the codebase's real idiom. All six §6
+defaults are unchanged. Next: **owner steer** on the still-open product forks
+(sellable-at-all, the 1:1 V043 rate) or **slice 4** — a bidirectional flow /
+promoting the bridge toward a shared inventory core.

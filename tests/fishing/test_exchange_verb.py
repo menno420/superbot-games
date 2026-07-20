@@ -80,11 +80,14 @@ def test_exchange_verb_absent_from_help_when_gated_off():
 
 
 def test_help_surface_is_byte_identical_when_gated_off():
-    """The whole fishing help surface is unchanged from the pre-bridge verb set."""
+    """The MUTATION help surface is unchanged when gated off — the only bridge line
+    is the read-only ``value`` preview (slice 3, always available); the mutating
+    ``exchange`` verb stays absent until the flag flips."""
     assert help_lines() == [
         "Commands:",
         "  cast                 cast once at your current spot — spend energy, maybe land a fish",
         "  sell <species> [qty] sell landed fish at the sim-pinned value (default: all you hold)",
+        "  value <species> [qty] preview mining-market coins for landed fish (read-only, V043)",
         "  spot <id>            move to a fishing spot (valid: "
         + ", ".join(spot_table.spot_ids())
         + ")",

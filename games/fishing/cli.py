@@ -141,16 +141,21 @@ def spots_lines(current: str | None = None) -> list[str]:
 def help_lines() -> list[str]:
     """The command reference printed by ``help`` (and on an unknown command).
 
-    The cross-game ``exchange`` verb is listed ONLY when the inventory bridge is
+    The read-only ``value`` preview verb is ALWAYS listed — it only reports the
+    canonical V043 mining-market price of a catch (pure information, no mutation),
+    so it is available regardless of the flag. The MUTATING cross-game
+    ``exchange`` verb, by contrast, is listed ONLY when the inventory bridge is
     enabled (``GAMES_INVENTORY_BRIDGE_ENABLED``); with the flag OFF (the default)
-    the verb is unavailable and the help surface is byte-identical to before the
-    bridge existed — no default behaviour changes until the owner flips the flag.
+    the exchange verb is unavailable and the mutation surface is byte-identical to
+    before the bridge existed — no default gameplay changes until the owner flips
+    the flag.
     """
     valid = ", ".join(spot_table.spot_ids())
     lines = [
         "Commands:",
         "  cast                 cast once at your current spot — spend energy, maybe land a fish",
         "  sell <species> [qty] sell landed fish at the sim-pinned value (default: all you hold)",
+        "  value <species> [qty] preview mining-market coins for landed fish (read-only, V043)",
     ]
     if bridge.bridge_enabled():
         lines.append(
@@ -261,6 +266,12 @@ def step(
     committed sells also print the refreshed coins/haul; the seam's no-ops
     (unknown species, too few held) change nothing and record nothing.
 
+    The read-only ``value`` verb (slice 3) is a PURE V043 price preview: it
+    reports what *qty* landed fish would fetch at the mining market
+    (:func:`~services.inventory_bridge.fish_market_value`) and mutates nothing /
+    records nothing, so — unlike ``exchange`` — it is available regardless of the
+    bridge flag.
+
     The cross-game ``exchange`` verb (slice 2) is CONFIG-GATED: it is always
     recognised (never falls through to "Unknown command"), but with the bridge
     disabled (``GAMES_INVENTORY_BRIDGE_ENABLED`` unset — the default) it is a
@@ -283,6 +294,11 @@ def step(
         return StepResult(lines=spots_lines(current=state.spot_id))
     if verb in {"help", "?"}:
         return StepResult(lines=help_lines())
+    if verb == "value":
+        # Read-only V043 price preview — pure information, no mutation, so it is
+        # available regardless of the bridge flag (routed here alongside the other
+        # read-only verbs, before the mutating/gated dispatch below).
+        return _do_value(state, args)
 
     if verb == "spot":
         if not args:
@@ -310,6 +326,53 @@ def step(
         return StepResult(lines=[f"Unknown command: {verb!r}.", *help_lines()])
 
     return _ACTIONS[verb](state, sink, args, now=now, rng=rng)
+
+
+_VALUE_USAGE = "Usage: value <species> [qty]  (preview mining-market coins; see 'haul' for what you hold)"
+
+
+def _do_value(state: fw.FishingState, args: list[str]) -> StepResult:
+    """The READ-ONLY V043 market-value preview — what a catch fetches at the mining market.
+
+    Pure information: reports
+    :func:`~services.inventory_bridge.fish_market_value` (the canonical V043 sell
+    curve #174 wired into the mining market) for *qty* fish of a species, and
+    mutates NOTHING and records NOTHING — so, unlike the gated ``exchange`` verb,
+    it is available regardless of ``GAMES_INVENTORY_BRIDGE_ENABLED`` (a price quote
+    is not a transfer). Same ``<species> [qty]`` grammar as ``sell`` / ``exchange``
+    (default: all you hold, or 1 if you hold none), so a player can preview a
+    stack's worth before deciding to walk it to the market.
+    """
+    if not args:
+        return StepResult(lines=[_VALUE_USAGE])
+    # Grammar mirrors _do_sell / _do_exchange: a trailing INTEGER is the quantity,
+    # everything before it is the (possibly multi-word) species id / display name.
+    if args[-1].lstrip("-").isdigit():
+        name = " ".join(args[:-1])
+        qty: int | None = int(args[-1])
+    else:
+        name = " ".join(args)
+        qty = None
+    if not name:
+        return StepResult(lines=[_VALUE_USAGE])
+
+    resolved = species_table.resolve(name)
+    species = resolved if resolved is not None else name.lower()
+    if not economy.is_sellable(species):
+        # Honest no-op message for an unknown/unsellable species (never raises).
+        return StepResult(lines=[f"{name} cannot be sold at the mining market."])
+    if qty is None:
+        held = state.haul.get(species, 0)
+        qty = held if held > 0 else 1
+    if qty <= 0:
+        return StepResult(lines=["Quantity must be positive."])
+
+    # Pure V043 quote — fish_market_value reuses economy.sell_value, no mutation.
+    total = bridge.fish_market_value(species, qty)
+    label = species_table.get(species).name if species_table.is_species(species) else species
+    return StepResult(
+        lines=[f"{qty}× {label} is worth {total} coins at the mining market (V043)."]
+    )
 
 
 def _do_sell(
