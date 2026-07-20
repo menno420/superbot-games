@@ -99,7 +99,11 @@
 >   auto-merge card-guard it patched is itself being retired. The 2026-07-16
 >   snapshot below still records #149 as "still OPEN"; that is **now stale**.
 > - **Claude Code Projects EAP goes READ-ONLY Tuesday 2026-07-21** (Anthropic,
->   ORDER 010). After that this seat cannot push or merge from a Project session.
+>   ORDER 010). That date is a platform-wide repository read-only freeze that
+>   affects every writer — a repo-level event, not an agent-capability limit.
+>   Until then, pushing and merging from a Project session are normal agent
+>   work and land as usual (dated fact, 2026-07-20: this seat pushed additive
+>   commits to PR #183 and armed its merge from a Project session).
 > - **Autonomy is being wound down and the Projects are being recreated.** The
 >   `control/` message-bus, per-seat heartbeats, and the self-arm wake routines
 >   are all standing down; routines stay **un-armed** pending the owner's

@@ -19,17 +19,18 @@ each block ends with a pointer to the full source doc.
 ## Skills digest
 
 - `session-close` — Land the session — claim, born-red card first, READY PR, batched work,…
-- `upgrade-distribution` — Roll a kit release out to one adopter repo — download, sha256 three-way,…
-- `release` — Cut + publish a substrate-kit release — version bump PR, workflow_dispatch…
-- `intake` — Turn a fragmented owner ask into main ideas, a restated fuller picture, a…
-- `chase-references` — Resolve every reference in the ask before acting — inventory, resolve or…
-- `prep-owner-steps` — Hand the owner finished steps, not directions — deep links, paste-ready…
-- `rationalize` — The checkpoint at natural pauses — should this action also be executed? does…
-- `quality-gate` — Run the project's full verification before pushing and report what must be…
-- `review` — Review the branch diff against the binding contracts; comment with a verdict…
+- `upgrade-distribution` — Roll a kit release out to one adopter repo — download, sha256…
+- `release` — Cut + publish a substrate-kit release — version bump PR,…
+- `intake` — Turn a fragmented owner ask into main ideas, a restated fuller…
+- `scope-backlog-item` — Turn a raw backlog item into a turnkey recipe or an owner ask — chase…
+- `chase-references` — Resolve every reference in the ask before acting — inventory, resolve…
+- `prep-owner-steps` — Hand the owner finished steps, not directions — deep links,…
+- `rationalize` — The checkpoint at natural pauses — should this action also be…
+- `quality-gate` — Run the project's full verification before pushing and report what…
+- `review` — Review the branch diff against the binding contracts; comment with a…
 - `repo-health` — Audit doc + session-log hygiene (bootstrap check) and summarize drift.
-- `deep-research` — Fan out web research, adversarially verify sources, and synthesize a cited…
-- `question` — Answer a direct question concisely from memory and source; make no changes.
+- `deep-research` — Fan out web research, adversarially verify sources, and synthesize a…
+- `question` — Answer a direct question concisely from memory and source; make no…
 - `analysis` — Read-only deep-dive: investigate and report findings without changing…
 
 Full index (grounds + capabilities): `docs/SKILLS.md` — the source this block derives from.
@@ -42,6 +43,7 @@ Full index (grounds + capabilities): `docs/SKILLS.md` — the source this block 
 - `any` · **Branch deletion**: 403 on every path (git push `:branch` and API) → owner deletes by hand / enables "Automatically delete head branches".
 - `any` · **`api.github.com` direct HTTP**: blocked → GitHub access is MCP-tools-only.
 - `any` · **Environment / Project creation**: owner-click actions in the console — queue them as structured owner asks, never wait silently. Routine/schedule creation…
+- `any` · **Self-merge is NOT a wall** (corrected 2026-07-18): merging your own or a sibling's green PR is normal agent work — proven by direct MCP merge on green CI…
 - `any` · **GraphQL API quota**: tight — batch queries and prefer the REST-backed MCP tools for bulk reads.
 
 Full ledger (all venues, evidence, freshness): `docs/CAPABILITIES.md` — the seat-local source of truth; append findings THERE, never here.
