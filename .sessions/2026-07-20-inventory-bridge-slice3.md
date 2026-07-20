@@ -1,6 +1,6 @@
 # 2026-07-20 · inventory-bridge-slice3 — feat(inventory): CLI surface + read-only value preview for the fishing→mining bridge (Option B, slice 3)
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Opus 4.8 · high · feature build
 
@@ -51,6 +51,15 @@ the read-only preview + help/docs, while deliberately NOT duplicating its
 interactive verb. Green baseline re-run at base before writing:
 `python3 -m pytest -q` → 922 passed.
 
-## Verification (pre-flip)
+## ✅ Complete
 
-_(filled in the final commit once the suite + strict check are green.)_
+Card born red (`in-progress`) in the first commit per the born-red discipline —
+the claim + this card landed alone to hold the substrate gate red; the read-only
+`value` verb + 18 tests + help/docs updates landed in the second commit. Verified
+green before this flip: `python3 -m pytest -q` → **940 passed** (922 baseline + 18
+new); `python3 bootstrap.py check --strict` → exit **0** (advisory-only + the
+born-red HOLD, which was the only exit-affecting item until this flip). The
+regenerated `docs/balance.md` (fishing suite floor 142 → 160) keeps the
+`gen_balance --check` freshness gate green. PR **#182** opened ready-for-review;
+this final commit flips the badge to `complete`, clearing the born-red HOLD so the
+green PR can land. `.substrate/guard-fires.jsonl` left uncommitted (kit telemetry).
