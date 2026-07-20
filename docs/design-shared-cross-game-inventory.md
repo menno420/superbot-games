@@ -213,3 +213,20 @@ Landed by **slice 1**: `services/inventory_bridge.py` — a pure `fish_market_va
 the mining market) + a config-gated `exchange_fish_for_coins` (moves fish from a
 `FishingState.haul` to coins on a `MiningState`, all-or-nothing, no-op when the
 flag is OFF). Additive seam only — nothing wired into a live CLI/command path yet.
+
+Landed by **slice 2**: the exchange is now reachable from a live, **config-gated**
+`exchange` verb in the fishing CLI (`games/fishing/cli.py`, "walk your catch to the
+mining market"), routed through a new audited wrapper
+`services/inventory_bridge.py::exchange_fish_for_coins_audited`. It emits BOTH legs
+of the money flow — the fishing-haul debit (`subsystem="fishing"`,
+`target="haul:<species>"`) and the mining-coin credit (`subsystem="mining"`,
+`target="coins"`), both `mutation_type="inventory:exchange"` — to the SAME
+`services/audit.py` sink the sibling `fishing_workflow.sell` / `mining_workflow.sell`
+legs use, so the cross-game sale is reconstructable from one ledger. Still DEFAULT
+OFF and unchanged in every §6 default: with `GAMES_INVENTORY_BRIDGE_ENABLED` unset
+the verb is unavailable (a clear "bridge is disabled" no-op, absent from the help
+surface, records nothing), so no existing gameplay changes until the owner flips the
+flag. All-or-nothing / non-destructive on error (no partial audit is ever left
+behind) and one-directional (fishing → mining only). Next: **slice 3** — the CLI
+surface/help-text polish (a discoverable help line + a mining-market wallet readout
+in the fishing status/summary).
