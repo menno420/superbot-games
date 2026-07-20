@@ -52,9 +52,19 @@ the one-line ⚑ Q-0040 bounded-authority owner sign-off (the plan recommends
      fishing CLI and routed BOTH legs (haul debit + coin credit) through the
      shared `services/audit.py` sink via `exchange_fish_for_coins_audited` —
      still DEFAULT OFF (the verb is unavailable + absent from help until the flag
-     is flipped). Next slice (**slice 3**): the CLI surface / help-text polish —
-     a discoverable help line + a "mining market" wallet readout in the fishing
-     status/summary, and a matching help-parity pin.
+     is flipped). **Slice 3** landed the surrounding CLI surface + discoverability:
+     a NEW read-only `value <species> [qty]` preview verb
+     (`games/fishing/cli.py::_do_value`) that reports the V043 mining-market price
+     of a catch via `fish_market_value` — pure info, no mutation, no audit — so it
+     is available regardless of the flag and always listed in help, while the
+     MUTATING `exchange` verb stays gated DEFAULT OFF (mutation surface
+     byte-identical when off; all six §6 defaults unchanged). The games hub and
+     per-game entry points are pure REPLs with no argv/subcommand dispatch, so no
+     one-shot CLI command was invented — the preview is scriptable via the existing
+     TTY-free `run_commands` driver. **Bridge slices are now complete.** Next: an
+     **owner steer** on the still-open product forks (sellable-at-all, the 1:1 V043
+     rate), or **slice 4** — a bidirectional flow / promoting the bridge toward a
+     shared inventory core per the design doc.
 3. **Build the rung-3 host-adapter** so these games actually run inside
    `superbot-next`, against `docs/game-plugin-contract.md`. Blocked on the
    owner packaging/hermeticity + persistence-format decisions — surface those
