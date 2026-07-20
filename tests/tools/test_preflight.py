@@ -328,4 +328,10 @@ def test_strict_gate_holds_red_on_an_in_progress_card(tmp_path):
     )
     assert proc.returncode != 0
     assert "badge still says in-progress" in proc.stdout
-    assert "designed hold" in proc.stdout
+    # substrate-kit v1.20.1 reworded the explicit-card HOLD line: the
+    # `--session-log` path now reports the miss via check_log as
+    # "a completed Status (badge still says in-progress)"; the old
+    # "designed hold" banner is now reserved for the added-card born-red
+    # lane (BORN_RED_HOLD_MESSAGE). Behaviour is unchanged — strict still
+    # exits non-zero / holds red on an in-progress card.
+    assert "a completed Status" in proc.stdout
