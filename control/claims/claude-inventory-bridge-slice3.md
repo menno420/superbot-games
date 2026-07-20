@@ -1,0 +1,1 @@
+ - `claude/inventory-bridge-slice3` · slice 3: CLI surface + read-only value preview for the fishing→mining bridge · 2026-07-20
