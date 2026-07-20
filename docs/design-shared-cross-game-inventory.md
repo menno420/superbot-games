@@ -183,3 +183,33 @@ These are genuine product-intent forks, not engineering calls. Each is left open
 - ⚠️ **OWNER PRODUCT CALL: Does a fish occupy the mining capacity cap?** Mining
   uses a distinct-types soft cap (`CapStatus`, warn-not-block). Whether deposited
   fish count against a miner's pack is a product/UX call, not an engineering one.
+
+## 6. Decision log — the 6 owner calls, resolved (2026-07-20)
+
+Coordinator-decided under the owner continue directive (2026-07-20), taking the
+most conservative, reversible default for each §5 fork so slice 1 could ship
+Option B without stalling. Every default is reversible (flip
+`GAMES_INVENTORY_BRIDGE_ENABLED` off or delete `services/inventory_bridge.py`):
+
+1. **Fish sellable at the mining market at all?** → YES in principle, but the
+   entire bridge path is **CONFIG-GATED OFF BY DEFAULT** — no existing gameplay
+   changes until explicitly enabled.
+2. **Unified vs bridged hold?** → **BRIDGED** (Option B): two separate per-game
+   inventories, a service pipes between them. No migration of mining's dict
+   store, no shared id scheme.
+3. **One-directional or bidirectional?** → **ONE-DIRECTIONAL** (fishing → mining
+   only). No ore/gear flows into fishing.
+4. **V043 as the cross-game price?** → **USE V043 CANONICAL VALUATION** (the #174
+   default) as the fish's coin value at the mining market. Reversible balance call.
+5. **Exchange rate / parity?** → **1:1 AT THE SHARED V043 PRICE.** No currency/XP
+   conversion.
+6. **Does a fish occupy the mining capacity cap?** → **N/A BY DESIGN** — the
+   bridge SELLS fish for coins (fish → coins); it never deposits fish objects into
+   the mining pack, so no fish occupies the mining capacity cap. Sidesteps the cap
+   question.
+
+Landed by **slice 1**: `services/inventory_bridge.py` — a pure `fish_market_value`
+(reusing `games.fishing.core.economy.sell_value`, the V043 curve #174 wired into
+the mining market) + a config-gated `exchange_fish_for_coins` (moves fish from a
+`FishingState.haul` to coins on a `MiningState`, all-or-nothing, no-op when the
+flag is OFF). Additive seam only — nothing wired into a live CLI/command path yet.
