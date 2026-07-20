@@ -1,6 +1,6 @@
 # 2026-07-20 · inventory-bridge-slice2 — feat(inventory): wire gated fishing→mining exchange onto an audited verb (Option B, slice 2)
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: Opus 4.8 · high · game-economy-service
 
@@ -46,11 +46,14 @@ pattern this slice mirrors: it wired the mining exploration engine onto a live
 the same seam-onto-verb move, adapted here for a gated, cross-game exchange.
 Green baseline re-run at base before writing: `python3 -m pytest -q` → 903 passed.
 
-## 🔴 Born red
+## ✅ Complete
 
-Card born red (`in-progress`) in this first commit per the born-red discipline —
-the claim + this card land alone to hold the substrate-gate red until owner
-review; the audited exchange + verb wiring + tests + doc updates land in the
-following commit. The final commit flips this badge to `complete` only after the
-suite is green and `bootstrap.py check --strict` passes, clearing the born-red
-HOLD so the green PR can auto-land.
+Card born red (`in-progress`) in the first commit per the born-red discipline —
+the claim + this card landed alone to hold the substrate-gate red; the audited
+exchange (`exchange_fish_for_coins_audited`) + the gated `exchange` verb in the
+fishing CLI + 19 tests + doc updates landed in the second commit. Verified green
+before this flip: `python3 -m pytest -q` → **922 passed** (903 baseline + 19
+new); `python3 bootstrap.py check --strict` → advisory-only (born-red HOLD was
+the only exit-affecting item). PR **#181** opened ready-for-review; this final
+commit flips the badge to `complete`, clearing the born-red HOLD so the green PR
+can auto-land.
