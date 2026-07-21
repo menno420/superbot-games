@@ -1,6 +1,6 @@
 # 2026-07-21 · final-closeout — superbot-games project closeout
 
-> **Status:** `in-progress`
+> **Status:** `complete`
 >
 > 📊 Model: opus-4.8 · medium · docs-only — superbot-games project closeout
 
