@@ -6,6 +6,12 @@
 > work always win over this file. Read it second (right after the working
 > agreement) and keep it current as the project moves.
 
+> **PROJECT CLOSED (2026-07-21).** The autonomous agent sessions on this repo
+> have wrapped. Read [PROJECT-CLOSEOUT.md](PROJECT-CLOSEOUT.md) first — it is the
+> plain-language wrap-up (what shipped, the true state, the open threads with
+> resume steps, and an owner walkthrough). Fleet-wide threads live in the MASTER
+> closeout, superbot-mineverse `docs/PROJECT-CLOSEOUT.md`.
+
 ## Stability baseline
 
 - Exploration P1 engine (`games/exploration/quest/`, engine suite now 55 tests
@@ -26,6 +32,25 @@
   born-red PRs red.
 
 ## In flight
+
+> **CLOSE-OUT — truth-stamped 2026-07-21 at HEAD `a9a7dcc`.**
+> <!-- truth-stamped-at: a9a7dccb3dfc0d2a1daaf9f10dc0b68162d225d8 -->
+> The autonomous agent sessions on this repo have **wrapped**; the full
+> plain-language wrap-up is [PROJECT-CLOSEOUT.md](PROJECT-CLOSEOUT.md). Since the
+> 2026-07-19 sweep below, these landed: **#178** (`e0cbbc7`, exploration engine
+> wired onto a live `explore` verb); the fishing→mining inventory **bridge**
+> shipped in three gated slices, **OFF by default** behind
+> `GAMES_INVENTORY_BRIDGE_ENABLED` — **#180** (`9d8b22a`, service seam),
+> **#181** (`4afb915`, exchange on an audited verb), **#182** (`9326694`, CLI
+> surface + read-only preview), framed by the design doc **#179** (`cb1b546`);
+> and the kit upgrade **#183** (`a9a7dcc`, substrate-kit v1.17.0 → v1.20.1,
+> this HEAD) with its gate-green follow-up **#184** (`63f880d`, ORDER 012).
+> **Suite is now 940 passed** (`python3 -m pytest -q`) — up from 868 as the
+> engine/bridge/kit work added coverage; `python3 bootstrap.py check --strict`
+> passes; **zero open PRs**. Open threads (bridge flip + the slice-4
+> bidirectional/shared-core fork, unbuilt by design) with exact resume steps are
+> in [PROJECT-CLOSEOUT.md](PROJECT-CLOSEOUT.md). The 2026-07-19 sweep below
+> stands as provenance.
 
 > **DECISION SWEEP — truth-stamped 2026-07-19 at HEAD `07c0ad3`.**
 > <!-- truth-stamped-at: 07c0ad315e56796810ab244a338713d41a99d8fa -->

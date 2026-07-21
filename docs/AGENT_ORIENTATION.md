@@ -7,6 +7,10 @@
 
 ## Start every session
 
+> **Project closed (2026-07-21):** start at
+> [PROJECT-CLOSEOUT.md](PROJECT-CLOSEOUT.md) for the plain-language wrap-up —
+> what shipped, the true state, and the open threads with exact resume steps.
+
 1. `CONSTITUTION.md` — the working agreement.
 2. `docs/current-state.md` — the living status ledger.
 3. `docs/CAPABILITIES.md` — verified session capabilities & walls (the
